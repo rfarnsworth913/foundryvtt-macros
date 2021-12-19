@@ -1,0 +1,2 @@
+# ----- Preload Next Scene -----
+@Drawing[*] @Tag[{{ Tagged Element }}] @Scene[{{ Preload Scene Name }}] @Trigger[preload]

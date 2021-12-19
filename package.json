@@ -1,0 +1,23 @@
+{
+  "name": "foundryvtt-macros",
+  "version": "1.0.0",
+  "description": "A collection of my macros for Foundry-VTT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rfarnsworth913/foundryvtt-macros.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rfarnsworth913/foundryvtt-macros/issues"
+  },
+  "homepage": "https://github.com/rfarnsworth913/foundryvtt-macros#readme",
+  "devDependencies": {
+    "eslint": "8.5.0",
+    "eslint-config-personal": "git+https://github.com/rfarnsworth913/eslint-config-personal.git"
+  }
+}

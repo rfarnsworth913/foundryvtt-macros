@@ -1,0 +1,16 @@
+/* ==========================================================================
+    Module:             ESLint Configuration
+    Version:            8.5.0
+    Documentation:      https://eslint.org/
+   ========================================================================== */
+{
+    "root": true,
+
+    "globals": {
+        "args": "readonly"
+    },
+
+    "extends": [
+        "./node_modules/eslint-config-personal/eslint-config-js.js"
+    ]
+}
