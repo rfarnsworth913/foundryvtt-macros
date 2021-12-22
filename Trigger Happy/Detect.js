@@ -74,7 +74,18 @@
                 ChatMessage.create(chatData, {});
             }
         }
+    }
 
+    // Handle close skill checks ----------------------------------------------
+    if ((props.checkDC - skillMax) <= 3) {
+        let chatData = {
+            user:    game.user._id,
+            content: "You feel something is amiss.",
+            whisper: ChatMessage.getWhisperRecipients(actor.name),
+            spealer: ChatMessage.getSpeaker({ token: actor })
+        };
+
+        ChatMessage.create(chatData, {});
     }
 
 })();
