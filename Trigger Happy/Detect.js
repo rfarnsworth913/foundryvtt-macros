@@ -47,7 +47,7 @@
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
             if (canvas.tokens.get(props.targetID).data.hidden) {
-                canvas.tokens.get(props.targetId).update({ hidden: false });
+                canvas.tokens.get(props.targetID).update({ hidden: false });
 
                 let message = `You have spotted a trap!`;
                 let chatData = {
