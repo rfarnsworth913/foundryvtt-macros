@@ -47,7 +47,7 @@
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
             if (canvas.tokens.get(props.targetID).data.hidden) {
-                canvas.tokens.get(props.targetID).update({ hidden: false });
+                const target = canvas.tokens.get(props.targetID).document.update({ hidden: false });
 
                 let message = `You have spotted a trap!`;
                 let chatData = {
@@ -64,7 +64,7 @@
         // Handle Items -------------------------------------------------------
         if (props.type === "Item") {
             if (cavnas.tokens.get(props.targetID).data.hidden) {
-                canvas.tokens.get(props.targetID).update({ hidden: false });
+                canvas.tokens.get(props.targetID).document.update({ hidden: false });
 
                 let message = `You have spotted something!`;
                 let chatData = {
