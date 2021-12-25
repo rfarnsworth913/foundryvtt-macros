@@ -2,7 +2,7 @@
     Macro:              Detect
     Description:        Detects a specified item
     Source:             https://gitlab.com/crymic/foundry-vtt-macros/-/blob/8.x/Trigger%20Happy/Detect.js
-    Usage:              Trigger Happy: @Token[Name of Trap] @Trigger[] @ChatMessage[/DetectTrap DC "Door, Item or Trap" "Trap or Wall ID"]
+    Usage:              Trigger Happy: @Token[Name of Trap] @Trigger[] @ChatMessage[/DetectTrap CheckDC "Door, Item or Trap" "Trap or Wall ID"]
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -15,9 +15,12 @@
     }
 
     // Get check information --------------------------------------------------
-    let passTest  = await actor.data.data.skills.prc.passive;
-    let skillTest = await actor.rollSkill("prc", { fastForward: true, chatMessage: false });
-    let skillMax  = Math.max(passTest, skillTest.total);
+    let passTest = await actor.data.data.skills.prc.passive;
+    let skillMax = Math.max(passTest);
+
+    // If we want an active check and passive check, use the below code
+    // let skillTest = await actor.rollSkill("prc", { fastForward: true, chatMessage: false });
+    // let skillMax  = Math.max(passTest, skillTest.total);
 
     console.info(`Perception Score of ${skillMax} vs ${props.checkDC}`);
 
@@ -78,14 +81,48 @@
 
     // Handle close skill checks ----------------------------------------------
     if ((props.checkDC - skillMax) <= 3) {
-        let chatData = {
-            user:    game.user._id,
-            content: "You feel something is amiss.",
-            whisper: ChatMessage.getWhisperRecipients(actor.name),
-            spealer: ChatMessage.getSpeaker({ token: actor })
-        };
 
-        ChatMessage.create(chatData, {});
+        // Handle Doors -------------------------------------------------------
+        if (props.type === "Door") {
+            if (canvas.walls.get(props.targetID).data.door === 2) {
+                let chatData = {
+                    user:    game.user._id,
+                    content: "You sense something is amiss.",
+                    whisper: ChatMessage.getWhisperRecipients(actor.name),
+                    spealer: ChatMessage.getSpeaker({ token: actor })
+                };
+
+                ChatMessage.create(chatData, {});
+            }
+        }
+
+        // Handle Traps -------------------------------------------------------
+        if (props.type === "Trap") {
+            if (canvas.tokens.get(props.targetID).data.hidden) {
+                let chatData = {
+                    user:    game.user._id,
+                    content: "You sense something is amiss.",
+                    whisper: ChatMessage.getWhisperRecipients(actor.name),
+                    spealer: ChatMessage.getSpeaker({ token: actor })
+                };
+
+                ChatMessage.create(chatData, {});
+            }
+        }
+
+        // Handle Items -------------------------------------------------------
+        if (props.type === "Item") {
+            if (cavnas.tokens.get(props.targetID).data.hidden) {
+                let chatData = {
+                    user:    game.user._id,
+                    content: "You sense something is amiss.",
+                    whisper: ChatMessage.getWhisperRecipients(actor.name),
+                    spealer: ChatMessage.getSpeaker({ token: actor })
+                };
+
+                ChatMessage.create(chatData, {});
+            }
+        }
     }
 
 })();
