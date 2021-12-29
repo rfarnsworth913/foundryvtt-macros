@@ -19,5 +19,8 @@
   "devDependencies": {
     "eslint": "8.5.0",
     "eslint-config-personal": "git+https://github.com/rfarnsworth913/eslint-config-personal.git"
+  },
+  "dependencies": {
+
   }
 }

@@ -1,8 +1,8 @@
 /* ==========================================================================
-    Macro:              Simple Trap
-    Description:        Handles Simple Traps
-    Source:             https://gitlab.com/tposney/midi-qol
-    Usage:              Trigger Happy  @Token[{{ Source Token }}] @Trigger[capture move] @ChatMessage[/AnimatedTrap {{ Source Actor }} {{ Item }} {{ Source Token }}]
+    Macro:              Tagger Delete Walls
+    Description:        Delete walls by tag
+    Source:             Custom
+    Usage:              TaggerDeleteWalls tag
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -14,24 +14,13 @@
         return;
     }
 
+    const ids = Tagger.getByTag(props.tag).filter((obj) => {
+        if (obj instanceof WallDocument) {
+            return obj.id;
+        }
+    }).map((obj) => obj.id);
 
-    // Validate we have the trap information ----------------------------------
-    if (props.trap.actor === "") {
-        return console.error(`Cannot find actor: ${args[0]}`);
-    }
-
-    if (props.trap.item === "") {
-        return console.error(`Cannot find item: ${args[1]}`);
-    }
-
-
-    // Apply damage to target -------------------------------------------------
-    const templateLocation = props.trap.token?.center;
-
-    new MidiQOL.TrapWorkflow(props.trap.actor, props.trap.item, [token], templateLocation);
-    if (props.trap.token) {
-        await props.trap.token.update({ hidden: false });
-    }
+    game.scenes.current.deleteEmbeddedDocuments("Wall", ids);
 
 })();
 
@@ -45,15 +34,9 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
-    const trapActor = game.actors.getName(args[0]) || "";
-
     return {
-        name: "Animated Trap",
-        trap: {
-            actor: trapActor,
-            item:  trapActor.items.getName(args[1]) || "",
-            token: canvas.tokens.placeables.find(t => t.name === args[2])
-        }
+        name: "Tagger Delete Walls",
+        tag:  args[0]
     };
 }
 
