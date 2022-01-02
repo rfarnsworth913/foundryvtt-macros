@@ -29,8 +29,10 @@
 
         // Handle Doors -------------------------------------------------------
         if (props.type === "Door") {
-            if (canvas.walls.get(props.targetID).data.door === 2) {
-                canvas.walls.get(props.targetID).update({ door: 1 });
+            const door = Tagger.getByTag(props.targetID)[0];
+
+            if (door.data.door === 2) {
+                door.update({ door: 1 });
 
                 let message = `You have spotted a hidden door!`;
                 let chatData = {
@@ -46,11 +48,7 @@
 
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
-            const trap = [...canvas.background.tiles, ...canvas.foreground.tiles].reduce((list, tile) => {
-                if (tile.id === props.targetID) {
-                    list.push(tile);
-                }
-            }, [])[0];
+            const trap = Tagger.getByTag(props.targetID);
 
             if (trap.data.hidden) {
                 trap.document.update({ hidden: false });
@@ -90,7 +88,9 @@
 
         // Handle Doors -------------------------------------------------------
         if (props.type === "Door") {
-            if (canvas.walls.get(props.targetID).data.door === 2) {
+            const door = Tagger.getByTag(props.targetID)[0];
+
+            if (door.data.door === 2) {
                 let chatData = {
                     user:    game.user._id,
                     content: "You sense something is amiss.",
@@ -104,11 +104,7 @@
 
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
-            const trap = [...canvas.background.tiles, ...canvas.foreground.tiles].reduce((list, tile) => {
-                if (tile.id === props.targetID) {
-                    list.push(tile);
-                }
-            }, [])[0];
+            const trap = Tagger.getByTag(props.targetID);
 
             if (trap.data.hidden) {
                 let chatData = {
