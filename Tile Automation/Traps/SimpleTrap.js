@@ -2,7 +2,7 @@
     Macro:              Simple Trap
     Description:        Handles Simple Traps
     Source:             https://gitlab.com/tposney/midi-qol
-    Usage:              Trigger Happy  @Token[{{ Source Token }}] @Trigger[capture move] @ChatMessage[/SimpleTrap {{ Source Actor }} {{ Item }} {{ Source Token }}]
+    Usage:              Callback {{ Actor Name }} {{ Item / Trap Name }}
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -16,11 +16,11 @@
 
 
     // Validate we have the trap information ----------------------------------
-    if (props.trap.actor === "") {
+    if (!props.trap.actor) {
         return console.error(`Cannot find actor: ${args[0]}`);
     }
 
-    if (props.trap.item === "") {
+    if (!props.trap.item) {
         return console.error(`Cannot find item: ${args[1]}`);
     }
 
@@ -45,6 +45,7 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
+    const args      = Array.from(arguments);
     const trapActor = game.actors.getName(args[0]) || "";
 
     return {
@@ -52,7 +53,7 @@ function getProps () {
         trap: {
             actor: trapActor,
             item:  trapActor.items.getName(args[1]) || "",
-            token: canvas.tokens.placeables.find(t => t.name === args[2])
+            token: Tagger.getByTag(args[2])[0]
         }
     };
 }

@@ -2,7 +2,7 @@
     Macro:              Detect
     Description:        Detects a specified item
     Source:             https://gitlab.com/crymic/foundry-vtt-macros/-/blob/8.x/Trigger%20Happy/Detect.js
-    Usage:              Trigger Happy: @Token[Name of Trap] @Trigger[] @ChatMessage[/DetectTrap CheckDC "Door, Item or Trap" "Trap or Wall ID"]
+    Usage:              Callback - CheckDC "Door, Item or Trap" "Trap or Wall ID"
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -42,16 +42,16 @@
                     speaker: ChatMessage.getSpeaker({ alias: "Door" })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
 
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
-            const trap = Tagger.getByTag(props.targetID);
+            const trap = Tagger.getByTag(props.targetID)[0];
 
             if (trap.data.hidden) {
-                trap.document.update({ hidden: false });
+                trap.update({ hidden: false });
 
                 let message = `You have spotted a trap!`;
                 let chatData = {
@@ -61,7 +61,7 @@
                     speaker: ChatMessage.getSpeaker({ alias: "Trap" })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
 
@@ -78,7 +78,7 @@
                     speaker: ChatMessage.getSpeaker({ token: actor })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
     }
@@ -98,13 +98,13 @@
                     spealer: ChatMessage.getSpeaker({ token: actor })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
 
         // Handle Traps -------------------------------------------------------
         if (props.type === "Trap") {
-            const trap = Tagger.getByTag(props.targetID);
+            const trap = Tagger.getByTag(props.targetID)[0];
 
             if (trap.data.hidden) {
                 let chatData = {
@@ -114,7 +114,7 @@
                     spealer: ChatMessage.getSpeaker({ token: actor })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
 
@@ -128,7 +128,7 @@
                     spealer: ChatMessage.getSpeaker({ token: actor })
                 };
 
-                ChatMessage.create(chatData, {});
+                return ChatMessage.create(chatData, {});
             }
         }
     }
