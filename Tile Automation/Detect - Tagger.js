@@ -66,7 +66,7 @@
         }
 
         // Handle Items -------------------------------------------------------
-        if (props.type === "Item") {
+        if (props.type === "Item" || props.type === "Creature") {
             if (cavnas.tokens.get(props.targetID).data.hidden) {
                 canvas.tokens.get(props.targetID).document.update({ hidden: false });
 
@@ -119,7 +119,7 @@
         }
 
         // Handle Items -------------------------------------------------------
-        if (props.type === "Item") {
+        if (props.type === "Item" || props.type === "Creature") {
             if (cavnas.tokens.get(props.targetID).data.hidden) {
                 let chatData = {
                     user:    game.user._id,
