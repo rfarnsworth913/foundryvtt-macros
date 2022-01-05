@@ -2,7 +2,7 @@
     Macro:              Detect
     Description:        Detects a specified item
     Source:             https://gitlab.com/crymic/foundry-vtt-macros/-/blob/8.x/Trigger%20Happy/Detect.js
-    Usage:              Callback - CheckDC "Door, Item or Trap" "Trap or Wall ID"
+    Usage:              Callback - CheckDC "Door, Item or Trap" "ID: Items/Creatures || Tag: Door/Trap"
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -66,7 +66,7 @@
         }
 
         // Handle Items -------------------------------------------------------
-        if (props.type === "Item" || props.type === "Creature") {
+        if (props.type === "Item") {
             if (cavnas.tokens.get(props.targetID).data.hidden) {
                 canvas.tokens.get(props.targetID).document.update({ hidden: false });
 
@@ -119,7 +119,7 @@
         }
 
         // Handle Items -------------------------------------------------------
-        if (props.type === "Item" || props.type === "Creature") {
+        if (props.type === "Item") {
             if (cavnas.tokens.get(props.targetID).data.hidden) {
                 let chatData = {
                     user:    game.user._id,
