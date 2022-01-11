@@ -1,43 +1,21 @@
 /* ==========================================================================
-    Macro:              Animated Trap
-    Description:        Template for Animated Traps
-    Source:             https://github.com/fantasycalendar/FoundryVTT-Sequencer/wiki/Traps-with-effects-and-optional-damage-with-MidiQOL#advanced-macro
-    Usage:              Trigger Happy  @Token[{{ Source Token }}] @Trigger[capture move] @ChatMessage[/AnimatedTrap {{ Source Actor }} {{ Item }} {{ Source Token }}]
+    Macro:              Token Update
+    Description:        Handles applying updates to a specified token
+    Source:             https://gitlab.com/crymic/foundry-vtt-macros/-/blob/8.x/Callback%20Macros/TokenUpdate.js
+    Usage:              const TokenUpdate = game.macros.getName("TokenUpdate");
+                        TokenUpdate.execute(target.id, { XYZ }, "on | off" (optional));
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
 (async () => {
     const props = getProps();
-    logProps(props, props.name || this.name);
+    logProps(props, this.name);
 
     if (!validateProps(props)) {
         return;
     }
 
-
-    // Validate we have the trap information ----------------------------------
-    if (props.trap.actor === "") {
-        return console.error(`Cannot find actor: ${args[0]}`);
-    }
-
-    if (props.trap.item === "") {
-        return console.error(`Cannot find item: ${args[1]}`);
-    }
-
-
-    // Apply damage to target -------------------------------------------------
-    const templateLocation = props.trap.token?.center;
-
-    new MidiQOL.TrapWorkflow(props.trap.actor, props.trap.item, [token], templateLocation);
-    if (props.trap.token) {
-        await props.trap.token.update({ hidden: false });
-    }
-
-
-    // Setup animation hook ---------------------------------------------------
-    Hooks.once("midi-qol.RollComplete", async function (result) {
-        // Sequencer logic
-    });
+    await canvas.tokens.get(props.tokenID).document.update(props.data, { animate: props.animate });
 
 })();
 
@@ -51,15 +29,10 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
-    const trapActor = game.actors.getName(args[0]) || "";
-
     return {
-        name: "Animated Trap",
-        trap: {
-            actor: trapActor,
-            item:  trapActor.items.getName(args[1]) || "",
-            token: Tagger.getByTag(args[2])[0]
-        }
+        tokenID: args[0],
+        data:    args[1],
+        animate: args[2] || false
     };
 }
 

@@ -82,6 +82,15 @@
                     ActorUpdate.execute(target.id, { "data.attributes.hp.value": 0 });
                     turnTargets.push(await getTargetHTML(target, `${target.name} fails with ${save.total} [D]`));
 
+                    if (props.sequencer) {
+                        new Sequence()
+                            .effect()
+                            .atLocation(target)
+                            .file("jb2a.impact.orange")
+                            .scaleToObject(1.5)
+                            .play();
+                    }
+
                 // Target is feared -------------------------------------------
                 } else {
                     console.log(target.name, save.total, `Fail [Feared]`);
@@ -133,6 +142,15 @@
                     }
 
                     turnTargets.push(await getTargetHTML(target, `${target.name} fails with ${save.total} [F]`));
+
+                    if (props.sequencer) {
+                        new Sequence()
+                            .effect()
+                            .atLocation(target)
+                            .file("jb2a.icon.fear.orange")
+                            .scaleToObject(1.5)
+                            .play();
+                    }
                 }
 
             // Handle target saves --------------------------------------------
@@ -226,6 +244,8 @@ function getProps () {
         item:     lastArg.item,
         level:    actorData.classes.cleric ? actorData.classes.cleric.levels : actorData.details.cr,
         saveType: actorData.attributes.spellcasting,
+
+        sequencer: game.modules.get("sequencer") ? true : false,
 
         lastArg
     };
