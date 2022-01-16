@@ -20,12 +20,11 @@
     }
 
     // Handle checking each turn for application
-    if (props.state === "each" || props.state === "off") {
+    if (props.state === "each") {
         if (!getEmboldeningState(props)) {
             await props.actor.createEmbeddedDocuments("ActiveEffect", [props.effectData]);
         }
     }
-
 
 })();
 
