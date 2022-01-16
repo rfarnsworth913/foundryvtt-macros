@@ -14,7 +14,14 @@
         return;
     }
 
-    // Remove effect for any save target(s)
+
+    // Validate dependencies --------------------------------------------------
+    if (!game.modules.get("sequencer")) {
+        return ui.notifications.warn("Sequencer is not available!");
+    }
+
+
+    // Remove effect for any save target(s) -----------------------------------
     await wait (7000);
     props.targets.forEach((target) => {
         Sequencer.EffectManager.endEffects({
