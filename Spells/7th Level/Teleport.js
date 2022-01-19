@@ -32,7 +32,7 @@
         x:           props.token.x + canvas.grid.size / 2,
         y:           props.token.y + canvas.grid.size / 2,
         direction:   0,
-        distance:    30,
+        distance:    props.range,
         borderColor: "#ff0000"
     };
 
@@ -100,7 +100,8 @@ function getProps () {
     const lastArg = args[args.length - 1];
 
     return {
-        name: "Teleport",
+        name:  "Teleport",
+        range: 30,
         token: canvas.tokens.get(lastArg.tokenId)
     };
 }
