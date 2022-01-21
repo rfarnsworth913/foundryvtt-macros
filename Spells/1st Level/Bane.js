@@ -22,7 +22,8 @@
 
 
     // Remove effect for any save target(s) -----------------------------------
-    await wait (7000);
+    await Sequencer.Helpers.wait(7000);
+
     props.targets.forEach((target) => {
         Sequencer.EffectManager.endEffects({
             object:  target.id,
@@ -31,10 +32,6 @@
     });
 
 })();
-
-async function wait(ms) {
-    return new Promise(resolve => { setTimeout(resolve, ms); });
-}
 
 
 // Property Helpers -----------------------------------------------------------
