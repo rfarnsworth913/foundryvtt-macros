@@ -1,0 +1,36 @@
+{
+  "_id": "M1tNRvEDVzpBUco9",
+  "name": "Sakura the Hireling",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Sakura Tetsu steps in to assist!</h3></div>\n            <img src=\"https://i.imgur.com/uYSg56F.png\" />\n            <div style=\"color:#131516;margin-top:4px;\">\n            • Devout Cleric of Calistria. <br>\n            • They met while on the Isle of Jalmeray. <br>\n            • Interested in researching and writing about their similar Beastbrood Heritages. <br>\n            • Soon after Shokotsu finished his training, she volunteered to travel Golarion with him as a Hireling and faithful Companion on his Pathfinder Society Quests and Adventures!\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>Skill and Lore Check:</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Diplomacy: [[/roll 1d20 + 4 + 3 # Diplomacy - Sakura's Modifier + Shokotsu's Level]]. <br>\n            Underworld Lore: [[/roll 1d20 + 4 + 3 # Lore Check - Sakura's Modifier + Shokotsu's Level]].\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>Extra Languages:</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Draconic and Sylvan.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/RVDH8vx.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "_id": "k0BnYs7RWdFvKcCO",
+  "name": "Consume Arrows",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Macro.UdgBGf98fwOg9FJc"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "if (!actor) {\n  ui.notifications.warn(\"You must select yourself.\");\n}\n\nlet updates = [];\nlet consumed = \"\";\n// Use Arrows\n(async () => {\nlet item = actor.items.find(i=> i.name===\"Arrows\");\n\nif(item === null) return\n\nif (item.data.data.quantity.value < 1) {\n\n  ui.notifications.warn(`${game.user.name} not enough ${name} remaining`);\n} else {\n\n  updates.push({\"_id\": item._id, \"data.quantity.value\": item.data.data.quantity.value - 1});\nconsumed += `${item.data.data.quantity.value - 1} arrows left<br>`;\n}\n\nif (updates.length > 0) {\n  actor.updateEmbeddedEntity(\"OwnedItem\", updates);\n}\nChatMessage.create({\n  user: game.user._id,\nspeaker: { actor: actor, alias: actor.name },\n  content: consumed,\n  type: CONST.CHAT_MESSAGE_TYPES.OTHER\n});\n })();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/equipment/weapons/arrows.jpg",
+  "actorIds": []
+}

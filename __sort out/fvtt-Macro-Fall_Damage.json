@@ -1,0 +1,30 @@
+{
+  "_id": "bfsdo3LAoouUp7f0",
+  "name": "Fall Damage",
+  "type": "chat",
+  "sort": 400000,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "Fall Damage",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "When you fall more than 5 feet, you take bludgeoning damage equal to half the distance you fell when you land. If you take any damage from a fall, you land prone.\n\nie. 10 ft. is [[/roll 5]] Bludgeoning Damage\n\nFalling on a Creature:\n\nIf you land on a creature, that creature must attempt a DC 15 Reflex Save. \n\nCritical Success: The creature takes no damage.\n\nSuccess: The creature takes bludgeoning damage equal to one-quarter the falling damage you took.\n\nFailure: The creature takes bludgeoning damage equal to half the falling damage you took.\n\nCritical Failure: The creature takes the same amount of bludgeoning damage you took from the fall.",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/VuUoTMa.png",
+  "actorIds": []
+}

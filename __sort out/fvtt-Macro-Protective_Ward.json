@@ -1,0 +1,22 @@
+{
+  "_id": "a5YDgVuNow8yKLKf",
+  "name": "Protective Ward",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Macro.hWlhB3ozBuQeqDQM"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Ward\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Ward\");\n        if (\n          token.data.effects.includes(\n            \"systems/pf2e/icons/spells/protective-ward.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/protective-ward.jpg\");\n        }\n      } else {\n                await actor.addCustomModifier(\"ac\", \"Ward\", 1, \"status\");\n        if (\n          !token.data.effects.includes(\n            \"systems/pf2e/icons/spells/protective-ward.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/protective-ward.jpg\");\n        }\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/spells/protective-ward.jpg",
+  "actorIds": []
+}

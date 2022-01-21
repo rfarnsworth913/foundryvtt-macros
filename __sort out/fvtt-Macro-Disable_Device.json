@@ -1,0 +1,36 @@
+{
+  "_id": "dgPFnQFWPubtvQFz",
+  "name": "Disable Device",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "if (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nactor.data.data.skills.thi.roll(event);\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Disable Device</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            This action allows you to disarm a trap or another complex device. Your Thievery check result determines how much progress you make.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>💥 Crit Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You disable the device, or you achieve one success toward disabling a complex device.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>✔️ Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You disable the device, or you achieve one success toward disabling a complex device.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You make no progress towards disabling the device, but don't trigger it.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Crit Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You trigger the device.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/wOkEb9W.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "_id": "G9WSlTcnpFydDDTs",
+  "name": "Parry",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Macro.cSS2vMkaDz1GTzpz"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Parry\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Parry\");\n        if (\n          token.data.effects.includes(\n            \"systems/pf2e/icons/equipment/weapons/main-gauche.png\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/equipment/weapons/main-gauche.png\");\n        }\n      } else {\n                await actor.addCustomModifier(\"ac\", \"Parry\", 1, \"circumstance\");\n        if (\n          !token.data.effects.includes(\n            \"systems/pf2e/icons/spells/shield.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/equipment/weapons/main-gauche.png\");\n        }\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/equipment/weapons/main-gauche.png",
+  "actorIds": []
+}

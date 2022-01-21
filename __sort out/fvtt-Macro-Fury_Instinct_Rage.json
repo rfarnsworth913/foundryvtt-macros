@@ -1,0 +1,36 @@
+{
+  "_id": "plj1pIxc9UV1yttR",
+  "name": "Fury Instinct Rage",
+  "type": "script",
+  "sort": 900000,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "Rage2",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.10.27.2840"
+    }
+  },
+  "scope": "global",
+  "command": "const RAGE_DAMAGE = 2; // increase for giant instinct or higher levels\n\n(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n         let messageContent = '';\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Rage\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Rage\");\n        await actor.removeCustomModifier(\"damage\", \"Rage\");\n        /// Remove the line below if you do not wish for your character to lose all temp hp when toggled \"off\".\n        await actor.update({ \"data.attributes.hp.temp\": 0 });\n        /// Remove the line above if you do not wish for your character to lose all temp hp when toggled \"off\".\n        await actor.update({ \"data.attributes.speed.value\": 25 });       \n        if (\n          token.data.effects.includes(\n            \"https://i.imgur.com/VFOwIY0.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/VFOwIY0.png\");\n        }\n                    messageContent = 'Begins to calm down.'\n      } else {        \n    const tmpHP =\n          token.actor.data.data.details.level.value +\n          token.actor.data.data.abilities.con.mod;\n        if (token.actor.data.data.attributes.hp.temp < tmpHP) {\n          await actor.update({ \"data.attributes.hp.temp\": tmpHP });\n        }\n        await actor.addCustomModifier(\"ac\", \"Rage\", -1, \"untyped\");\n        await actor.update({ \"data.attributes.speed.value\": 35 });        \n        await actor.addCustomModifier(\"damage\", \"Rage\", RAGE_DAMAGE, \"status\");\n        if (\n          !token.data.effects.includes(\n            \"https://i.imgur.com/VFOwIY0.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/VFOwIY0.png\");\n        }\nmessageContent = 'Enters a Furious Rage!'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/VFOwIY0.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "Rage2",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

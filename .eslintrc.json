@@ -7,7 +7,8 @@
     "root": true,
 
     "globals": {
-        "args": "readonly"
+        "args": "readonly",
+        "game": "readonly"
     },
 
     "extends": [

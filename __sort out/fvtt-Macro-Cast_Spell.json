@@ -1,0 +1,25 @@
+{
+  "_id": "DQBzNR3Ti9tDQ48G",
+  "name": "Cast Spell",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "furnace": {
+      "runAsGM": false
+    },
+    "core": {
+      "sourceId": "Macro.XB7xBRA7QbFtwHxo"
+    },
+    "exportSource": {
+      "world": "pfs2e_public",
+      "system": "pf2e",
+      "coreVersion": "0.7.8",
+      "systemVersion": "1.10.27.2840"
+    }
+  },
+  "scope": "global",
+  "command": "function castSpell(effect) {\n    const tokens = canvas.tokens.controlled;\n    if (tokens.length == 0) {\n        ui.notifications.error(\"Please select a token\");\n        return;\n    }\n    game.user.targets.forEach((i, t) => {\n        canvas.fxmaster.drawSpecialToward(effect, tokens[0], t);\n    })\n}\n\ncastSpell({\n    file: \"modules/fxmaster/specials/jinker/dragonBornBlack-CopperAcid30x5Line.webm\",\n    anchor: {\n        x: -.08,\n        y: 0.5\n    },\n    speed: 0,\n    angle: 0,\n    scale: {\n    x: 1.0,\n    y: 1.0\n}\n});",
+  "author": "y9iYbvragH4tTGlL",
+  "img": "icons/svg/sun.svg",
+  "actorIds": []
+}

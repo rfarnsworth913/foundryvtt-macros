@@ -1,0 +1,30 @@
+{
+  "_id": "F5c8Fgpwk4Jrbtk4",
+  "name": "Change Shape",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "pathfinder-society",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.13.2.5430"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n        for ( let token of canvas.tokens.controlled ) {\n            let messageContent = '';\n                if ((token.actor.data.data.customModifiers['deception'] || []).some(modifier => modifier.name === 'Change Shape')) {\n                    await token.actor.removeCustomModifier('deception', 'Change Shape');\n                    await token.update({\"img\" : \"https://i.imgur.com/nL9m6z5.png\"});          \nif (\n          token.data.effects.includes(\n            \"https://i.imgur.com/pS3goOU.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/pS3goOU.png\");\n        }\n          messageContent = (`<div><h3 style='border-bottom: 3px solid black'>Dispurses the magic effects allowing him to Change Shape...</h3></div>\n            <img src=\"https://i.imgur.com/yrkx0K0.jpg\" />\n            <div style=\"color:#131516;margin-top:4px;\">\n            Shokotsu returns to his Kitsune-Beastbrood form.\n            </div>`)\n\n                } else {\n                    await token.actor.addCustomModifier('deception', 'Change Shape', +1, 'status');\n                    await token.update({\"img\" : \"https://i.imgur.com/Ima7E9b.png\"});\n        if (\n          !token.data.effects.includes(\n            \"https://i.imgur.com/pS3goOU.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/pS3goOU.png\");\n        }\n                    messageContent = (`<div><h3 style='border-bottom: 3px solid black'>Activates his innate magic power to Change Shape!</h3></div>\n            <img src=\"https://i.imgur.com/M5rVCQ3.png\" />\n            <div style=\"color:#131516;margin-top:4px;\">\n            Shokotsu's form shifts to mirror an Elf of the Mwangi.\n            </div>`)\n\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n                }\n        }\n    } else {\n        ui.notifications.warn(\"You must have an actor selected.\");\n    }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/pS3goOU.png",
+  "actorIds": []
+}

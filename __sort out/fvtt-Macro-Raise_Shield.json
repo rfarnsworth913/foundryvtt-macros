@@ -1,0 +1,22 @@
+{
+  "_id": "88Cbngv6KWTlv6hA",
+  "name": "Raise Shield",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Compendium.pf2e.pf2e-macros.ldVkDj7NJxOiIGdi"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "// 'Raise Shield' macro that will raised a shield the character has equipped\nlet messageContent = ''\nif (!actor) {\n    ui.notifications.warn(\"You must have an actor selected.\");\n}\n\n(async () => {\n    for (let token of canvas.tokens.controlled) {\n        const shield = token.actor.data.items.filter(item => item.type === 'armor')\n            .filter(armor => armor.data.armorType.value === 'shield')\n            .find(shield => shield.data.equipped.value);\n        if (shield) {\n            if (token.data.effects.includes(\"systems/pf2e/icons/equipment/shields/steel-shield.jpg\")) {\n                actor.removeCustomModifier('ac', 'Raised Shield')\n                token.toggleEffect(\"systems/pf2e/icons/equipment/shields/steel-shield.jpg\")\n                messageContent = 'Lowers their shield'\n            } else {\n                actor.addCustomModifier('ac', 'Raised Shield', Number(shield.data.armor.value), 'circumstance');\n                token.toggleEffect(\"systems/pf2e/icons/equipment/shields/steel-shield.jpg\")\n                messageContent = 'Raises their shield'\n            };\n\n\n        } else ui.notifications.warn(\"You must have a shield equipped.\");\n    }\n})();\n// create the message\nif (messageContent !== '') {\n    let chatData = {\n        user: game.user._id,\n        speaker: ChatMessage.getSpeaker(),\n        content: messageContent,\n    };\n    ChatMessage.create(chatData, {});\n}",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/equipment/shields/steel-shield.jpg",
+  "actorIds": []
+}

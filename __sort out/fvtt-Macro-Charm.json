@@ -1,0 +1,22 @@
+{
+  "_id": "XuhFRqO2AHtBbXfj",
+  "name": "Charm",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "pf2e": {
+      "itemMacro": true
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "game.pf2e.rollItemMacro(\"GQLRWXkZIkLF6yVt\");",
+  "author": "VHMNDK9OHV1tlcqZ",
+  "img": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/spells/charm.jpg",
+  "actorIds": []
+}

@@ -1,0 +1,36 @@
+{
+  "_id": "F5s7JAY5NHFr5ys2",
+  "name": "High Jump",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "if (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nactor.data.data.skills.ath.roll(event);\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>High Jump</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You Stride, then make a vertical Leap and attempt a DC 30 Athletics check to increase the height of your jump. If you didn't Stride at least 10 feet, you automatically fail your check. This DC might be increased or decreased due to the situation, as determined by the GM.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>💥 Crit Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Increase the maximum vertical distance to 8 feet, or increase the maximum vertical distance to 5 feet and maximum horizontal distance to 10 feet.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>✔️ Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Increase the maximum vertical distance to 5 feet.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You Leap normally.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Crit Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You don't Leap at all, and instead you fall @Compendium[pf2e.conditionitems.j91X7x0XSomq8d60]{Prone} in your space.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/Zg4aDAP.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

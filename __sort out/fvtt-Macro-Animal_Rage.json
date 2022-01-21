@@ -1,0 +1,22 @@
+{
+  "_id": "2ntXxbT86tdTy2B6",
+  "name": "Animal Rage",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Macro.R7Q4DZDMJm3BPzZS"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Animal Rage\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Animal Rage\");\n        /// Remove the line below if you do not wish for your character to lose all temp hp when toggled \"off\".\n        await actor.update({ \"data.attributes.hp.temp\": 0 });\n        /// Remove the line above if you do not wish for your character to lose all temp hp when toggled \"off\".\n        if (\n          token.data.effects.includes(\n            \"systems/pf2e/icons/features/classes/rage.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/features/classes/rage.jpg\");\n        }\n      } else {\n        const tmpHP =\n          token.actor.data.data.details.level.value +\n          token.actor.data.data.abilities.con.mod;\n        if (token.actor.data.data.attributes.hp.temp < tmpHP) {\n          await actor.update({ \"data.attributes.hp.temp\": tmpHP });\n        }\n        await actor.addCustomModifier(\"ac\", \"Animal Rage\", -1, \"untyped\");\n        if (\n          !token.data.effects.includes(\n            \"systems/pf2e/icons/features/classes/rage.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/features/classes/rage.jpg\");\n        }\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/features/classes/rage.jpg",
+  "actorIds": []
+}

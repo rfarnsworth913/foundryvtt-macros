@@ -1,0 +1,36 @@
+{
+  "_id": "ZVpqDXLBj3ilz3Zk",
+  "name": "Demoralize",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "const handleCrits = (roll) => roll === 1 ? -10 : (roll === 20 ? 10 : 0);\nconst options = ['all', 'skill-check', \"intimidation\", 'demoralize']\n\nif (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nif (game.user.targets.size == 0) {\n  ui.notifications.warn(\"You must have a target.\");\n}\n\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\ngame.user.targets.forEach(t => {\n\n    token.actor.data.data.skills.itm.roll(event, options, (result) => {\n        let roll = result._total;\n        let crit = handleCrits(result.parts[0].rolls[0].result);\n        let willDC = 10 + t.actor.data.data.saves.will.totalModifier\n\n        if (roll + crit >= willDC + 10) {\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Demoralize</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            💥 <b>Crit Success! \n             <br> <b>${t.name}:</b>  becomes Frightened 2!                  \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n            addAlert(t, 2)\n        } else if (roll + crit >= willDC) {\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Demoralize</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ✔️ <b>Success! \n             <br> <b>${t.name}:</b>  becomes Frightened 1!                  \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n            addAlert(t, 1)\n        } else if (roll + crit < willDC - 10) {\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Demoralize</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ❌ <b>Crit Fail! \n             <br> <b>${t.name}:</b> unaffected                \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n\n        } else if (roll + crit < willDC) {\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Demoralize</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ❌ <b>Fail! \n             <br> <b>${t.name}:</b>  unaffected                \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n        }\n})\n\n})",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/CVbBqUZ.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

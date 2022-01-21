@@ -1,0 +1,36 @@
+{
+  "_id": "EjmiObJoNzrG1wqQ",
+  "name": "Pick a Lock",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "if (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nactor.data.data.skills.thi.roll(event);\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Pick a Lock</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Opening a lock without a key is very similar to Disabling a Device, but the DC of the check is determined by the complexity and construction of the lock you are attempting to pick (locks and their DCs are found in their description).\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>💥 Crit Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You unlock the lock, or you achieve two successes toward opening a complex lock. You leave no trace of your tampering.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>✔️ Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You open the lock, or you achieve one success toward opening a complex lock.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Crit Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You break your tools. Fixing them requires using Crafting to @Compendium[pf2e.actionspf2e.bT3skovyLUtP22ME]{Repair} them or else swapping in @Compendium[pf2e.equipment-srd.Sw7MBLASN3xK4Y44]{Replacement Picks}.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/765k2sG.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

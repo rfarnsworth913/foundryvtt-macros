@@ -1,0 +1,36 @@
+{
+  "name": "Dream Vision Generator",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "//rolltable by u/DougTheDragonborn from https://www.reddit.com/r/BehindTheTables/comments/fgdrq0/omens_from_dreams_an_all_dice_table/\n\nlet setting = [\n\t`You find yourself on a ship at night with rain pelting your face. `,\n\t`You find yourself in a seemingly peaceful grove full of flowers. `,\n\t`You find yourself at the top of a wizard's tower, looking over the ledge. `,\n\t`You find yourself sitting at a the bar of a familiar inn. `,\n\t`You find yourself face down in the sand with no structure in sight. `,\n\t`You find yourself falling from the sky and crashing into a body of water. `,\n\t`You find yourself on a battlefield lined with dead soldiers and common folk alike. `,\n\t`You find yourself in a cemetery covering all sides of a city-sized sphere floating in the darkness. `,\n\t`You find yourself as small as an insect, lost in the grass of a field. `,\n\t`You find yourself looking down upon your own body, laying where you slept this night. `,\n\t`You find yourself feasting with loved ones in a grand mansion. `,\n\t`You find yourself bound to a strangers back as they walk through a swamp. `,\n\t`You find yourself rising from slumber in the same spot you fell asleep, but you see your body still sleeping; you are a spirit. `,\n\t`You find yourself losing an arm wrestling contest to a king, and the court laughs and points. `,\n\t`You find yourself swimming in an endless ocean. `,\n\t`You find yourself telling a joke to a monarch, and nobody laughs. `,\n\t`You find yourself furiously running from something chasing you. `,\n\t`You find yourself aboard a ship far out to sea. `,\n\t`You find yourself at the gates of eternity; a choir of divine beings float around you as far as you can see. `,\n\t`You find yourself in the dilapidated temple of a religion you despise. However, a feeling of failure weighs heavy on your mind. `];\n\nlet being = [\n`A three-headed being looks down upon you from the sky, one face scowling, one crying, and one smiling. `,\n`Your deity manifests in front of you after crashing down from the heavens; they are worn from battle. `,\n`A serpent slithers toward you, it's body growing longer as it moves as to never leaves an area it once occupied. `,\n`A sickly frog uses its broken limbs to move toward you. `,\n`A figure made solely of familiar faces stares at you. `,\n`The person you care for most walks up behind you and places their hands gently around your neck. `,\n`Bones rise and form the skeleton of an unrecognizable creature. `,\n`Your skin tears from your muscle, forming a swirl of a face in front of you. `,\n`A swarm of maggots overtake your surroundings becoming a being standing 20 feet tall. `,\n`A mass of red clouds shroud the sky. A tear allows you to see something approaching from far beyond the stars. `,\n`Four versions of you appear, each one from an important moment in your life. `,\n`An oval eye nearly as tall as you stares at you, following you wherever you go. `];\n\nlet action = [\n`The being looks left quickly, and scrambles around before disappearing, but you can faintly make out`,\n`It creates a plume of fire; you feel the heat against your face. A vision of what to come:`,\n`A pool forms at your feet, swirling with otherworldly power, which glistens with the image of`,\n`It calls out your name but its voice fades from existence. Then you see`,\n`It tears open, revealing a single word in a language you do not understand along with the image of`,\n`You destroy it, but it wails and dies revealing`,\n`A wave of teeth and bones wash everything away, and in its wake, you see`,\n`It kneels before you, arms stretched out as if waiting to receive something. `,\n`Its mouth opens, a haunting chorus of laughter erupting forth; its cackles turn to streams of light which manifest as`,\n`It splits the ground open before you, exposing the depths of the world. `];\n\nlet omen = [\n`your hometown, burning, absolutely orange with smoke and flame. `,\n`those you love turning the back on you, shame is clear in their eyes. `,\n`a devilish form laughing before being consumed in brimstone. `,\n`your eyes pull themselves from your body, moving toward a collection of colors you cannot look away from. `,\n`all material items you treasure are taken, destroyed, or dissolve. `,\n`a foreign vessel with a crew that have no solid form sinking at an incredible rate. `,\n`cracks forming along the sea bed, draining the waters, and then a horde of monstrous limbs climbing out. `,\n`a terrible screech and then complete and utter silence. `];\n\nlet feeling = [\n`You feel a great sense of dread about how real it all felt, but shake it off quickly. `,\n`You feel a bit perplexed on why this being came to you of all people. `,\n`You feel like this is something you need to tell your party members, but can barely find the words to describe the experience. `,\n`You feel like this matter will weigh on you for the days to come. `,\n`You feel the matter would be a complete waste of time to investigate. `,\n`You feel unsettled at the events that unfolded before you. `];\n\nlet waking = [\n`You awaken in a cold sweat. `,\n`When you awake, you find yourself sleepwalking about 20 feet from where you fell asleep. `,\n`When you awaken, you still see the last image of your dream when you shut your eyes until you flush them with water. `,\n`You jump up, a scream rising in your throat for a moment, but you are able to silence yourself before anyone notices. `];\n\nfunction random(arr) {\n\treturn Math.floor(Math.random() * (arr.length))\n}\n\nlet message = setting[random(setting)]+being[random(being)]+action[random(action)]+omen[random(omen)]+feeling[random(feeling)]+waking[random(waking)];\n\nconsole.log(message)\n\n ChatMessage.create({\n\tuser : game.user._id,\n\tcontent: message,\n\twhisper : ChatMessage.getWhisperRecipients(\"test\")\n});",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/7hoMbb7.png",
+  "actorIds": [],
+  "_id": "rsN1sdzSBcHjpyQE",
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

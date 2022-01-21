@@ -1,0 +1,36 @@
+{
+  "_id": "bergZlV3aAlwRK3K",
+  "name": "Introduction Macro",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Shokotsu's Introduction</h3></div>\n            <img src=\"https://i.imgur.com/XsCUOzf.png\" />\n            <div style=\"color:#131516;margin-top:4px;\">\n            • Carefee, Mischievious, and Stubborn. <br>\n            • From the Monastery of Untwisting Iron. <br>\n            　• Jalmeray's 1st House of Perfection. <br>\n            • Brown hair and beard with red lowlights. <br>\n            • Crimson Cat-Slit-Like Eyes. <br>\n            • While most of his appearance is Elven, atop his head are two very fluffy cat-like ears and at the end of his fingers are long sharpened nails which add up to visibly betraying his Rakshasian Devil Bloodline. <br>\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>Traits:</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Chaotic, Elf, Humanoid, Neutral, Tiefling.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>Special:</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Elf Beastbrood-Tiefling Heritage Boon.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/XsCUOzf.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

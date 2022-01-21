@@ -1,0 +1,30 @@
+{
+  "_id": "1YyFNyQKvB5OQPb2",
+  "name": "Inspire Courage",
+  "type": "script",
+  "sort": 850000,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/conditions-2/status_hero.png",
+        "tooltip": "Inspire Courage",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n        for ( let token of canvas.tokens.controlled ) {\n            let messageContent = '';\n                if ((token.actor.data.data.customModifiers['attack'] || []).some(modifier => modifier.name === 'Inspire Courage')) {\n                    await token.actor.removeCustomModifier('attack', 'Inspire Courage');\n                    await token.actor.removeCustomModifier('damage', 'Inspire Courage');\n\n                    if (token.data.effects.includes(\"systems/pf2e/icons/conditions-2/status_hero.png\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/conditions-2/status_hero.png\")\n                    }\n\n                    messageContent = 'Is no longer Inspired.'\n                } else {\n                    await token.actor.addCustomModifier('attack', 'Inspire Courage', 1, 'status');\n                    await token.actor.addCustomModifier('damage', 'Inspire Courage', 1, 'status');\n\n                    if (!token.data.effects.includes(\"systems/pf2e/icons/conditions-2/status_hero.png\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/conditions-2/status_hero.png\")\n                    }\n\n                    messageContent = 'Is Inspired!'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n                }\n        }\n    } else {\n        ui.notifications.warn(\"You must have an actor selected.\");\n    }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/conditions-2/status_hero.png",
+  "actorIds": []
+}

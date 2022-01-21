@@ -1,0 +1,30 @@
+{
+  "_id": "6DOsi8WlTbAwu1Dj",
+  "name": "Premonition Of Avoidance",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n        for ( let token of canvas.tokens.controlled ) {\n            let messageContent = '';\n                if ((token.actor.data.data.customModifiers['attack'] || []).some(modifier => modifier.name === 'Premonition Of Avoidance')) {\n                    await token.actor.removeCustomModifier('attack', 'Premonition Of Avoidance');\n\n                    await actor.removeCustomModifier(\"fortitude\", \"Premonition Of Avoidance\");\n                    await actor.removeCustomModifier(\"reflex\", \"Premonition Of Avoidance\");\n                    await actor.removeCustomModifier(\"will\", \"Premonition Of Avoidance\");\n\n                    if (token.data.effects.includes(\"https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/hourglass.jpg\")) {\n                        await token.toggleEffect(\"https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/hourglass.jpg\")\n                    }\n\n                    messageContent = 'The blessing from Pharasma begins to fade...'\n                    \n                } else {\n                    await token.actor.addCustomModifier('attack', 'Premonition Of Avoidance', 0, 'status');\n\n                    await actor.addCustomModifier(\"fortitude\", \"Premonition Of Avoidance\", +2, \"status\");\n                    await actor.addCustomModifier(\"reflex\", \"Premonition Of Avoidance\", +2, \"status\");\n                    await actor.addCustomModifier(\"will\", \"Premonition Of Avoidance\", +2, \"status\");\n\n                    if (!token.data.effects.includes(\"https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/hourglass.jpg\")) {\n                        await token.toggleEffect(\"https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/hourglass.jpg\")\n                    }\n\n                    messageContent = 'Pharasma attempts to grant Bhelroth foresight!'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n                }\n        }\n    } else {\n        ui.notifications.warn(\"You must have an actor selected.\");\n    }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/hourglass.jpg",
+  "actorIds": []
+}

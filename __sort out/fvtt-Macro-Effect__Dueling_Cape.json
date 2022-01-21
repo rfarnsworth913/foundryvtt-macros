@@ -1,0 +1,19 @@
+{
+  "_id": "Ov5H8bvvo4cJiScA",
+  "name": "Effect: Dueling Cape",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "exportSource": {
+      "world": "pathfinder-society",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.13.2.5430"
+    }
+  },
+  "scope": "global",
+  "command": "\nconst ITEM_UUID = 'Compendium.pf2e.equipment-effects.7dLsA9PAb5ij7Bc6'; // Effect: Dueling Cape\n(async () => {\n  const effect = duplicate(await fromUuid(ITEM_UUID));\n  effect.flags.core = effect.flags.core ?? {};\n  effect.flags.core.sourceId = ITEM_UUID;\n  for await (const token of canvas.tokens.controlled) {\n    let existing = token.actor.items.find(i => i.type === 'effect' && i.data.flags.core?.sourceId === ITEM_UUID);\n    if (existing) {\n      token.actor.deleteOwnedItem(existing._id);\n    } else {\n      token.actor.createOwnedItem(effect);\n    }\n  }\n})();\n",
+  "author": "W8q1Lt1rpRQHzfmu",
+  "img": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/equipment/adventuring-gear/dueling-cape.webp",
+  "actorIds": []
+}

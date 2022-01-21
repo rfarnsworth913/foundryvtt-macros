@@ -1,0 +1,55 @@
+// Get token from scene by name
+let token = canvas.scene.data.tokens.find(token => token.name = 'My Actor')
+
+// Get first controlled token
+let token = canvas.tokens.controlled[0];
+
+// Get all controlled tokens and do something with each
+let tokens = canvas.tokens.controlled;
+tokens.forEach(token => {
+  console.log(token.name);
+});
+
+// Distance between 2 tokens
+let d = canvas.grid.measureDistance(token1, token2);
+
+// Select one random token from amongst all selected
+let tks = canvas.tokens.controlled;
+let r = Math.floor(Math.random()*tks.length);
+canvas.tokens.selectObjects(tks[r]);
+
+/*
+ * Add token to scene
+ * Options override (actor.data.token) or set properties
+ */
+let tk = game.actors.getName('MyActor').data.token;
+tk.x = 100;
+tk.y = 100;
+Token.create(tk);
+
+/*
+ * Add multiple tokens to scene
+ */
+let tk = game.actors.getName('ActorOne').data.token;
+let tk2 = game.actors.getName('ActorTwo').data.token;
+tk.x = 100;
+tk.y = 100;
+tk2.x = 200;
+tk2.y = 200;
+Token.create([tk, tk2]);
+
+// Select all tokens in scene
+let tokens = canvas.tokens.placeables;
+canvas.tokens.selectObjects(tokens)
+
+// Select token by name
+let token = canvas.tokens.placeables.find(t => t.name === 'Azimuth');
+token.control();
+
+// Select all NPC tokens
+canvas.tokens.selectObjects(); // Drop existing selection
+let tokens = canvas.tokens.placeables.filter(t => !t.actor.isPC); // Find NPCs
+tokens.forEach(t => { t.control({ releaseOthers: false }); }); // Select them
+
+// Select token while retaining control of existing selection
+token.control({ releaseOthers: false });

@@ -1,0 +1,30 @@
+{
+  "_id": "KMhB6JcKlFrOC9hL",
+  "name": "Produce Flame",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "pf2e": {
+      "itemMacro": true
+    },
+    "macro-marker": {
+      "activeData": {
+        "icon": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/spells/produce-flame.jpg",
+        "tooltip": "Produce Flame",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "game.pf2e.rollItemMacro(\"Or8XE7ZPSLKFC873\");",
+  "author": "VHMNDK9OHV1tlcqZ",
+  "img": "https://assets.forge-vtt.com/bazaar/systems/pf2e/assets/icons/spells/produce-flame.jpg",
+  "actorIds": []
+}

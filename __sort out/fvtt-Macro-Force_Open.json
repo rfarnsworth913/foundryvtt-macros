@@ -1,0 +1,36 @@
+{
+  "_id": "pL4Tgt9CfREqUv4l",
+  "name": "Force Open",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "if (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nactor.data.data.skills.ath.roll(event);\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Force Open</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You attempt to forcefully open a door, window, container or heavy gate. With a high enough result, you can even smash through walls. Without a crowbar, prying something open takes a -2 item penalty to Athletics.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>💥 Crit Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You open the door, window, container, or gate and can avoid damaging it in the process.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>✔️ Success!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            You break the door, window, container, or gate open, and it gains the broken condition. If it's especially sturdy, the GM might have it take damage but not be broken.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>❌ Crit Fail!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Your attempt jams the door, window, container, or gate shut, imposing a -2 circumstance penalty on future attempts to Force it Open.\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>\n            <div><h3 style='border-bottom: 3px solid black'>Skill Rank Requirements!</h3></div>\n            <div style=\"color:#131516;margin-top:4px;\">\n            Untrained: fabric, flimsy glass<br>\n            Trained: ice, sturdy glass<br>\n            Expert: flimsy wooden door, wooden portcullis<br>\n            Master: sturdy wooden door, iron portcullis, metal bar<br>\n            Legendary: stone or iron door\n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>`)",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/Uw7K2Dg.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}

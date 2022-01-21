@@ -1,0 +1,22 @@
+{
+  "name": "Shield Spell",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Macro.cSS2vMkaDz1GTzpz"
+    },
+    "exportSource": {
+      "world": "saturday-night-path",
+      "system": "pf2e",
+      "coreVersion": "0.7.8",
+      "systemVersion": "1.10.20.2419"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Shield\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Shield\");\n        if (\n          token.data.effects.includes(\n            \"systems/pf2e/icons/spells/shield.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/shield.jpg\");\n        }\n      } else {\n                await actor.addCustomModifier(\"ac\", \"Shield\", 1, \"circumstance\");\n        if (\n          !token.data.effects.includes(\n            \"systems/pf2e/icons/spells/shield.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/shield.jpg\");\n        }\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/spells/shield.jpg",
+  "actorIds": [],
+  "_id": "sgUgviYEbneEp2a7"
+}

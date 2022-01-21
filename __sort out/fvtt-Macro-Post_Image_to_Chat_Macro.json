@@ -1,0 +1,22 @@
+{
+  "name": "Post Image to Chat Macro",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "combat-utility-belt": {
+      "macroTrigger": ""
+    },
+    "exportSource": {
+      "world": "extinction",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.0.5014"
+    }
+  },
+  "scope": "global",
+  "command": "/**\n * Share an image to all players when you have an image URL\n * Author: @Krishmero#1792\n */\n\nlet imagePopup = (imageUrl) => {\n\t// Display the image popout and share it.\n\tconst ip = new ImagePopout(imageUrl);\n\tip.render(true);\n\tip.shareImage();\n};\n\nlet chatDialog = (imageUrl) => {\n\tChatMessage.create({\n\t\tuser: game.user._id,\n\t\tcontent: `<img src=\"${imageUrl}\" />`,\n\t\ttype: CONST.CHAT_MESSAGE_TYPES.OOC\n\t});\n};\n\nlet selectOptions = game.user.isGM ? `\n<div style=\"display: inline-block; width: 100%; margin-bottom: 10px\">\n\t<label for=\"output-options\" style=\"margin-right: 10px\">Output Options:</label>\n\t<select id=\"output-options\" />\n\t\t<option value=\"popup\">Popup</option>\n\t\t<option value=\"chat\">Chat</option>\n\t\t<option value=\"both\">Both</option>\n\t</select>\n</div>\n<br />\n` : '';\n\nnew Dialog({\n\ttitle: `Share Image via URL`,\n\tcontent: `\n\t\t<form>\n\t\t\t${selectOptions}\n\t\t\t<div style=\"display: flex; width: 100%; margin-bottom: 10px\">\n\t\t\t\t<label for=\"image-url\" style=\"white-space: nowrap; margin-right: 10px; padding-top:4px\">Image URL:</label>\n\t\t\t\t<input type=\"text\" id=\"image-url\" name=\"image-url\" />\n\t\t\t</div>\n\t\t</form>\n\t`,\n\tbuttons: {\n\t\tyes: {\n\t\t\ticon: \"<i class='fas fa-check'></i>\",\n\t\t\tlabel: `Share`,\n\t\t\tcallback: (html) => {\n\t\t\t\tlet imageUrl = html.find('#image-url').val();\n\t\t\t\tlet permission = html.find('select#output-options')[0]?.value || null;\n\t\t\t\tif (!imageUrl) {\n\t\t\t\t\treturn ui.notifications.info(\"You did not provide a valid image.\");\n\t\t\t\t}\n\t\t\t\tif (game.user.isGM && ['popup', 'both'].includes(permission)) {\n\t\t\t\t\timagePopup(imageUrl);\n\t\t\t\t}\n\t\t\t\tif (!game.user.isGM || ['chat', 'both'].includes(permission)) {\n\t\t\t\t\tchatDialog(imageUrl);\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\tno: {\n\t\t\ticon: \"<i class='fas fa-times'></i>\",\n\t\t\tlabel: `Cancel`\n\t\t},\n\t},\n\tdefault: \"yes\"\n}).render(true)",
+  "author": "akkY3YKJeSg5Jrpq",
+  "img": "icons/svg/down.svg",
+  "actorIds": [],
+  "_id": "SmCNZm2M9fuRmqmO"
+}

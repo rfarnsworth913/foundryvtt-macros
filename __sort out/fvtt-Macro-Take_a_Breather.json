@@ -1,0 +1,19 @@
+{
+  "_id": "t6wEsllPtgv0KVoB",
+  "name": "Take a Breather",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "let toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n    ChatMessage.create(chatData, {})\n}\n\nlet applyChanges = false;\nnew Dialog({\n  title: `Take a Breather`,\n  content: `\n    <div>Rest for 10 minutes, spend a resolve point, and regain stamina?</div>\n    `,\n  buttons: {\n    yes: {\n      icon: \"<i class='fas fa-check'></i>\",\n      label: `Take a Breather`,\n      callback: () => applyChanges = true\n    },\n    no: {\n      icon: \"<i class='fas fa-times'></i>\",\n      label: `Cancel`\n    },\n  },\n  default: \"yes\",\n  close: html => {\n    if (applyChanges) {\n        for ( let token of canvas.tokens.controlled ) {\n            const {name} = token;\n            console.log(token);\n            const {resolve, sp} = token.actor.data.data.attributes;\n            console.log(resolve, sp);\n            if (resolve.value > 0) {\n                let oldSP = sp.value;\n                toChat(`${name} has ${sp.value}/${sp.max} SP and spends a resolve point, taking a 10 minute breather. Stamina Refreshed.`);\n                token.actor.update({\n                    'data.attributes.sp.value': sp.max,\n                    'data.attributes.resolve.value': resolve.value-1\n                });\n            } else {\n                toChat(`${name} is tired and needs to go to bed! No resolve points remaining.`);\n            }\n        }\n      }\n    }\n}).render(true);",
+  "author": "y9iYbvragH4tTGlL",
+  "img": "icons/svg/unconscious.svg",
+  "actorIds": []
+}

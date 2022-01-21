@@ -1,0 +1,30 @@
+{
+  "_id": "SUAwNkfFKTDeLyP6",
+  "name": "Sickness of Gozreh",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "core": {
+      "sourceId": "Compendium.pf2e.pf2e-macros.W958IcYDQVoIVqLz"
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    },
+    "macro-marker": {
+      "activeData": {
+        "icon": "systems/pf2e/icons/spells/inspire-courage.jpg",
+        "tooltip": "Inspire Courage",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n        for ( let token of canvas.tokens.controlled ) {\n            let messageContent = '';\n                if ((token.actor.data.data.customModifiers['attack'] || []).some(modifier => modifier.name === 'Gozreh Sickness')) {\n                    await token.actor.removeCustomModifier('attack', 'Gozreh Sickness');\n                    await token.actor.removeCustomModifier('damage', 'Gozreh Sickness');\n                    await actor.removeCustomModifier(\"ac\", \"Gozreh Sickness\");\n                    await actor.removeCustomModifier(\"fortitude\", \"Gozreh Sickness\");\n\n                    if (token.data.effects.includes(\"systems/pf2e/icons/spells/daze.jpg\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/spells/daze.jpg\")\n                    }\n\n                    messageContent = 'Is no longer Sickened by Gozreh!'\n                } else {\n                    await token.actor.addCustomModifier('attack', 'Gozreh Sickness', -1, 'status');\n                    await token.actor.addCustomModifier('damage', 'Gozreh Sickness', -1, 'status');\n                    await actor.addCustomModifier(\"ac\", \"Gozreh Sickness\", -1, \"status\");\n                    await actor.addCustomModifier(\"fortitude\", \"Gozreh Sickness\", -1, \"status\");\n\n                    if (!token.data.effects.includes(\"systems/pf2e/icons/spells/daze.jpg\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/spells/daze.jpg\")\n                    }\n\n                    messageContent = 'Is Sickened by Gozreh!'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n                }\n        }\n    } else {\n        ui.notifications.warn(\"You must have an actor selected.\");\n    }\n})();",
+  "author": "FTYrZ1lnySOkABg3",
+  "img": "systems/pf2e/icons/spells/daze.jpg",
+  "actorIds": []
+}

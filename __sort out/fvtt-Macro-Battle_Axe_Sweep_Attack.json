@@ -1,0 +1,30 @@
+{
+  "_id": "yWuGQWqu1mn7CXma",
+  "name": "Battle Axe Sweep Attack",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n        for ( let token of canvas.tokens.controlled ) {\n            let messageContent = '';\n                if ((token.actor.data.data.customModifiers['attack'] || []).some(modifier => modifier.name === 'Sweep Attack')) {\n                    await token.actor.removeCustomModifier('attack', 'Sweep Attack');\n\n                    if (token.data.effects.includes(\"systems/pf2e/icons/equipment/weapons/battle-axe.jpg\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/equipment/weapons/battle-axe.jpg\")\n                    }\n                } else {\n                    await token.actor.addCustomModifier('attack', 'Sweep Attack', 1, 'status');\n\n                    if (!token.data.effects.includes(\"systems/pf2e/icons/equipment/weapons/battle-axe.jpg\")) {\n                        await token.toggleEffect(\"systems/pf2e/icons/equipment/weapons/battle-axe.jpg\")\n                    }\n\n                    messageContent = 'Readies to Strike a new foe!'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n                }\n        }\n    } else {\n        ui.notifications.warn(\"You must have an actor selected.\");\n    }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "systems/pf2e/icons/equipment/weapons/battle-axe.jpg",
+  "actorIds": []
+}

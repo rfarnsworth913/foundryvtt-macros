@@ -1,0 +1,19 @@
+{
+  "_id": "Zy4tMaP088eWEwzA",
+  "name": "Rain of Embers Stance",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Embers Stance\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Embers Stance\");\n        if (\n          token.data.effects.includes(\n            \"systems/pf2e/icons/spells/fire-shield.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/fire-shield.jpg\");\n        }\n      } else {\n                await actor.addCustomModifier(\"ac\", \"Embers Stance\", 1, \"status\");\n        if (\n          !token.data.effects.includes(\n            \"systems/pf2e/icons/spells/fire-shield.jpg\"\n          )\n        ) {\n          token.toggleEffect(\"systems/pf2e/icons/spells/fire-shield.jpg\");\n        }\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "y9iYbvragH4tTGlL",
+  "img": "systems/pf2e/icons/spells/fire-shield.jpg",
+  "actorIds": []
+}

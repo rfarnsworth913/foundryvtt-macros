@@ -1,0 +1,30 @@
+{
+  "_id": "q7NkRJ8tvvJhWzn6",
+  "name": "Blood Magic",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "Blood Magic",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.11.3.3582"
+    }
+  },
+  "scope": "global",
+  "command": "(async () => {\n    if (actor) {\n    for (let token of canvas.tokens.controlled) {\n         let messageContent = '';\n      if (\n        (token.actor.data.data.customModifiers[\"ac\"] || []).some(\n          (modifier) => modifier.name === \"Blood Magic\"\n        )\n      ) {\n        await actor.removeCustomModifier(\"ac\", \"Blood Magic\");      \n        if (\n          token.data.effects.includes(\n            \"https://i.imgur.com/Jtub936.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/Jtub936.png\");\n        }\n                    messageContent = 'The scales begin to fade away...'\n      } else {        \n        await actor.addCustomModifier(\"ac\", \"Blood Magic\", +1, \"untyped\");\n        if (\n          !token.data.effects.includes(\n            \"https://i.imgur.com/Jtub936.png\"\n          )\n        ) {\n          token.toggleEffect(\"https://i.imgur.com/Jtub936.png\");\n        }\nmessageContent = 'Draconic scales strengthen your defenses.'\n                };\n                // create the message \n\n                if (messageContent !== '') {\n                    let chatData = {\n                        user: game.user._id,\n                        speaker: ChatMessage.getSpeaker(),\n                        content: messageContent,\n                    };\n\n                    await ChatMessage.create(chatData, {});\n      }\n    }\n  } else {\n    ui.notifications.warn(\"You must have an actor selected.\");\n  }\n})();",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/Jtub936.png",
+  "actorIds": []
+}

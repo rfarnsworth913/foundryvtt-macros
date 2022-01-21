@@ -1,0 +1,36 @@
+{
+  "_id": "S4fvA9Cw6yFmPnbl",
+  "name": "Disarm",
+  "type": "script",
+  "sort": 100001,
+  "flags": {
+    "macro-marker": {
+      "activeData": {
+        "icon": "icons/svg/dice-target.svg",
+        "tooltip": "New Macro",
+        "colour": "#ff0000",
+        "trigger": ""
+      }
+    },
+    "furnace": {
+      "runAsGM": false
+    },
+    "exportSource": {
+      "world": "intotheabyss",
+      "system": "pf2e",
+      "coreVersion": "0.7.9",
+      "systemVersion": "1.12.1.5052"
+    }
+  },
+  "scope": "global",
+  "command": "const handleCrits = (roll) => roll === 1 ? -10 : (roll === 20 ? 10 : 0);\nconst options = ['all', 'skill-check', 'athletics','disarm']\n\nif (canvas.tokens.controlled == 0) {\n  ui.notifications.warn(\"You must select a token.\");\n}\n\nif (game.user.targets.size == 0) {\n  ui.notifications.warn(\"You must have a target.\");\n}\n\n\n////////////// To chat message data /////////////////\n\nlet toChat = (content) => {\n    let chatData = {\n        user: game.user.id,\n        content,\n        speaker: ChatMessage.getSpeaker(),\n    }\n\n    ChatMessage.create(chatData, {})\n}\n\n//////////// To chat message data //////////////////\n\ngame.user.targets.forEach(t => {\n \n\n    token.actor.data.data.skills.ath.roll(event, options, (result) => {\n        let roll = result._total;\n        let crit = handleCrits(result.parts[0].rolls[0].result);\n        let willDC = 10 + t.actor.data.data.saves.reflex.totalModifier\n        \n\n        if (roll + crit >= willDC + 10) {\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Disarm</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            💥 <b>Crit Success! \n             <br> <b>${t.name}:</b>  You knock the item out of the opponent’s grasp. It falls to the ground in the opponent’s space.                \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n\n        } else if (roll + crit >= willDC) {\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Disarm</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ✔️ <b>Success! \n             <br> <b>${t.name}:</b>  You weaken your opponent’s grasp on the item. Until the start of that creature’s turn, attempts to Disarm the opponent of that item gain a +2 circumstance bonus, and the target takes a –2 circumstance penalty to attacks with the item or other checks requiring a firm grasp on the item.\n                 \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n\n        } else if (roll + crit < willDC - 10) {\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Disarm</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ❌ <b>Crit Fail! \n             <br> <b>${t.name}:</b> You lose your balance and become flat-footed until the start of your next turn.                 \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n\n        } else if (roll + crit < willDC) {\n\n            toChat(`<div><h3 style='border-bottom: 3px solid black'>Disarm</h3></div><div style=\"color:#131516;margin-top:4px;\">\n            ❌ <b>Fail! \n             <br> <b>${t.name}:</b>  unaffected                \n            <div style=\"border-bottom: 2px solid black;color:#131516;padding-bottom:4px;\">\n            <b style=\"color:#990000\">\n            </div>  `)\n        }\n\n    })\n\n})",
+  "author": "E8D8BpwBYbRmlRfq",
+  "img": "https://i.imgur.com/0FQSJQa.png",
+  "actorIds": [],
+  "macro-marker": {
+    "icon": "icons/svg/dice-target.svg",
+    "tooltip": "New Macro",
+    "colour": "#ff0000",
+    "trigger": ""
+  }
+}
