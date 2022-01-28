@@ -2,7 +2,7 @@
     Macro:              Summon
     Description:        Generic Summoning Macro
     Source:             Custom
-    Usage:              DAE ItemMacro {{ Token Name }} @item
+    Usage:              DAE ItemMacro {{ Token Name }} @item @unique
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -28,88 +28,23 @@
         const updates = {};
 
         const target = await warpgate.spawn(props.summonToken, updates);
-
-
-        // Summon Tracking ----------------------------------------------------
-        const effectData = {
-            changes: [{
-                key:      `flags.midi-qol.${props.summonLabel}`,
-                mode:     5,
-                value:    target[0],
-                priority: 20
-            }],
-            origin: props.lastArg?.origin,
-            disabled: false,
-            duration: {
-                round:      0,
-                seconds:    props.duration,
-                startRound: game.combata ? game.combat.round : 0,
-                startTime:  game.time.worldTime
-            },
-            icon:  props.item?.img,
-            label: props.item?.name + " Token"
-        };
-
-        await props.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        await props.actor.setFlag("midi-qol", props.summonLabel, target[0]);
     }
 
 
     // Unsummon Token ---------------------------------------------------------
     if (props.state === "off") {
 
-        if (!await hasEffect({ actor: props.actor, effectLabel: props.item.name + " Token"})) {
-            return;
-        }
+        const target = await props.actor.getFlag("midi-qol", props.summonLabel);
 
-        const target = `${getProperty(props.actor.data.flags, `midi-qol.${props.summonLabel}`)}`;
-        await warpgate.dismiss(target, game.scenes.current.data.document.id);
-        await removeEffect({ actor: props.actor, effectLabel: props.item.name + " Token"});
+        if (target) {
+            await warpgate.dismiss(target, game.scenes.current.data.document.id);
+            await props.actor.unsetFlag("midi-qol", props.summonLabel);
+        }
     }
 
 })();
 
-
-/**
- * Checks if a specified actor has the expected effect applied to their character
- *
- * @param    {object}  [options]
- * @param    {Actor5e}  actor         Target Actor
- * @param    {string}   effectLabel   Effect to be found on target actor
- * @returns  {Promise<Boolean>}       Status of the effect on target
- */
-async function hasEffect({ actor, effectLabel = `` } = {}) {
-    if (!actor) {
-        return console.error("No actor specified!");
-    }
-
-    return Boolean(actor.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase()
-    }));
-}
-
-/**
- * Removes an effect from a selected actor
- *
- * @param    {object}   [options]
- * @param    {Actor5e}  actor        Target actor
- * @param    {string}   effectLabel  Effect to be found on target actor
- * @returns  {Promise<Function>}     Deletion status of effect
- */
-async function removeEffect ({ actor, effectLabel = ""}) {
-    if (!actor) {
-        return console.error("No actor specified!");
-    }
-
-    let effect = actor.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
-    });
-
-    if (!effect) {
-        return;
-    }
-
-    return await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
-}
 
 
 // Property Helpers -----------------------------------------------------------
@@ -122,7 +57,7 @@ async function removeEffect ({ actor, effectLabel = ""}) {
 */
 function getProps () {
     const lastArg   = args[args.length - 1];
-    const tokenData = canvas.tokensg.get(lastArg.tokenId);
+    const tokenData = canvas.tokens.get(lastArg.tokenId);
 
     return {
         name: "Summon",
@@ -133,7 +68,7 @@ function getProps () {
 
         actor:       tokenData?.actor || {},
         duration:    3600,
-        summonLabel: "Summoned_Token",
+        summonLabel: `${args[2]?.name.replace(" ", "_")}_Summoned_Token`,
         summonToken: args[1] || ""
     };
 }
