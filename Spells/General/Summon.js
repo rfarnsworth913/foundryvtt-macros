@@ -2,7 +2,7 @@
     Macro:              Summon
     Description:        Generic Summoning Macro
     Source:             Custom
-    Usage:              DAE ItemMacro {{ Token Name }} @item @unique
+    Usage:              DAE ItemMacro {{ Token Name }} @item
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------

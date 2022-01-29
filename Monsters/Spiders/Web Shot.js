@@ -2,7 +2,7 @@
     Macro:              Web Shot
     Description:        Handles applying Web Shot to a specified target
     Source:             Custom
-    Usage:              DAE ItemMacro
+    Usage:              DAE ItemMacro {{ Token Name }} @item
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -33,8 +33,8 @@
         // Summon at coordinates ----------------------------------------------
         const location  = props.target.center;
         const gridScale = game.scenes.current.data.grid;
-        location.x += gridScale * .5;
-        location.y -= gridScale * .5;
+        location.x += gridScale * (.5 * props.target.data.width);
+        location.y -= gridScale * (.5 * props.target.data.height);
 
         // Summon and apply updates -------------------------------------------
         const updates  = {
@@ -61,28 +61,7 @@
             }
         };
         const target = await warpgate.spawnAt(location, props.summonToken, updates);
-
-        // Generate DAE Tracker Effect ----------------------------------------
-        const effectData = {
-            changes: [{
-                key:      `flags.midi-qol.${props.summonLabel}`,
-                mode:     5,
-                value:    target[0],
-                priority: 20
-            }],
-            origin: props.lastArg?.origin,
-            disabled: false,
-            duration: {
-                rounds:     0,
-                seconds:    3600,
-                startRound: game.combat ? game.combat.round : 0,
-                startTime:  game.time.worldTime
-            },
-            icon:  props.item?.img,
-            label: props.item?.name + " Token"
-        };
-
-        await props.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        await props.actor.setFlag("midi-qol", props.summonLabel, target[0]);
 
         // Attach tracker to host token ---------------------------------------
         if (game.modules.get("token-attacher")) {
@@ -94,21 +73,16 @@
     // Unsummon Token ---------------------------------------------------------
     if (props.state === "off") {
 
-        // Get tracker effect and remove from target --------------------------
-        const effect = props.actor.effects.find(i => i.data.label === props.item.name + " Token");
+        const target = await props.actor.getFlag("midi-qol", props.summonLabel);
 
-        if (!effect) {
-            return;
+        if (target) {
+            if (game.modules.get("token-attacher")) {
+                await tokenAttacher.detachElementFromToken(canvas.tokens.get(target), props.target, true);
+            }
+
+            await warpgate.dismiss(target, game.scenes.current.data.document.id);
+            await props.actor.unsetFlag("midi-qol", props.summonLabel);
         }
-
-        const target = `${getProperty(props.actor.data.flags, `midi-qol.${props.summonLabel}`)}`;
-
-        if (game.modules.get("token-attacher")) {
-            await tokenAttacher.detachElementFromToken(canvas.tokens.get(target), props.target, true);
-        }
-
-        await warpgate.dismiss(target, game.scenes.current.data.document.id);
-        await props.actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
     }
 
 })();
@@ -134,7 +108,7 @@ function getProps () {
         lastArg,
 
         actor:       tokenData?.actor || {},
-        summonLabel: "Summoned_Token",
+        summonLabel: `${args[2]?.name?.replace(" ", "_")}_Summoned_Token`,
         summonToken: args[1] || "",
         target:      tokenData || null
     };
