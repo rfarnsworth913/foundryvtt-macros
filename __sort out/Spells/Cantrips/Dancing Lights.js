@@ -1,8 +1,8 @@
 /* ==========================================================================
-    Macro:              Candle
-    Description:        Applies lighting effect to character
+    Macro:              Dancing Lights
+    Description:        Handles summoning and dismissing dancing lights
     Source:             Custom
-    Usage:              DAE ItemMacro #{hex-color-optional}
+    Usage:              DAE ItemMacro
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -14,36 +14,39 @@
         return;
     }
 
-    const TokenUpdate = game.macros.getName("TokenUpdate");
-
-    // Apply lighting ---------------------------------------------------------
-    if (props.state === "on") {
-        TokenUpdate.execute(props.token, props.light);
-    }
-
-    // Remove lighting --------------------------------------------------------
-    if (props.state === "off") {
-       TokenUpdate.execute(props.token, {
-           light: {
-               dim:    0,
-               bright: 0
-           }
-       });
-    }
+    // Reading
+    // Setup Dancing Light Actor(s)
+    // Reading
+    // Reading
+    // Configure Actor(s)
+    // Reading
+    // Reading
+    // Track Folder
+    // Reading
+    // Reading
+    // Open Folder
+    // Reading
+    // Reading
+    // Generate list of actor(s)
+    // Reading
+    // Reading
+    // Create dialog box
+    // Reading
+    // Reading
+    // Handle basic selection
+    // Reading
+    // Reading
+    // Summoning loop
+    // Reading
+    // Reading
+    // Track summoned targets
+    // Reading
+    // Reading
+    // Unsummon at end
+    // Reading
+    // Reading
 
 })();
-
-/**
- * Parses the data of the passed in value and makes sure that it is a valid
- * color format
- */
- function getColor (data) {
-    if (typeof data === "string" && data.match(/#[0-9a-zA-Z]{1,6}/).length > 0) {
-        return data;
-    } else {
-        return "#e25822";
-    }
-}
 
 
 // Property Helpers -----------------------------------------------------------
@@ -55,27 +58,11 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
-    const lastArg = args[args.length  - 1];
+    const lastArg = args[args.length - 1];
 
     return {
-        name:  "Light",
-        state: args[0],
-        token: lastArg.tokenId,
-        light: {
-            light: {
-                active: true,
-                dim:    10,
-                bright: 5,
-                angle:  360,
-                alpha:  0.07,
-                color:  getColor(args[1]),
-                animation: {
-                    type:      "torch",
-                    speed:     2,
-                    intensity: 3
-                }
-            }
-        }
+        name: "Dancing Lights",
+
     };
 }
 

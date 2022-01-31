@@ -1,8 +1,8 @@
 /* ==========================================================================
-    Macro:              Light
-    Description:        Applies lighting effect to character
+    Macro:              Plane Shift
+    Description:        Plane Shift self animation
     Source:             Custom
-    Usage:              DAE ItemMacro #{hex-color-optional}
+    Usage:              ItemMacro
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -14,36 +14,39 @@
         return;
     }
 
-    const TokenUpdate = game.macros.getName("TokenUpdate");
 
-    // Apply lighting ---------------------------------------------------------
-    if (props.state === "on") {
-        TokenUpdate.execute(props.token, props.light);
+    // Check dependencies -----------------------------------------------------
+    if (!(game.modules.get("sequencer")?.active)) {
+        return ui.notifications.error("Sequencer is required!");
     }
 
-    // Remove lighting --------------------------------------------------------
-    if (props.state === "off") {
-       TokenUpdate.execute(props.token, {
-           light: {
-               dim:    0,
-               bright: 0
-           }
-       });
-    }
+
+    // Setup animation --------------------------------------------------------
+    const target = props.target ? props.target : props.token;
+
+    new Sequence()
+        .effect()
+            .file("jb2a.magic_signs.circle.02.conjuration.intro.green")
+            .scale(1.0)
+            .atLocation(target)
+            .belowTokens()
+            .waitUntilFinished(-550)
+        .effect()
+            .file("jb2a.magic_signs.circle.02.conjuration.loop.green")
+            .scale(1.0)
+            .atLocation(target)
+            .belowTokens()
+            .fadeIn(200)
+            .fadeOut(200)
+            .waitUntilFinished(-550)
+        .effect()
+            .file("jb2a.magic_signs.circle.02.conjuration.outro.green")
+            .scale(1.0)
+            .atLocation(target)
+            .belowTokens()
+        .play();
 
 })();
-
-/**
- * Parses the data of the passed in value and makes sure that it is a valid
- * color format
- */
- function getColor (data) {
-    if (typeof data === "string" && data.match(/#[0-9a-zA-Z]{1,6}/).length > 0) {
-        return data;
-    } else {
-        return "#FDF4DC";
-    }
-}
 
 
 // Property Helpers -----------------------------------------------------------
@@ -55,27 +58,13 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
-    const lastArg = args[args.length  - 1];
+    const lastArg = args[args.length - 1];
 
     return {
-        name:  "Light",
-        state: args[0],
-        token: lastArg.tokenId,
-        light: {
-            light: {
-                active: true,
-                dim:    40,
-                bright: 20,
-                angle:  360,
-                alpha:  0.07,
-                color:  getColor(args[1]),
-                animation: {
-                    type:      "pulse",
-                    speed:     2,
-                    intensity: 3
-                }
-            }
-        }
+        name:   "Plane Shift",
+        target: lastArg.targets[0] || "",
+        token:  canvas.tokens.get(lastArg.tokenId),
+        lastArg
     };
 }
 
