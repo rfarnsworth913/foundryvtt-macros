@@ -2,7 +2,7 @@
     Macro:              Preload
     Description:        Handles preloading a specified set of scenes
     Source:             Custom
-    Usage:              Preload [{{ scene names}}]
+    Usage:              Preload [{{ scene names }}]
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
