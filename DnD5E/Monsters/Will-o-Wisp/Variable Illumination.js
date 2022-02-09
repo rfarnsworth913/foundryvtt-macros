@@ -26,7 +26,7 @@
     new Dialog({
         title: "Variable Illumination Range",
         content: `
-            <div style="margin: 7px;">
+            <div class="form-group">
                 <label for="lightRange">Light range between 5 and 20</label>
                 <input type="number" id="lightRange" list="rangeValues" min="5" max="20" style="margin-top: 15px;" />
                 <datalist id="rangeValues">
@@ -73,8 +73,6 @@
             }
         }
     }).render(true);
-
-    // Update lighting effect
 
 })();
 
