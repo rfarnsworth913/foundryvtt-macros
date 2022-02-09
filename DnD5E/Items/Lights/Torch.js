@@ -1,8 +1,8 @@
 /* ==========================================================================
-    Macro:              Oil Puddle
-    Description:        Handles applying the Oil Puddle effects
+    Macro:              Torch
+    Description:        Applies lighting effect to character
     Source:             Custom
-    Usage:              ItemMacro [Only after template is placed]
+    Usage:              DAE ItemMacro #{hex-color-optional}
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -14,16 +14,41 @@
         return;
     }
 
-    // Check dependencies -----------------------------------------------------
-    if (!(game.modules.get("advanced-macros")?.active)) {
-        return ui.notifications.error("Advanced Macros is required!");
+    const TokenUpdate = game.macros.getName("TokenUpdate");
+
+    // Apply lighting ---------------------------------------------------------
+    if (props.state === "on") {
+        TokenUpdate.execute(props.token, props.light);
     }
 
-    if (props.tag === "OnUse") {
-        AAhelpers.applyTemplate(args);
+    // Remove lighting --------------------------------------------------------
+    if (props.state === "off") {
+       TokenUpdate.execute(props.token, {
+           light: {
+               dim:    0,
+               bright: 0
+           }
+       });
     }
 
 })();
+
+/**
+ * Parses the data of the passed in value and makes sure that it is a valid
+ * color format
+ */
+ function getColor (data) {
+
+    if (typeof data === "string") {
+        const matches = data.match(/#[0-9a-zA-Z]{1,6}/);
+
+        if (matches !== null && matches.length > 0) {
+            return data;
+        }
+    }
+
+    return "#F73718";
+}
 
 
 // Property Helpers -----------------------------------------------------------
@@ -35,9 +60,27 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
+    const lastArg = args[args.length  - 1];
+
     return {
-        name: "Oil Puddle",
-        tag:  args[0].tag || ""
+        name:  "Torch",
+        state: args[0],
+        token: lastArg.tokenId,
+        light: {
+            light: {
+                active: true,
+                dim:    40,
+                bright: 20,
+                angle:  360,
+                alpha:  0.07,
+                color:  getColor(args[1]),
+                animation: {
+                    type:      "torch",
+                    speed:     2,
+                    intensity: 3
+                }
+            }
+        }
     };
 }
 
