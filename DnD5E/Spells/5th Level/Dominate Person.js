@@ -97,7 +97,6 @@ async function getEffect({ actor, effectLabel = `` } = {}) {
 */
 function getProps () {
     const lastArg = args[args.length - 1];
-    console.warn(lastArg);
 
     return {
         name:  "Dominate Person",
