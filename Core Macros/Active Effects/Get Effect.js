@@ -6,7 +6,7 @@
  * @param    {string}   effectLabel   Effect to be found on target actor
  * @returns  {Promise<ActiveEffect>}  Effect
  */
- async function getEffect({ actor, effectLabel = `` } = {}) {
+ async function getEffect ({ actor, effectLabel = `` } = {}) {
     if (!actor) {
         return console.error("No actor specified!");
     }
