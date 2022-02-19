@@ -25,7 +25,7 @@
     if (props.state === "on") {
 
         // Check if actor has any special senses that would overcome the blind status
-        const senses = props.actor.data.data.attributes.senses;
+        const senses = props.actorData.data.data.attributes.senses;
         const vision = ["Blindfighting"];
 
         if (senses.blindsight > 0 || vision.some((sense) => {
@@ -35,20 +35,20 @@
         }
 
         // Set tracking flag and limit token sight
-        DAE.setFlag(props.token, "blinded", {
+        DAE.setFlag(props.tokenData, "blinded", {
             state: true
         });
 
-        props.token.document.setFlag("perfect-vision", "sightLimit", 5);
+        props.tokenData.document.setFlag("perfect-vision", "sightLimit", 5);
     }
 
 
     // Remove Blinded Condition -----------------------------------------------
     if (props.state === "off") {
-        const flag = DAE.getFlag(props.token, "blinded");
+        const flag = DAE.getFlag(props.tokenData, "blinded");
 
         if (flag) {
-            props.token.document.unsetFlag("perfect-vision", "sightLimit");
+            props.tokenData.document.unsetFlag("perfect-vision", "sightLimit");
         }
     }
 
@@ -71,8 +71,8 @@ function getProps () {
         name: "Blinded",
         state: args[0] || "",
 
-        actor: tokenData.actor,
-        token: tokenData
+        actorData: tokenData.actor,
+        tokenData
     };
 }
 
