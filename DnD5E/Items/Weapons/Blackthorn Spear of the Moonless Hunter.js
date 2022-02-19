@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:              Blackthorn Spear of the Endless Hunter
+    Macro:              Blackthorn Spear of the Moonless Hunter
     Description:        Handles effects for the Spear
     Source:             Custom
     Usage:              DAE ItemMacro
@@ -16,10 +16,10 @@
 
 
     // Check dependencies -----------------------------------------------------
-    const cubCondition = game.macros.getName("CUBCondition");
+    const cubCondition = game.macros.getName(`CUBCondition`);
 
     if (!cubCondition) {
-        return ui.notifications.error("Requires the macro: CUBCondition to be present!");
+        return ui.notifications.error(`Requires the macro CUBCondition to be present!`);
     }
 
 
@@ -27,13 +27,31 @@
     if (props.state === "on") {
 
         // Handle exhaustion conditions ---------------------------------------
-        const exhaustion = await getExhaustionEffects(props.actor) || [];
-        cubCondition.execute(props.tokenID, exhaustion, "remove");
+        const exhaustion = await getExhaustionEffects({ actorData: props.actorData }) || [];
+        cubCondition.execute(props.tokenData.id, exhaustion, "remove");
 
+        // Update weapon damage -----------------------------------------------
+        const weapon = await getItems({
+            actorData: props.actorData,
+            itemLabel: `Blackthorn Spear of the Moonless Hunter`
+        });
+        let weaponData = {};
+
+        if (weapon) {
+            weaponData = duplicate(weapon[0]);
+
+            weaponData.data.damage.parts.push([`1d6`, `necrotic`]);
+            props.actorData.updateEmbeddedDocuments(`Item`, [weaponData]);
+
+            ChatMessage.create({ content: `${weaponData.name} is enhanced.`});
+        }
+
+        console.warn(weapon, weaponData.data.damage);
 
         // Set tracker flag ---------------------------------------------------
-        DAE.setFlag(props.actor, "blackthorn-spear", {
-            exhaustion
+        DAE.setFlag(props.actorData, props.flagLabel, {
+            exhaustion,
+            damage: weaponData.data.damage
         });
     }
 
@@ -42,7 +60,7 @@
     if (props.state === "off") {
 
         // Get tracking flag --------------------------------------------------
-        const flag = DAE.getFlag(props.actor, "blackthorn-spear");
+        const flag = DAE.getFlag(props.actorData, props.flagLabel);
 
         if (!flag) {
             return {};
@@ -59,45 +77,72 @@
             const actorUpdate = game.macros.getName("ActorUpdate");
 
             if (actorUpdate) {
-                actorUpdate.execute(props.tokenID, { "data.attributes.hp.value": 0 });
+                actorUpdate.execute(props.tokenData.id, { "data.attributes.hp.value": 0 });
             }
 
             ui.notifications.info("You have died!");
         } else {
-            cubCondition.execute(props.tokenID, exhaustion, "add");
+            cubCondition.execute(props.tokenData.id, exhaustion, "add");
         }
 
+        // Reset weapon status ------------------------------------------------
+        const weapon = await getItems({
+            actorData: props.actorData,
+            itemLabel: `Blackthorn Spear of the Moonless Hunter`
+        });
+
+        if (weapon && flag) {
+            const weaponData = duplicate(weapon[0]);
+            flag.damage.parts.pop();
+
+            weaponData.data.damage.parts = flag.damage.parts;
+            props.actorData.updateEmbeddedDocuments(`Item`, [weaponData]);
+
+            ChatMessage.create({ content: `${weaponData.name} return to normal`});
+        }
 
         // Remove tracker flag ------------------------------------------------
-        DAE.unsetFlag(props.actor, "blackthorn-spear");
+        DAE.unsetFlag(props.actorData, props.flagLabel);
     }
-
-    // You can see normally in darkness, both magical and nonmagical, out to a range of 120 feet
-    // Your attacks with the blackthorn spear of the moonless hunter deal an extra 1d6 necrotic damage to any creature it hits
-    // Your movement speed increases by 5 feet
 
 })();
 
 /**
- * Returns the specified effect
+ * Returns the collection of Exhaustion effects on the target
  *
- * @param    {object}  [options]
  * @param    {Actor5e}  actor         Target Actor
- * @param    {string}   effectLabel   Effect to be found on target actor
  * @returns  {Promise<ActiveEffect>}  Effect
  */
-async function getExhaustionEffects (actor) {
-    if (!actor) {
-        return console.error("No actor specified!");
+async function getExhaustionEffects ({ actorData } = {}) {
+    if (!actorData) {
+        return console.error(`No actor specified!`);
     }
 
-    return actor.effects.reduce((effects, effect) => {
+    return actorData.effects.reduce((exhaustionEffects, effect) => {
         if (effect.data.label.includes("Exhaustion")) {
-            effects.push(effect.data.label);
+            exhaustionEffects.push(effect.data.label);
         }
 
-        return effects;
+        return exhaustionEffects;
     }, []);
+}
+
+/**
+ * Returns a collection of items that have the specified label
+ *
+ * @param    {object}     [options]
+ * @param    {Actor5e}    actorData  Actor to be operated on
+ * @param    {String}     itemLabel  Item name to be found
+ * @returns  Array<Item>             Collection of items matching the label
+ */
+async function getItems ({ actorData, itemLabel = ``} = {}) {
+    if (!actorData) {
+        return null;
+    }
+
+    return (actorData.items.filter((item) => {
+        return item.name?.toLowerCase() === itemLabel.toLowerCase();
+    }));
 }
 
 
@@ -114,11 +159,13 @@ function getProps () {
     const tokenData = canvas.tokens.get(lastArg.tokenId);
 
     return {
-        name:  "Blackthorn Spear of the Endless Hunter",
-        state: args[0] || "",
+        name:  `Blackthorn Spear of the Moonless Hunter`,
+        state: args[0] || ``,
 
-        actor:   tokenData.actor,
-        tokenID: lastArg.tokenId
+        actorData: tokenData.actor,
+        tokenData,
+
+        flagLabel: `blackthorn-spear`
     };
 }
 
