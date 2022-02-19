@@ -128,11 +128,11 @@
 // Property Helpers -----------------------------------------------------------
 
 /**
-* Extracts properties from passed in values and assigns them to a common object which
-* is eaiser to access
-*
-* @returns  Extracted property values as object
-*/
+ * Extracts properties from passed in values and assigns them to a common object which
+ * is eaiser to access
+ *
+ * @returns  Extracted property values as object
+ */
 function getProps () {
     const lastArg = args[args.length - 1];
 
