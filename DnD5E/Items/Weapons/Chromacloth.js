@@ -16,14 +16,14 @@
 
 
     // Check for actor --------------------------------------------------------
-    if (props.actor === "") {
+    if (props.actorData === "") {
         return {};
     }
 
 
     // Disabled effects -------------------------------------------------------
     props.effects.forEach((effectLabel) => {
-        let effect = props.actor.effects.find((effect) => {
+        let effect = props.actorData.effects.find((effect) => {
             return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
         });
 
@@ -47,7 +47,7 @@ function getProps () {
 
     return {
         name:  "Chromacloth",
-        actor: lastArg.actor || "",
+        actorData: lastArg.actor || "",
         effects: [
             "Chromacloth (Red)",
             "Chromacloth (Yellow)",
