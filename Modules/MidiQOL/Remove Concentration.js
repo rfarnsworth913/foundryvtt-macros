@@ -1,8 +1,8 @@
 /* ==========================================================================
-    Macro:              Blinded
-    Description:        Applies blinded changes to token
+    Macro:              Remove Concentration
+    Description:        Removes Concentration from caster
     Source:             Custom
-    Usage:              DAE Macro
+    Usage:              DAE ItemMacro
    ========================================================================== */
 
 // Macro actions --------------------------------------------------------------
@@ -15,45 +15,40 @@
     }
 
 
-    // Check dependencies -----------------------------------------------------
-    if (!(game.modules.get(`perfect-vision`)?.active)) {
-        return {};
-    }
-
-
-    // Apply Blinded Condition ------------------------------------------------
-    if (props.state === `on`) {
-
-        // Check if actor has any special senses that would overcome the blind status
-        const senses = props.actorData.data.data.attributes.senses;
-        const vision = [`Blindfighting`];
-
-        if (senses.blindsight > 0 || vision.some((sense) => {
-            return senses.special.includes(sense);
-        })) {
-            return {};
-        }
-
-        // Set tracking flag and limit token sight
-        DAE.setFlag(props.tokenData, `blinded`, {
-            state: true
+    // Remove Concentration on caster -----------------------------------------
+    if (props.state === "off") {
+        await removeEffect({
+            actorData:   props.caster,
+            effectLabel: "Concentrating"
         });
-
-        props.tokenData.document.setFlag(`perfect-vision`, `sightLimit`, 5);
     }
 
-
-    // Remove Blinded Condition -----------------------------------------------
-    if (props.state === `off`) {
-        const flag = DAE.getFlag(props.tokenData, `blinded`);
-
-        if (flag) {
-            props.tokenData.document.unsetFlag(`perfect-vision`, `sightLimit`);
-            DAE.unsetFlag(props.tokenData, `blinded`);
-        }
-    }
 
 })();
+
+/**
+ * Removes an effect from a selected actor
+ *
+ * @param    {object}   [options]
+ * @param    {Actor5e}  actorData    Target actor
+ * @param    {string}   effectLabel  Effect to be found on target actor
+ * @returns  {Promise<Function>}     Deletion status of effect
+ */
+async function removeEffect ({ actorData, effectLabel = ``} = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    let effect = actorData.effects.find((effect) => {
+        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
+    });
+
+    if (!effect) {
+        return;
+    }
+
+    return await actorData.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+}
 
 
 // Property Helpers -----------------------------------------------------------
@@ -66,14 +61,13 @@
 */
 function getProps () {
     const lastArg   = args[args.length - 1];
-    const tokenData = canvas.tokens.get(lastArg.tokenId);
+    const caster    = DAE.DAEfromUuid(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1));
 
     return {
-        name: `Blinded`,
+        name:  `Remove Concentration`,
         state: args[0] || ``,
 
-        actorData: tokenData.actor,
-        tokenData
+        caster
     };
 }
 
