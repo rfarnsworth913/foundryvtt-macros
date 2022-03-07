@@ -27,7 +27,7 @@
             .effect()
                 .file(props.animation)
                 .attachTo(props.token)
-                .scale(0.5)
+                .scaleToObject(2)
                 .persist()
                 .name(props.label)
                 .fadeIn(300)

@@ -34,6 +34,15 @@
                 .fadeIn(300)
                 .fadeOut(300)
             .play();
+
+        // Apply Stone Tint ---------------------------------------------------
+        const tokenUpdate = game.macros.getName("TokenUpdate");
+
+        if (tokenUpdate) {
+            tokenUpdate.execute(props.token.id, {
+                tint: "#888C8D"
+            });
+        }
     }
 
 
@@ -43,6 +52,15 @@
             name:   props.label,
             object: props.token
         });
+
+        // Remove Stone Tint --------------------------------------------------
+        const tokenUpdate = game.macros.getName("TokenUpdate");
+
+        if (tokenUpdate) {
+            tokenUpdate.execute(props.token.id, {
+                tint: null
+            });
+        }
     }
 
 })();
