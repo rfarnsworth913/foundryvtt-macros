@@ -38,7 +38,7 @@
             .stretchTo(props.targets[0])
             .missed(missed)
         .effect()
-            .file("jb2a.explosion.green.0")
+            .file("jb2a.liquid.splash.green")
             .atLocation(props.targets[1] ?? false)
             .scale(0.5)
             .delay(1000)
