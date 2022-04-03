@@ -101,7 +101,7 @@
                     {
                         key:      "macro.CUB",
                         mode:     0,
-                        value:    "Unconscious",
+                        value:    "Sleep",
                         priority: 20
                     }
                 ]
