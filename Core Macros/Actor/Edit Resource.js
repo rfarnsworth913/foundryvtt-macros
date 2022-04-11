@@ -7,15 +7,15 @@
  * @param    {number}   value  New value of the resource
  * @returns  {Promise<any>}    Actor update handler
  */
-async function editResource ({ actor, name = "", value = 1} = {}) {
+async function editResource ({ actorData, name = "", value = 1} = {}) {
 
     // Check actor and name
-    if (!actor || !name) {
+    if (!actorData || !name) {
         return {};
     }
 
     // Attempt to find object on the specified actor
-    let resources = actor.toObject().data.resources;
+    let resources = actorData.toObject().data.resources;
     let [key, object] = Object.entries(resources).find(([key, object]) => {
         return key === name || object.label === name;
     });
@@ -33,5 +33,5 @@ async function editResource ({ actor, name = "", value = 1} = {}) {
 
     resources[key] = object;
 
-    return await actor.update({ "data.resources": resources });
+    return await actorData.update({ "data.resources": resources });
 }
