@@ -6,12 +6,12 @@
  * @param    {string}   effectLabel  Effect to be found on target actor
  * @returns  {Promise<Function>}     Deletion status of effect
  */
-async function toggleEffect ({ actor, effectLabel = ``} = {}) {
-    if (!actor) {
+async function toggleEffect ({ actorData, effectLabel = ``} = {}) {
+    if (!actorData) {
         return console.error("No actor specified!");
     }
 
-    let effect = actor.effects.find((effect) => {
+    let effect = actorData.effects.find((effect) => {
         return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
     });
 
