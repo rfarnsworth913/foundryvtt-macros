@@ -1,7 +1,7 @@
 /**
  * Checks if a specified actor has the expected effect applied to their character
  *
- * @param    {object}  [options]
+ * @param    {object}   [options]
  * @param    {Actor5e}  actorData     Target Actor
  * @param    {string}   effectLabel   Effect to be found on target actor
  * @returns  {Promise<Boolean>}       Status of the effect on target
