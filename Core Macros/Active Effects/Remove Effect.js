@@ -2,7 +2,7 @@
  * Removes an effect from a selected actor
  *
  * @param    {object}   [options]
- * @param    {Actor5e}  actor        Target actor
+ * @param    {Actor5e}  actorData    Target actor
  * @param    {string}   effectLabel  Effect to be found on target actor
  * @returns  {Promise<Function>}     Deletion status of effect
  */
