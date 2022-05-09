@@ -81,7 +81,7 @@ function getProps () {
         name:  "Petrified",
         state: args[0] || "",
 
-        animation: "jb2a.ground_cracks.03.purple",
+        animation: "jb2a.ground_cracks.03.orange",
         label:     `Petrified-${lastArg.tokenId}`,
         token:     canvas.tokens.get(lastArg.tokenId)
     };

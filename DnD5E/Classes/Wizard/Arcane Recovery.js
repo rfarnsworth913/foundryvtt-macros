@@ -1,6 +1,6 @@
 /* ==========================================================================
     Macro:              Arcane Recovery
-    Description:        Handles recovery of spell slots
+    Description:        Handles recovery of spell slots for Wizards
     Source:             https://gitlab.com/crymic/foundry-vtt-macros/-/blob/8.x/5e/Classes/Wizard/Arcane-Recovery.js
     Usage:              ItemMacro
    ========================================================================== */
@@ -14,19 +14,22 @@
         return;
     }
 
+
     // Handle restoring spells ------------------------------------------------
     let numRec = Math.ceil(props.level / 2);
 
-    if (hasAvailableSlot(props.actor)) {
-        let inputText = "";
+    if (hasAvailableSlot(props.actorData)) {
+
+        // Generate dialog ----------------------------------------------------
+        let inputContent = ``;
 
         for (let i = 1; i <= 5; i++) {
-            let chosenSpellSlots = getSpellSlots(props.actor, i);
+            let chosenSpellSlots = getSpellSlots(props.actorData, i);
             let minSlots         = Math.abs(chosenSpellSlots.value - chosenSpellSlots.max);
             let maxSlots         = minSlots >= numRec ? numRec : minSlots;
 
             if (chosenSpellSlots.max > 0 && chosenSpellSlots.value < chosenSpellSlots.max) {
-                inputText += `
+                inputContent += `
                     <div class="form-group">
                         <label for="spell${i}">Spell Slot Level ${i} [${chosenSpellSlots.value}/${chosenSpellSlots.max}]</label>
                         <input id="spell${i}" name="spell${i}" type="number" min="0" max="${maxSlots}" />
@@ -35,45 +38,101 @@
             }
         }
 
+
+        // Show dialog --------------------------------------------------------
         new Dialog({
-            title: "Arcane Recovery",
+            title: `Arcane Recovery`,
             content: `
                 <form>
                     <p>You have regained <strong>${numRec}</strong> spell slots.</p>
                     <hr />
-                    ${inputText}
+                    ${inputContent}
                 </form>
             `,
             buttons: {
                 recover: {
                     icon:     `<i class=fas fa-check></i>`,
-                    label:    "Recover",
+                    label:    `Recover`,
                     callback: async (html) => {
+                        playAnimation(props.tokenData);
+
                         for (let i = 1; i <= 5; i++) {
                             let numRes = html.find(`#spell${i}`).val();
-                            spellRefund(props.actor, i, numRes);
+                            spellRefund(props.actorData, i, numRes);
                         }
                     }
                 }
             }
         }).render(true);
-
     } else {
         return ui.notifications.warn(`You aren't missing any spell slots.`);
     }
 
 })();
 
+
+// Helper Functions -----------------------------------------------------------
+
+/**
+ * Plays an animation on the target
+ *
+ * @param  {Token5e}  target  Target to play animation on
+ */
+function playAnimation (target) {
+    if (game.modules.get(`sequencer`).active) {
+        new Sequence()
+            .effect()
+                .file(`jb2a.magic_signs.circle.02.divination.intro.purple`)
+                .scaleToObject(1.75)
+                .atLocation(target)
+                .belowTokens()
+                .waitUntilFinished(-550)
+            .effect()
+                .file(`jb2a.magic_signs.circle.02.divination.loop.purple`)
+                .scaleToObject(1.75)
+                .atLocation(target)
+                .belowTokens()
+                .fadeIn(200)
+                .fadeOut(200)
+                .waitUntilFinished(-550)
+            .effect()
+                .file(`jb2a.magic_signs.circle.02.divination.outro.purple`)
+                .scaleToObject(1.75)
+                .atLocation(target)
+                .belowTokens()
+            .play();
+    }
+}
+
+/**
+ * Handles refunding spells to the target
+ *
+ * @param  {Actor5e}  actorData    Actor to be updated
+ * @param  {Number}   i            Spell level to be modified
+ * @param  {Number}   numRestored  Number of spell slots restored
+ */
 function spellRefund (actorData, i, numRestored) {
     let actor_data = duplicate(actorData.data._source);
     actor_data.data.spells[`spell${i}`].value = Number(actor_data.data.spells[`spell${i}`].value) + Number(numRestored);
     actorData.update(actor_data);
 }
 
+/**
+ * Returns the number of spell slots for a specified level
+ *
+ * @param  {Actor5e}  actorData  Actor to be updated
+ * @param  {Number}   level      Spell level
+ * @returns                      Number of spell slots available
+ */
 function getSpellSlots (actorData, level) {
     return actorData.data.data.spells[`spell${level}`];
 }
 
+/**
+ * Checks if there are spell slots to be restored
+ * @param  {Actor5e}  actorData  Actor to be updated
+ * @returns                      If there are slots to be restored
+ */
 function hasAvailableSlot (actorData) {
     for (let slot in actorData.data.data.spells) {
         if (actorData.data.data.spells[slot].value < actorData.data.data.spells[slot].max) {
@@ -95,12 +154,15 @@ function hasAvailableSlot (actorData) {
 */
 function getProps () {
     const lastArg   = args[args.length - 1];
-    const actorData = game.actors.get(lastArg.actor._id);
+    const tokenData = canvas.tokens.get(lastArg.tokenId) || {};
 
     return {
-        name:  "Arcane Recovery",
-        actor: actorData,
-        level: actorData.getRollData().classes.wizard.levels || 0
+        name:  ``,
+        state: args[0] || ``,
+
+        actorData: tokenData.actor || {},
+        tokenData,
+        level:     tokenData.actor.getRollData().classes.wizard.levels || 0
     };
 }
 
