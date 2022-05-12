@@ -8,7 +8,7 @@
  */
 async function toggleEffect ({ actorData, effectLabel = ``} = {}) {
     if (!actorData) {
-        return console.error("No actor specified!");
+        return console.error(`No actor specified!`);
     }
 
     let effect = actorData.effects.find((effect) => {
