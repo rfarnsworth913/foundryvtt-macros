@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/rfarnsworth913/foundryvtt-macros#readme",
   "devDependencies": {
-    "eslint": "8.5.0",
+    "eslint": "8.15.0",
     "eslint-config-personal": "git+https://github.com/rfarnsworth913/eslint-config-personal.git"
   },
   "dependencies": {
