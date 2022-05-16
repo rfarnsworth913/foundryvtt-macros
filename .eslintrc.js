@@ -19,6 +19,7 @@ module.exports = {
     globals: {
         "args":   "readonly",
         "canvas": "readonly",
+        "game":   "readonly",
         "ui":     "readonly"
     },
 

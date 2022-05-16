@@ -16,7 +16,7 @@
 
     // Check for scenes -------------------------------------------------------
     if (props.scenes.length === 0) {
-        return ui.notifications.error(`No scenes specified!`);
+        return ui.notifications.error("No scenes specified!");
     }
 
 
@@ -62,10 +62,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });
