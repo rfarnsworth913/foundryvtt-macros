@@ -17,25 +17,25 @@
     // Create Dialog Values ---------------------------------------------------
     const kiPoints = await getResource({
         actorData: props.actorData,
-        resource:  `Ki`
+        resource:  "Ki"
     });
 
     if (!kiPoints) {
-        return notifications.error(`Ki points could not be found!`);
+        return ui.notifications.error("Ki points could not be found!");
     }
 
     if (kiPoints.value === 0) {
-        return notifications.error(`You do not have any remaining Ki points!`);
+        return ui.notifications.error("You do not have any remaining Ki points!");
     }
 
-    let options = [];
+    const options = [];
     for (let i = 1; i < 4; i++) {
         if (i <= kiPoints.value) {
             options.push(`<option value="${i}">+${i * 2} Attack (${i} Ki Point)</option>`);
         }
     }
 
-    let dialogContent = `
+    const dialogContent = `
         <form class="flexcol">
             <div class="form-group">
                 <select id="kiPoints">
@@ -47,25 +47,25 @@
 
     // Create Dialog ----------------------------------------------------------
     new Dialog({
-        title: `Focused Aim`,
+        title: "Focused Aim",
         content: dialogContent,
         buttons: {
             yes: {
                 icon:  `<i class="fas fa-check"></i>`,
-                label: `Apply`,
+                label: "Apply",
                 callback: async (html) => {
 
                     // Update Ki Points ---------------------------------------
-                    let element = html.find(`#kiPoints`).val();
+                    const element = html.find("#kiPoints").val();
                     await editResource({
                         actorData: props.actorData,
-                        resource:  `Ki`,
+                        resource:  "Ki",
                         value:     -Math.abs(element)
                     });
 
                     // Update Chat --------------------------------------------
-                    let chatMessage = game.messages.get(props.itemCardID);
-                    let chatContent = `
+                    const chatMessage = game.messages.get(props.itemCardID);
+                    const chatContent = `
                         <div class="midi-qol-nobox">
                             <div class="midi-qol-flex-container">
                                 <div>Attack is improved by: +${element * 2}</div>
@@ -73,9 +73,9 @@
                         </div>
                     `;
 
-                    let content       = duplicate(chatMessage.data.content);
-                    let searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
-                    let replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
+                    let content         = duplicate(chatMessage.data.content);
+                    const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
+                    const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
 
                     content = content.replace(searchString, replaceString);
                     chatMessage.update({ content });
@@ -85,10 +85,10 @@
             },
             cancel: {
                 icon:  `<i class="fas fa-times"></i>`,
-                label: `Cancel`
+                label: "Cancel"
             }
         },
-        default: `yes`
+        default: "yes"
     }).render(true);
 
 })();
@@ -101,7 +101,7 @@
  * @param    {string}   resource  Name of resource to be updated
  * @returns  {Promise<any>}       Actor update handler
  */
-async function getResource ({ actorData, resource = ""} = {}) {
+async function getResource ({ actorData, resource = "" } = {}) {
 
     // Check actor and name
     if (!actorData || !resource) {
@@ -109,8 +109,8 @@ async function getResource ({ actorData, resource = ""} = {}) {
     }
 
     // Attempt to find object on the specified actor
-    let resources = actorData.toObject().data.resources;
-    let [key, object] = Object.entries(resources).find(([key, object]) => {
+    const { resources } = actorData.toObject().data;
+    const [key] = Object.entries(resources).find(([key, object]) => {
         return key === resource || object.label === resource;
     });
 
@@ -126,7 +126,7 @@ async function getResource ({ actorData, resource = ""} = {}) {
  * @param    {number}   value     New value of the resource
  * @returns  {Promise<any>}       Actor update handler
  */
-async function editResource ({ actorData, resource = "", value = 1} = {}) {
+async function editResource ({ actorData, resource = "", value = 1 } = {}) {
 
     // Check actor and name
     if (!actorData || !resource) {
@@ -134,8 +134,8 @@ async function editResource ({ actorData, resource = "", value = 1} = {}) {
     }
 
     // Attempt to find object on the specified actor
-    let resources = actorData.toObject().data.resources;
-    let [key, object] = Object.entries(resources).find(([key, object]) => {
+    const { resources } = actorData.toObject().data;
+    const [key, object] = Object.entries(resources).find(([key, object]) => {
         return key === resource || object.label === resource;
     });
 
@@ -164,7 +164,7 @@ async function playAnimation (token) {
     if (game.modules.get("sequencer")?.active) {
         new Sequence()
             .effect()
-                .file(`jb2a.hunters_mark.loop.01.blue`)
+                .file("jb2a.hunters_mark.loop.01.blue")
                 .attachTo(token)
                 .scaleToObject(1.0)
             .play();
@@ -184,8 +184,8 @@ function getProps () {
     const tokenData = canvas.tokens.get(lastArg.tokenId) || {};
 
     return {
-        name:  `Focused Aim`,
-        state: args[0] || ``,
+        name:  "Focused Aim",
+        state: args[0] || "",
 
         actorData:  tokenData.actor || {},
         itemCardID: lastArg.itemCardId,
@@ -211,10 +211,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });

@@ -17,10 +17,13 @@ module.exports = {
     },
 
     globals: {
-        "args":   "readonly",
-        "canvas": "readonly",
-        "game":   "readonly",
-        "ui":     "readonly"
+        "args":      "readonly",
+        "canvas":    "readonly",
+        "Dialog":    "readonly",
+        "duplicate": "readonly",
+        "game":      "readonly",
+        "Sequence":  "readonly",
+        "ui":        "readonly"
     },
 
 
@@ -112,7 +115,7 @@ module.exports = {
         "block-spacing":                   ["warn"],
         "brace-style":                     ["warn", "1tbs"],
         "comma-spacing":                   ["warn"],
-        "dot-location":                    ["warn", "object"],
+        "dot-location":                    ["warn", "property"],
         "eol-last":                        ["warn"],
         "indent":                          ["warn", 4],
         "lines-around-comment":            ["warn", {
