@@ -16,8 +16,8 @@
 
     // Handle removing unconscious state --------------------------------------
     if (props.state === "off") {
-        const uuid = props.actorData.uuid;
-        game.dfreds.effectInterface.addEffect({ effectName: `Prone`, uuid });
+        const { uuid } = props.actorData;
+        game.dfreds.effectInterface.addEffect({ effectName: "Prone", uuid });
     }
 
 })();
@@ -36,8 +36,8 @@ function getProps () {
     const tokenData = canvas.tokens.get(lastArg.tokenId) || {};
 
     return {
-        name:  `Unconscious`,
-        state: args[0] || ``,
+        name:  "Unconscious",
+        state: args[0] || "",
 
         actorData: tokenData.actor || {},
         tokenData,
@@ -62,10 +62,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });
