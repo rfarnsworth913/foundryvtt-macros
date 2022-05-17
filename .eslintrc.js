@@ -24,6 +24,7 @@ module.exports = {
         "duplicate": "readonly",
         "game":      "readonly",
         "Sequence":  "readonly",
+        "Sequencer": "readonly",
         "ui":        "readonly"
     },
 

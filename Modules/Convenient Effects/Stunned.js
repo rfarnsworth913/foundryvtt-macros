@@ -17,7 +17,7 @@
 
     // Check dependencies -----------------------------------------------------
     if (!(game.modules.get("sequencer")?.active)) {
-        return {};
+        return false;
     }
 
 
@@ -86,10 +86,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });
