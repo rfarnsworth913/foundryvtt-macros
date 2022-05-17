@@ -34,17 +34,17 @@
  * @param    {string}   effectLabel  Effect to be found on target actor
  * @returns  {Promise<Function>}     Deletion status of effect
  */
-async function removeEffect ({ actorData, effectLabel = ``} = {}) {
+async function removeEffect ({ actorData, effectLabel = "" } = {}) {
     if (!actorData) {
         return console.error("No actor specified!");
     }
 
-    let effect = actorData.effects.find((effect) => {
+    const effect = actorData.effects.find((effect) => {
         return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
     });
 
     if (!effect) {
-        return;
+        return false;
     }
 
     return await actorData.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
@@ -64,8 +64,8 @@ function getProps () {
     const caster    = DAE.DAEfromUuid(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1));
 
     return {
-        name:  `Remove Concentration`,
-        state: args[0] || ``,
+        name:  "Remove Concentration",
+        state: args[0] || "",
 
         caster
     };
@@ -89,10 +89,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });

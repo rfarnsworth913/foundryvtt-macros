@@ -19,6 +19,7 @@ module.exports = {
     globals: {
         "args":      "readonly",
         "canvas":    "readonly",
+        "DAE":       "readonly",
         "Dialog":    "readonly",
         "duplicate": "readonly",
         "game":      "readonly",
