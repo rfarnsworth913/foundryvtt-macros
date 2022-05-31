@@ -119,7 +119,9 @@ module.exports = {
         "comma-spacing":                   ["warn"],
         "dot-location":                    ["warn", "property"],
         "eol-last":                        ["warn"],
-        "indent":                          ["warn", 4],
+        "indent":                          ["warn", 4, {
+            "MemberExpression": "off"
+        }],
         "lines-around-comment":            ["warn", {
             "beforeBlockComment": true
         }],

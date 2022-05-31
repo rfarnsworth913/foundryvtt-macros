@@ -16,7 +16,7 @@
 
     // Only handle if we're on a damage bonus
     if (props.state === "DamageBonus" && props.targets.length > 0) {
-        let damageType = props.lastArg.damageDetail[0]?.type || "unknown";
+        const damageType = props.lastArg.damageDetail[0]?.type || "unknown";
 
         // Exit if we are not doing healing or only targeting self
         if (damageType !== "healing" || isTargetingSelf(props.source, props.targets)) {
@@ -57,7 +57,7 @@
         };
 
         // Apply effects to self
-        let actorData = canvas.tokens.get(props.lastArg.tokenId).actor;
+        const actorData = canvas.tokens.get(props.lastArg.tokenId).actor;
         await actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
     }
 
@@ -112,10 +112,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });
