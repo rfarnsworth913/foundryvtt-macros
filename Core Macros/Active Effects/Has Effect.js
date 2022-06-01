@@ -6,12 +6,12 @@
  * @param    {string}   effectLabel   Effect to be found on target actor
  * @returns  {Promise<Boolean>}       Status of the effect on target
  */
-async function hasEffect({ actorData, effectLabel = `` } = {}) {
+async function hasEffect ({ actorData, effectLabel = "" } = {}) {
     if (!actorData) {
         return console.error("No actor specified!");
     }
 
     return Boolean(actorData.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase()
+        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
     }));
 }
