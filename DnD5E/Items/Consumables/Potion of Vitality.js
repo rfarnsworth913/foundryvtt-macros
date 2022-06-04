@@ -16,8 +16,8 @@
 
 
     // Check for dependencies -------------------------------------------------
-    if (!(game.modules.get(`dfreds-convenient-effects`)?.active)) {
-        return ui.notifications.error(`dfreds-convenient-effects is required!`);
+    if (!(game.modules.get("dfreds-convenient-effects")?.active)) {
+        return ui.notifications.error("dfreds-convenient-effects is required!");
     }
 
     // Remove conditions ------------------------------------------------------
@@ -48,21 +48,21 @@ function getProps () {
     const tokenData = canvas.tokens.get(lastArg.tokenId) || {};
 
     return {
-        name:  `Potion of Vitality`,
-        state: args[0] || ``,
+        name:  "Potion of Vitality",
+        state: args[0] || "",
 
         actorData: tokenData.actor || {},
         tokenData,
         uuid: tokenData.actor.uuid,
 
         conditions: [
-            `Exhaustion 1`,
-            `Exhaustion 2`,
-            `Exhaustion 3`,
-            `Exhaustion 4`,
-            `Exhaustion 5`,
-            `Poisoned`,
-            `Diseased`
+            "Exhaustion 1",
+            "Exhaustion 2",
+            "Exhaustion 3",
+            "Exhaustion 4",
+            "Exhaustion 5",
+            "Poisoned",
+            "Diseased"
         ]
     };
 }
@@ -85,10 +85,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });
