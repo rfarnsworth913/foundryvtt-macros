@@ -15,9 +15,11 @@
     }
 
     // Get effects affecting the actor ----------------------------------------
-    let effects       = props.target.actor.effects.filter(i => props.conditions.includes(i.data.label));
-    let selectOptions = effects.reduce((list, activeEffect) => {
-        let condition = activeEffect.data.label;
+    const effects = props.target.actor.effects.filter((i) => {
+        return props.conditions.includes(i.data.label);
+    });
+    const selectOptions = effects.reduce((list, activeEffect) => {
+        const condition = activeEffect.data.label;
         list.push(`<option value="${condition}">${condition}</option>`);
         return list;
     }, []);
@@ -29,7 +31,7 @@
     }
 
     // Generate dialog content ------------------------------------------------
-    let dialogContent = `
+    const dialogContent = `
         <form class="flexcol">
             <div class="form-group">
                 <select id="element">
@@ -49,16 +51,18 @@
                 icon:     '<i class="fas fa-check"></i>',
                 label:    "Remove it!",
                 callback: async (html) => {
-                    let element = html.find("#element").val();
-                    let effect  = props.target.actor.effects.find(i => i.data.label === element);
+                    const element = html.find("#element").val();
+                    const effect  = props.target.actor.effects.find((i) => {
+                        return i.data.label === element
+                    });
 
                     await MidiQOL.socket().executeAsGM("removeEffects", {
                         actorUuid: props.target.actor.uuid,
                         effects:   [effect.id]
                     });
 
-                    let chatMessage = game.messages.get(args[0].itemCardId);
-                    let chatContent = `
+                    const chatMessage = game.messages.get(args[0].itemCardId);
+                    const chatContent = `
                         <div class="midi-qol-nobox">
                             <div class="midi-qol-flex-container">
                                 <div>Cures ${element}:</div>
@@ -71,8 +75,8 @@
                     `;
 
                     let content       = duplicate(chatMessage.data.content);
-                    let searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
-                    let replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
+                    const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
+                    const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
 
                     content = content.replace(searchString, replaceString);
                     chatMessage.update({ content });
@@ -127,10 +131,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });

@@ -23,12 +23,12 @@
 
     // Remove lighting --------------------------------------------------------
     if (props.state === "off") {
-       TokenUpdate.execute(props.token, {
-           light: {
-               dim:    0,
-               bright: 0
-           }
-       });
+        TokenUpdate.execute(props.token, {
+            light: {
+                dim:    0,
+                bright: 0
+            }
+        });
     }
 
 })();
@@ -37,7 +37,7 @@
  * Parses the data of the passed in value and makes sure that it is a valid
  * color format
  */
- function getColor (data) {
+function getColor (data) {
 
     if (typeof data === "string") {
         const matches = data.match(/#[0-9a-zA-Z]{1,6}/);
@@ -60,7 +60,7 @@
 * @returns  Extracted property values as object
 */
 function getProps () {
-    const lastArg = args[args.length  - 1];
+    const lastArg = args[args.length - 1];
 
     return {
         name:  "Torch",
@@ -102,10 +102,10 @@ function logProps (props, title) {
 * @param  props  Properties to be evaluated
 */
 function validateProps (props) {
-    let missingProps = [];
+    const missingProps = [];
 
     Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
+        if (!props[key] || props[key] === null) {
             missingProps.push(key);
         }
     });

@@ -23,6 +23,7 @@ module.exports = {
         "Dialog":    "readonly",
         "duplicate": "readonly",
         "game":      "readonly",
+        "MidiQOL":   "readonly",
         "Sequence":  "readonly",
         "Sequencer": "readonly",
         "ui":        "readonly"
