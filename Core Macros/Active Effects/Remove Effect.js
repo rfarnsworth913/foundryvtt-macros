@@ -6,12 +6,12 @@
  * @param    {string}   effectLabel  Effect to be found on target actor
  * @returns  {Promise<Function>}     Deletion status of effect
  */
-async function removeEffect ({ actorData, effectLabel = ``} = {}) {
+async function removeEffect ({ actorData, effectLabel = "" } = {}) {
     if (!actorData) {
-        return console.error(`No actor specified!`);
+        return console.error("No actor specified!");
     }
 
-    let effect = actorData.effects.find((effect) => {
+    const effect = actorData.effects.find((effect) => {
         return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
     });
 
@@ -19,5 +19,5 @@ async function removeEffect ({ actorData, effectLabel = ``} = {}) {
         return;
     }
 
-    return await actorData.deleteEmbeddedDocuments(`ActiveEffect`, [effect.id]);
+    return await actorData.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
 }
