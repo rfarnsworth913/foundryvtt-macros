@@ -17,16 +17,21 @@ module.exports = {
     },
 
     globals: {
-        "args":      "readonly",
-        "canvas":    "readonly",
-        "DAE":       "readonly",
-        "Dialog":    "readonly",
-        "duplicate": "readonly",
-        "game":      "readonly",
-        "MidiQOL":   "readonly",
-        "Sequence":  "readonly",
-        "Sequencer": "readonly",
-        "ui":        "readonly"
+        "AAhelpers":     "readonly",
+        "args":          "readonly",
+        "canvas":        "readonly",
+        "DAE":           "readonly",
+        "Dialog":        "readonly",
+        "duplicate":     "readonly",
+        "game":          "readonly",
+        "getProperty":   "readonly",
+        "MidiQOL":       "readonly",
+        "Roll":          "readonly",
+        "Sequence":      "readonly",
+        "Sequencer":     "readonly",
+        "tokenAttacher": "readonly",
+        "ui":            "readonly",
+        "warpgate":      "readonly"
     },
 
 
