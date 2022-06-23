@@ -6,9 +6,9 @@
  * @param    {String}     itemLabel  Item name to be found
  * @returns  Array<Item>             Collection of items matching the label
  */
- async function getItems ({ actorData, itemLabel = ``} = {}) {
+async function getItems ({ actorData, itemLabel = "" } = {}) {
     if (!actorData) {
-        return console.error(`No actor specified`);
+        return console.error("No actor specified");
     }
 
     return (actorData.items.filter((item) => {
