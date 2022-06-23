@@ -11,6 +11,11 @@ module.exports = {
         "eslint:recommended"
     ],
 
+    parser: "@babel/eslint-parser",
+    parserOptions: {
+        requireConfigFile: false
+    },
+
     env: {
         browser: true,
         es2021:  true
@@ -46,7 +51,7 @@ module.exports = {
         "no-promise-executor-return":      ["error"],
         "no-self-compare":                 ["error"],
         "no-unmodified-loop-condition":    ["warn"],
-        "no-unused-private-class-members": ["warn"],
+        // "no-unused-private-class-members": ["warn"],
         "no-use-before-define":            ["warn", {
             "functions": false
         }],
