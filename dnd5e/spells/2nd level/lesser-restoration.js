@@ -1,0 +1,122 @@
+/* ==========================================================================
+    Macro:         Lesser Restoration
+    Source:        https://www.patreon.com/posts/lesser-57539886
+    Usage:         ItemMacro
+   ========================================================================== */
+
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg   = args[args.length - 1];
+
+const props = {
+    name: "Lesser Restoration",
+    state: args[0]?.tag || args[0] || "unknown",
+
+    itemCardId: lastArg.itemCardId,
+    target:     canvas.tokens.get(lastArg.targets[0].id),
+
+    conditions: [
+        "Blinded",
+        "Deafened",
+        "Diseased",
+        "Paralyzed",
+        "Poisoned"
+    ]
+};
+
+logProps(props);
+
+
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+
+// Get Effects on the target Actor --------------------------------------------
+const effects = props.target.actor.effects.filter((item) => {
+    return props.conditions.includes(item.data.label);
+});
+
+const selectOptions = effects.reduce((list, activeEffect) => {
+    const condition = activeEffect.data.label;
+    list.push(`<option value="${condition}">${condition}</option>`);
+    return list;
+}, []);
+
+
+// Check for conditions -------------------------------------------------------
+if (selectOptions.length === 0) {
+    return ui.notifications.error(`Nothing happens...There's nothing to Cure on ${props.target.name}`);
+}
+
+
+// Create Dialog and Handle Cure ----------------------------------------------
+new Dialog({
+    title: `Lesser Restoration: ${props.target.name}`,
+    content: `
+        <form class="flexcol">
+            <div class="form-group">
+                <select id="element">
+                    ${selectOptions.join("")}
+                </select>
+            </div>
+        </form>
+    `,
+    buttons: {
+        yes: {
+            icon:  "<ciass=\"fas fa-check\"></i>",
+            label: "Remove it!",
+            callback: async (html) => {
+                const element = html.find("#element").val();
+                const effect  = props.target.actor.effects.find((item) => {
+                    return item.data.label === element;
+                });
+
+                await MidiQOL.socket().executeAsGM("removeEffects", {
+                    actorUuid: props.target.actor.uuid,
+                    effects:   [effect.id]
+                });
+
+                const chatMessage = game.messages.get(props.itemCardId);
+                const chatContent = `
+                    <div class="midi-qol-nobox">
+                        <div class="midi-qol-flex-container">
+                            <div>Cures ${element}:</div>
+                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target.data._id}"> ${props.target.name}</div>
+                            <div>
+                                <img src="${props.target.data.img}" width="30" height="30" style="border:0px"></img>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                let content         = duplicate(chatMessage.data.content);
+                const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
+                const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
+
+                content = content.replace(searchString, replaceString);
+                chatMessage.update({ content });
+                ui.chat.scrollBottom();
+            }
+        }
+    },
+    default: "yes"
+}).render(true);
+
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
+/**
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
+function logProps (props) {
+    console.group(`${props.name} Macro`);
+    Object.keys(props).forEach((key) => {
+        console.log(`${key}: `, props[key]);
+    });
+    console.groupEnd();
+}

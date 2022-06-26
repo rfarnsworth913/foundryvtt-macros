@@ -6,7 +6,7 @@
  * @param    {string}   resource  Name of resource to be updated
  * @returns  {Promise<any>}       Actor update handler
  */
-async function getResource ({ actorData, resource = ""} = {}) {
+async function getResource ({ actorData, resource = "" } = {}) {
 
     // Check actor and name
     if (!actorData || !resource) {
@@ -14,8 +14,8 @@ async function getResource ({ actorData, resource = ""} = {}) {
     }
 
     // Attempt to find object on the specified actor
-    let resources = actorData.toObject().data.resources;
-    let [key] = Object.entries(resources).find(([key, object]) => {
+    const { resources } = actorData.toObject().data;
+    const [key]         = Object.entries(resources).find(([key, object]) => {
         return key === resource || object.label === resource;
     });
 
