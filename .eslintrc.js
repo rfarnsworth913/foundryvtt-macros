@@ -138,7 +138,7 @@ module.exports = {
         }],
         "lines-between-class-members":     ["warn"],
         "max-len":                         ["warn", {
-            "code": 120,
+            "code": 130,
             "ignoreComments":         true,
             "ignoreTrailingComments": true,
             "ignoreUrls":             true
