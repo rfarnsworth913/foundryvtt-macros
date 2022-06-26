@@ -25,6 +25,7 @@ module.exports = {
         "AAhelpers":     "readonly",
         "args":          "readonly",
         "canvas":        "readonly",
+        "CONST":         "readonly",
         "DAE":           "readonly",
         "Dialog":        "readonly",
         "duplicate":     "readonly",
