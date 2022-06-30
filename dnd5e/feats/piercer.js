@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Crusher
+    Macro:         Piercer
     Source:        Custom
     Usage:         DamageBonusMacro
    ========================================================================== */
@@ -10,14 +10,12 @@
 const lastArg   = args[args.length - 1];
 
 const props = {
-    name: "Crusher",
+    name: "Piercer",
     state: args[0]?.tag || args[0] || "unknown",
 
+    diceSides:  lastArg.damageRoll.terms[0].faces ?? 0,
     damageType: lastArg.item.data.damage.parts[0][1] ?? "unknown",
-    icon:       "icons/skills/melee/strike-flail-spiked-pink.webp",
-    isCritical: lastArg?.isCritical || false,
-    itemUUID:   lastArg.itemUuid || "",
-    target:     lastArg.targets[0]
+    isCritical: lastArg?.isCritical || false
 };
 
 logProps(props);
@@ -26,34 +24,11 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "DamageBonus" && props.isCritical && props.damageType === "bludgeoning") {
-    const gameRound = game.combat ? game.combat.round : 0;
-    const effectData = {
-        changes: [{
-            key:      "flags.midi-qol.grants.advantage.attack.all",
-            mode:     2,
-            priority: 20,
-            value:    1
-        }],
-        origin: props.itemUUID,
-        disabled: false,
-        duration: {
-            rounds:     1,
-            turns:      1,
-            seconds:    12,
-            startRound: gameRound,
-            startTime:  game.time.worldTime
-        },
-        flags: {
-            dae: {
-                specialDuration: ["turnStartSource"]
-            }
-        },
-        icon:  props.icon,
-        label: props.name
+if (props.state === "DamageBonus" && props.isCritical && props.damageType === "piercing") {
+    return {
+        damageRoll: `1d${props.diceSides}[${props.damageType}]`,
+        flavor:     "Piercer"
     };
-
-    await props.target?.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
 }
 
 

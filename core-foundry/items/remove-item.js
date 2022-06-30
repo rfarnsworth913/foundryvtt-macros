@@ -5,8 +5,8 @@
  * @param    {String}   itemLabel  Item name to be removed from inventory
  * @returns  {Promise}             Removal handler
  */
-async function removeItem ({actorData, itemLabel = ``} = {}) {
-    let getItem = actorData.items.find((item) => {
+async function removeItem ({ actorData, itemLabel = "" } = {}) {
+    const getItem = actorData.items.find((item) => {
         return item.name === itemLabel;
     });
 
