@@ -32,6 +32,7 @@ module.exports = {
         "game":          "readonly",
         "getProperty":   "readonly",
         "MidiQOL":       "readonly",
+        "randomID":      "readonly",
         "Roll":          "readonly",
         "Sequence":      "readonly",
         "Sequencer":     "readonly",

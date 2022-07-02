@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Abi-Dalzim’s Horrid Wilting
+    Macro:         Faerie Fire
     Source:        Custom
     Usage:         ItemMacro
    ========================================================================== */
@@ -8,7 +8,7 @@
     Macro Globals
    ========================================================================== */
 const props = {
-    name: "Abi-Dalzim’s Horrid Wilting",
+    name: "Faerie Fire",
     state: args[0]?.macroPass || args[0] || "unknown",
 
     templateID: args[0]?.templateId || ""
@@ -20,27 +20,6 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "templatePlaced") {
-    const creatureTypes = ["construct", "undead"];
-    const newTargets    = args[0].targets.reduce((targets, target) => {
-        const invalid = creatureTypes.some((creatureType) => {
-            return (target.actor.data.data.details.race ||
-                    target.actor.data.data.details.type.value).toLowerCase().includes(creatureType);
-        });
-
-        if (!invalid) {
-            targets.push(target);
-        }
-
-        return targets;
-    }, []).map((token) => {
-        return token.id;
-    });
-
-    game.user.updateTokenTargets(newTargets);
-    game.user.broadcastActivity({ targets: newTargets });
-}
-
 if (props.state === "postActiveEffects") {
     await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [props.templateID]);
     game.user.updateTokenTargets([]);
