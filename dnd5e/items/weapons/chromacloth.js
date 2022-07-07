@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Restrained
+    Macro:         Chromacloth
     Source:        Custom
-    Usage:         DAE macro.execute Restrained
+    Usage:         ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,12 +11,17 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Restrained",
+    name: "Chromacloth",
     state: args[0]?.tag || args[0] || "unknown",
 
-    animation: "jb2a.markers.chain.standard.loop.02.blue",
-    label:     `Restrained-${lastArg.tokenId}`,
-    tokenData,
+    actorData: tokenData?.actor || {},
+
+    effects: [
+        "Chromacloth (Red)",
+        "Chromacloth (Yellow)",
+        "Chromacloth (Green)",
+        "Chromacloth (Blue)"
+    ]
 };
 
 logProps(props);
@@ -25,29 +30,21 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (!(game.modules.get("sequencer")?.active)) {
+if (props.actorData === "") {
     return false;
 }
 
-if (props.state === "on") {
-    new Sequence()
-        .effect()
-            .file(props.animation)
-            .attachTo(props.tokenData)
-            .persist()
-            .scaleToObject(1.5)
-            .name(props.label)
-            .fadeIn(300)
-            .fadeOut(300)
-        .play();
-}
+// Disable effects ------------------------------------------------------------
+props.effects.forEach(async (effectLabel) => {
 
-if (props.state === "off") {
-    Sequencer.EffectManager.endEffects({
-        name:   props.label,
-        object: props.tokenData
+    const effect = props.actorData.effects.find((effect) => {
+        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
     });
-}
+
+    if (effect) {
+        await effect.update({ disabled: true });
+    }
+});
 
 
 /* ==========================================================================
