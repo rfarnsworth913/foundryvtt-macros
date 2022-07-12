@@ -25,6 +25,7 @@ module.exports = {
         "AAhelpers":     "readonly",
         "args":          "readonly",
         "canvas":        "readonly",
+        "CONFIG":        "readonly",
         "CONST":         "readonly",
         "DAE":           "readonly",
         "Dialog":        "readonly",
@@ -148,6 +149,7 @@ module.exports = {
         "new-parens":                      ["warn"],
         "no-multi-spaces":                 ["warn", {
             "exceptions": {
+                "ignoreEOLComments":  true,
                 "ImportDeclaration":  true,
                 "Property":           true,
                 "VariableDeclarator": true
