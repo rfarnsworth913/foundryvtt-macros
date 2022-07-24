@@ -100,31 +100,31 @@ async function bonusEffect (actorData, itemData) {
         },
         changes: [
             {
-                key:      "flags.midi-qol.optional.NAME.label",
+                key:      "flags.midi-qol.optional.emboldeningBond.label",
                 mode:     2,
                 value:    `${itemData.name} Bonus`,
                 priority: 20
             },
             {
-                key:      "flags.midi-qol.optional.NAME.attack.all",
+                key:      "flags.midi-qol.optional.emboldeningBond.attack.all",
                 mode:     2,
                 value:    "+1d4",
                 priority: 20
             },
             {
-                key:      "flags.midi-qol.optional.NAME.check.all",
+                key:      "flags.midi-qol.optional.emboldeningBond.check.all",
                 mode:     2,
                 value:    "+1d4",
                 priority: 20
             },
             {
-                key:      "flags.midi-qol.optional.NAME.skill.all",
+                key:      "flags.midi-qol.optional.emboldeningBond.skill.all",
                 mode:     2,
                 value:    "+1d4",
                 priority: 20
             },
             {
-                key:      "flags.midi-qol.optional.NAME.save.all",
+                key:      "flags.midi-qol.optional.emboldeningBond.save.all",
                 mode:     2,
                 value:    "+1d4",
                 priority: 20

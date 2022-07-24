@@ -22,6 +22,9 @@ module.exports = {
     },
 
     globals: {
+        "actor":         "readonly",
+        "token":         "readonly",
+
         "AAhelpers":     "readonly",
         "args":          "readonly",
         "canvas":        "readonly",
@@ -148,8 +151,8 @@ module.exports = {
         }],
         "new-parens":                      ["warn"],
         "no-multi-spaces":                 ["warn", {
+            "ignoreEOLComments": true,
             "exceptions": {
-                "ignoreEOLComments":  true,
                 "ImportDeclaration":  true,
                 "Property":           true,
                 "VariableDeclarator": true
