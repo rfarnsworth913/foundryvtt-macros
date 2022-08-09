@@ -42,7 +42,7 @@ if (!(game.modules.get("warpgate")?.active)) {
 // Get target information -----------------------------------------------------
 const targetList = props.targets.reduce((targetList, target) => {
     const creatureTypes = ["undead"];
-    const validTarget   = target.actor.type === "character" ?
+    let validTarget   = target.actor.type === "character" ?
                             creatureTypes.some((creatureType) => {
                                 return target.actor.data.data.details.race.toLowerCase().includes(creatureType);
                             }) :
@@ -178,7 +178,14 @@ for (let target of targetList) {
 
 // Finalize Ability -----------------------------------------------------------
 await wait(600);
-const turnResults = `<div class="midi-qol-nobox midi-qol-bigger-text">${CONFIG.DND5E.abilities[props.saveType]} Saving Throw: DC ${props.saveDC}</div><div><div class="midi-qol-nobox">${turnTargets.join('')}</div></div>`
+const turnResults = `
+    <div class="midi-qol-nobox midi-qol-bigger-text">
+        ${CONFIG.DND5E.abilities[props.saveType]} Saving Throw: DC ${props.saveDC}
+    </div>
+    <div>
+        <div class="midi-qol-nobox">${turnTargets.join("")}
+    </div>
+</div>`;
 const chatMessage = await game.messages.get(lastArg.itemCardId);
 let content       = await duplicate(chatMessage.data.content);
 
@@ -215,6 +222,7 @@ function logProps (props) {
  */
 async function wait (ms) {
     return new Promise((resolve) => {
+        // eslint-disable-next-line no-promise-executor-return
         return setTimeout(resolve, ms);
     });
 }
@@ -226,18 +234,24 @@ async function wait (ms) {
  * @returns  {number}         Max CR destroyed by actor
  */
 async function getDestroyCR (level) {
-    return level > 20  ? 5 :
-           level >= 17 ? 4 :
-           level >= 14 ? 3 :
-           level >= 11 ? 2 :
-           level >= 8  ? 1 :
-           level >= 5  ? 0.5 : 0;
+    return level > 20 ? 5 :
+        level >= 17 ? 4 :
+            level >= 14 ? 3 :
+                level >= 11 ? 2 :
+                    level >= 8 ? 1 :
+                        level >= 5 ? 0.5 : 0;
 }
 
+/**
+ * Plays animation based upon the effect being applied on the specified target
+ *
+ * @param  {Token5e}  target  Target for animation
+ * @param  {string}   mode    Animation type to be played
+ */
 function playAnimation (target, mode) {
     const animation = mode === "fear" ?
-                               "jb2a.toll_the_dead.purple.skull_smoke" :
-                               "jb2a.explosion.03.bluewhite";
+        "jb2a.toll_the_dead.purple.skull_smoke" :
+        "jb2a.explosion.03.bluewhite";
 
     if (game.modules.get("sequencer")?.active) {
         new Sequence()

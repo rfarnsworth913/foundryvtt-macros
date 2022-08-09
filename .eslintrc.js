@@ -28,11 +28,13 @@ module.exports = {
         "AAhelpers":     "readonly",
         "args":          "readonly",
         "canvas":        "readonly",
+        "ChatMessage":   "readonly",
         "CONFIG":        "readonly",
         "CONST":         "readonly",
         "DAE":           "readonly",
         "Dialog":        "readonly",
         "duplicate":     "readonly",
+        "fromUuid":      "readonly",
         "game":          "readonly",
         "getProperty":   "readonly",
         "MidiQOL":       "readonly",
@@ -71,7 +73,7 @@ module.exports = {
         "complexity":                      ["warn", {
             "max": 15
         }],
-        "consistent-return":               ["warn"],
+        "consistent-return":               ["off"],
         "consistent-this":                 ["warn"],
         "curly":                           ["error", "all"],
         "default-case":                    ["warn"],

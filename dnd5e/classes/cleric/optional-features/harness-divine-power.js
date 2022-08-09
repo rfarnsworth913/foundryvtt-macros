@@ -71,26 +71,26 @@ new Dialog ({
             icon:  "<i class=\"fas fa-check\"></i>",
             label: "Recover",
             callback: async (html) => {
-                let selectedSlot = html.find(`input[name="spellSlot"]:checked`);
-                let slot         = "";
-                let num          = "";
+                const selectedSlot = html.find("input[name=\"spellSlot\"]:checked");
+                let slot           = "";
+                let num            = "";
 
                 for (let i = 0; i < selectedSlot.length; i++) {
                     slot = selectedSlot[i].id;
-                    num  = selectedSlot[i].value;
+                    num = selectedSlot[i].value;
                 }
 
                 if (slot === "") {
-                    return ui.notifications.warn(`The ability fails, not spell slot was selected`);
+                    return ui.notifications.warn("The ability fails, not spell slot was selected");
                 }
 
                 spellRefund(props.actorData, slot);
-                let rollResults     = `<div>Regains 1 spell slot, Level ${num}.</div>`;
+                const rollResults   = `<div>Regains 1 spell slot, Level ${num}.</div>`;
                 const chatMessage   = game.messages.get(props.itemCardID);
                 let content         = duplicate(chatMessage.data.content);
                 const searchString  = /<div class="midi-qol-saves-display">[\\s\\S]*<div class="end-midi-qol-saves-display">/g;
                 const replaceString = `<div class="midi-qol-saves-display"><div class="end-midi-qol-saves-display">${rollResults}`;
-                content             = content.replace(searchString, replaceString);
+                content = content.replace(searchString, replaceString);
                 chatMessage.update({ content });
             }
         }
@@ -115,18 +115,37 @@ function logProps (props) {
     console.groupEnd();
 }
 
+/**
+ * Handles refunding the spell slot to the correct spell level
+ *
+ * @param  {Actor5e}  actorData  Actor to be updated
+ * @param  {number}   slot       Spell level to be updated
+ */
 async function spellRefund (actorData, slot) {
-    let actor_data = duplicate(actorData.data._source);
+    const actor_data = duplicate(actorData.data._source);
     actor_data.data.spells[slot].value = actor_data.data.spells[slot].value + 1;
     await actorData.update(actor_data);
 }
 
+/**
+ * Returns the number of spell slots for the given spell level
+ *
+ * @param    {Actor5e}  actorData  Actor to be operated on
+ * @param    {number}   level      Spell level to look up
+ * @returns  {number}              Number of spell slots for specified level
+ */
 function getSpellSlots (actorData, level) {
     return actorData.data.data.spells[`spell${level}`];
 }
 
+/**
+ * Checks for available spell slots
+ *
+ * @param    {Actor5e}  actorData  Actor to check for spell slots
+ * @returns  {boolean}             Status of spell slots
+ */
 function hasAvailableSlots (actorData) {
-    for (let slot in actorData.data.data.spells) {
+    for (const slot in actorData.data.data.spells) {
         if (actorData.data.data.spells[slot].value < actorData.data.data.spells[slot].max) {
             return true;
         }
