@@ -82,7 +82,9 @@ new Dialog({
                     <div class="midi-qol-nobox">
                         <div class="midi-qol-flex-container">
                             <div>Cures ${element}:</div>
-                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target.data._id}"> ${props.target.name}</div>
+                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target.data._id}">
+                                ${props.target.name}
+                            </div>
                             <div>
                                 <img src="${props.target.data.img}" width="30" height="30" style="border:0px"></img>
                             </div>
