@@ -1,0 +1,29 @@
+const attacker = canvas.tokens.get(args[0].tokenId);
+const {object: target} = await fromUuid(args[0].hitTargetUuids[0]);
+ChatMessage.create({'content': `${attacker.name} tries to shove ${target.name} back 5 feet!`})
+let tactorRoll = await attacker.actor.rollSkill("ath");
+let skill = target.actor.data.data.skills.ath.total < target.actor.data.data.skills.acr.total ? "acr" : "ath";
+let tokenRoll = await target.actor.rollSkill(skill);
+await wait(3000);
+if (tactorRoll.total >= tokenRoll.total) {
+        const knockbackPixels = canvas.grid.size;
+        const sourceToken = canvas.tokens.get(args[0].tokenId);
+        const sourceActor = sourceToken.actor;
+        if (args[0].hitTargets.length !== 1) return;
+        const targetToken = args[0].hitTargets[0];
+        const targetActor = targetToken.actor;
+        const ray = new Ray(sourceToken.center, targetToken.object.center);
+        let newCenter = ray.project((ray.distance + knockbackPixels)/ray.distance);
+        newCenter = canvas.grid.getSnappedPosition(newCenter.x - targetToken.object.w / 2, newCenter.y - targetToken.object.h / 2, 1);
+        const isAllowedLocation = canvas.sight.testVisibility({x: newCenter.x, y: newCenter.y}, {object: targetToken.Object});
+        if(!isAllowedLocation) return ChatMessage.create({content: `${targetToken.name} hits a wall`});
+        const mutationData = { token: {x: newCenter.x, y: newCenter.y}};
+        await warpgate.mutate(targetToken, mutationData, {}, {permanent: true});
+        ChatMessage.create({'content': `${attacker.name} pushes ${target.name} back!`})
+        }
+        else ChatMessage.create({'content': `${attacker.name} is to weak, can't push ${target.name} back at all!`})
+
+}
+
+const isAllowedLocation = canvas.sight.testVisibility({x: newCenter.x, y: newCenter.y}, {object: targetToken.Object});
+        if(!isAllowedLocation) return ChatMessage.create({content: `${targetToken.name} hits a wall`});
