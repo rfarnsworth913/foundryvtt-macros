@@ -37,6 +37,7 @@ module.exports = {
         "fromUuid":      "readonly",
         "game":          "readonly",
         "getProperty":   "readonly",
+        "mergeObject":   "readonly",
         "MidiQOL":       "readonly",
         "randomID":      "readonly",
         "Roll":          "readonly",
