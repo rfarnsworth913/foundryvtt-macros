@@ -34,6 +34,7 @@ module.exports = {
         "DAE":           "readonly",
         "Dialog":        "readonly",
         "duplicate":     "readonly",
+        "ForienIdentification": "readonly",
         "fromUuid":      "readonly",
         "game":          "readonly",
         "getProperty":   "readonly",

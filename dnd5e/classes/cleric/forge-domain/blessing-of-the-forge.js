@@ -59,7 +59,8 @@ if (props.state === "on") {
 
                     applyEffects({
                         actorData: props.actorData,
-                        itemData:  itemData
+                        itemData:  itemData,
+                        tokenData: props.tokenData
                     });
                 }
             },
@@ -97,6 +98,37 @@ function logProps (props) {
 }
 
 /**
+ * Plays an animation on the character showing the effect being applied
+ *
+ * @param  {Token5e}  target  Where animation should be played
+ */
+function playAnimation (target) {
+    if ((game.modules.get("sequencer")?.active)) {
+        new Sequence()
+            .effect()
+                .file("jb2a.magic_signs.circle.02.transmutation.intro.dark_blue")
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+                .waitUntilFinished(-550)
+            .effect()
+                .file("jb2a.magic_signs.circle.02.transmutation.loop.dark_blue")
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+                .fadeIn(200)
+                .fadeOut(200)
+                .waitUntilFinished(-550)
+            .effect()
+                .file("jb2a.magic_signs.circle.02.transmutation.outro.dark_blue")
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+            .play();
+    }
+}
+
+/**
  * Returns the collection of non-magical weapons and armor that the player has
  * in their inventory
  *
@@ -125,8 +157,9 @@ async function getItems ({ actorData } = {}) {
  * @param  {object}   [options]
  * @param  {Actor5e}  actorData  Actor to be operated on
  * @param  {Item5e}   itemData   Item to be operated item
+ * @param  {Token5e}  tokenData  Token for animation
  */
-async function applyEffects ({ actorData, itemData } = {}) {
+async function applyEffects ({ actorData, itemData, tokenData } = {}) {
     const itemCopy = duplicate(itemData);
     const itemType = itemCopy.type;
 
@@ -154,36 +187,7 @@ async function applyEffects ({ actorData, itemData } = {}) {
         content: `${itemData.name}  has been enhanced.`
     });
 
-    playAnimation();
-}
-
-/**
- * Plays an animation on the character showing the effect being applied
- */
-function playAnimation () {
-    if ((game.modules.get("sequencer")?.active)) {
-        new Sequence()
-            .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.intro.green")
-                .atLocation(props.token)
-                .scaleToObject(1.5)
-                .belowTokens()
-                .waitUntilFinished(-550)
-            .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.loop.green")
-                .atLocation(props.token)
-                .scaleToObject(1.5)
-                .belowTokens()
-                .fadeIn(200)
-                .fadeOut(200)
-                .waitUntilFinished(-550)
-            .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.outro.green")
-                .atLocation(props.token)
-                .scaleToObject(1.5)
-                .belowTokens()
-            .play();
-    }
+    playAnimation(tokenData);
 }
 
 /**
