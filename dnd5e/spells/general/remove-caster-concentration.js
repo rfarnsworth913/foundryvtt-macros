@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Guidance
+    Macro:         Remove Caster Concentration
     Source:        Custom
     Usage:         DAE ItemMacro
    ========================================================================== */
@@ -10,7 +10,7 @@
 const lastArg   = args[args.length - 1];
 
 const props = {
-    name: "Guidance",
+    name: "Remove Caster Concentration",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: DAE.DAEfromUuid(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1))
@@ -32,13 +32,13 @@ if (props.state === "off") {
 
 /* ==========================================================================
     Helpers
-   ========================================================================== */
+    ========================================================================== */
 
 /**
-* Logs the global properties for the Macro to the console for debugging purposes
-*
-* @param  {Object}  props  Global properties
-*/
+ * Logs the global properties for the Macro to the console for debugging purposes
+ *
+ * @param  {Object}  props  Global properties
+ */
 function logProps (props) {
     console.group(`${props.name} Macro`);
     Object.keys(props).forEach((key) => {
@@ -48,13 +48,13 @@ function logProps (props) {
 }
 
 /**
- * Removes an effect from a selected actor
- *
- * @param    {object}   [options]
- * @param    {Actor5e}  actor        Target actor
- * @param    {string}   effectLabel  Effect to be found on target actor
- * @returns  {Promise<Function>}     Deletion status of effect
- */
+* Removes an effect from a selected actor
+*
+* @param    {object}   [options]
+* @param    {Actor5e}  actor        Target actor
+* @param    {string}   effectLabel  Effect to be found on target actor
+* @returns  {Promise<Function>}     Deletion status of effect
+*/
 async function removeEffect ({ actorData, effectLabel = "" } = {}) {
     if (!actorData) {
         return console.error("No actor specified!");
