@@ -14,9 +14,12 @@ const props = {
     name: "Restrained",
     state: args[0]?.tag || args[0] || "unknown",
 
-    animation: "jb2a.markers.chain.standard.loop.02.blue",
+    animation: {
+        intro: "jb2a.markers.chain.standard.complete.02.blue",
+        loop:  "jb2a.markers.chain.standard.loop.02.blue"
+    },
     label:     `Restrained-${lastArg.tokenId}`,
-    tokenData,
+    tokenData
 };
 
 logProps(props);
@@ -25,24 +28,43 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+
+// Check dependencies ---------------------------------------------------------
 if (!(game.modules.get("sequencer")?.active)) {
     return false;
 }
 
+
+// Apply animation ------------------------------------------------------------
 if (props.state === "on") {
     new Sequence()
         .effect()
-            .file(props.animation)
+            .file(props.animation.intro)
+            .attachTo(props.tokenData)
+            .scaleToObject(1.5)
+            .endTime(2000)
+            .waitUntilFinished(-500)
+        .effect()
+            .file(props.animation.loop)
             .attachTo(props.tokenData)
             .persist()
             .scaleToObject(1.5)
             .name(props.label)
-            .fadeIn(300)
-            .fadeOut(300)
+            .fadeOut(600)
         .play();
 }
 
+
+// Remove animation -----------------------------------------------------------
 if (props.state === "off") {
+    new Sequence()
+        .effect()
+            .file(props.animation.intro)
+            .attachTo(props.tokenData)
+            .scaleToObject(1.5)
+            .startTime(6000)
+        .play();
+
     Sequencer.EffectManager.endEffects({
         name:   props.label,
         object: props.tokenData
