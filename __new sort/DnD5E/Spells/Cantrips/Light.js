@@ -1,114 +1,175 @@
+/* eslint-disable no-await-in-loop */
 /* ==========================================================================
-    Macro:              Light
-    Description:        Applies lighting effect to character
-    Source:             Custom
-    Usage:              DAE ItemMacro #{hex-color-optional}
+    Macro:         Light
+    Source:        https://www.patreon.com/posts/light-69533664
+    Usage:         ItemMacro
    ========================================================================== */
 
-// Macro actions --------------------------------------------------------------
-(async () => {
-    const props = getProps();
-    logProps(props, props.name || this.name);
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg    = args[args.length - 1];
+const tokenData  = canvas.tokens.get(lastArg?.tokenId) || {};
+const casterData = canvas.tokens.get(args[1]);
 
-    if (!validateProps(props)) {
-        return;
-    }
+const props = {
+    name: "Light",
+    state: args[0]?.tag || args[0] || "unknown",
 
-    const TokenUpdate = game.macros.getName("TokenUpdate");
+    actorData: tokenData?.actor || {},
+    tokenData,
 
-    // Apply lighting ---------------------------------------------------------
-    if (props.state === "on") {
-        TokenUpdate.execute(props.token, props.light);
-    }
+    casterData,
+    casterDisposition: casterData.data.disposition,
+    itemData:          await fromUuid(lastArg.origin),
+    saveDC:            casterData.actor.getRollData().attributes.spelldc,
+    spellCasting:      casterData.actor.getRollData().attributes.spellcasting,
 
-    // Remove lighting --------------------------------------------------------
-    if (props.state === "off") {
-       TokenUpdate.execute(props.token, {
-           light: {
-               dim:    0,
-               bright: 0
-           }
-       });
-    }
+    lastArg
+};
 
-})();
-
-/**
- * Parses the data of the passed in value and makes sure that it is a valid
- * color format
- */
- function getColor (data) {
-    if (typeof data === "string" && data.match(/#[0-9a-zA-Z]{1,6}/).length > 0) {
-        return data;
-    } else {
-        return "#FDF4DC";
-    }
-}
+logProps(props);
 
 
-// Property Helpers -----------------------------------------------------------
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+if (props.state === "on") {
 
-/**
-* Extracts properties from passed in values and assigns them to a common object which
-* is eaiser to access
-*
-* @returns  Extracted property values as object
-*/
-function getProps () {
-    const lastArg = args[args.length  - 1];
+    // Setup check(s) ---------------------------------------------------------
+    const saveType = "dex";
+    let saveResult = "saves";
+    let results    = `
+        <div class="midi-qol-flex-container">
+            hits
+            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.tokenData.id}">
+                ${props.tokenData.name}
+            </div>
+            <div>
+                <img src="${props.tokenData.data.img}" width="30" height="30" style="border:0px">
+            </div>
+        </div>
+    `;
+    let saveResults = `
+        <div>
+            <div class="midi-qol-nobox">
+                ${results}
+            </div>
+        </div>
+    `;
 
-    return {
-        name:  "Light",
-        state: args[0],
-        token: lastArg.tokenId,
-        light: {
-            light: {
-                active: true,
-                dim:    40,
-                bright: 20,
-                angle:  360,
-                alpha:  0.07,
-                color:  getColor(args[1]),
-                animation: {
-                    type:      "pulse",
-                    speed:     2,
-                    intensity: 3
-                }
+
+    // Check token disposition ------------------------------------------------
+    if (props.tokenData.data.disposition !== props.casterDisposition) {
+        const save = await MidiQOL.socket().executeAsGM("rollAbility", {
+            request: "save",
+            targetUuid: props.actorData.uuid,
+            ability: saveType,
+            options: {
+                chatMessage: false,
+                fastForward: false
             }
+        });
+
+        if (save.total < props.saveDC) {
+            saveResult = "fails";
+            await removeAll();
+        } else {
+            await MidiQOL.socket().executeAsGM("removeEffects", {
+                actorUuid: props.tokenData.actor.uuid,
+                effects:   [props.tokenData.actor.effects.find((effect) => {
+                    return effect.data.label === props.itemData.name;
+                }).id]
+            });
         }
-    };
+
+        results = `
+            <div class="midi-qol-flex-container">
+                <div class="midi-qol-target-npc midi-qol-target-name" id="${props.tokenData.id}">
+                    ${props.tokenData.name} ${saveResult} with ${save.total}
+                </div>
+                <div>
+                    <img src="${props.tokenData.data.img}" width="30" height="30" style="border:0px">
+                </div>
+            </div>
+        `;
+        saveResults = `
+            <div class="midi-qol-nobox midi-qol-bigger-text">
+                ${CONFIG.DND5E.abilities[saveType]} Saving Throw: DC ${props.saveDC}
+            </div>
+            <div>
+                <div class="midi-qol-nobox">${results}</div>
+            </div>
+        `;
+    } else {
+        removeAll();
+    }
+
+
+    // Update Chat with Results -----------------------------------------------
+    const lastMessage = game.messages.filter((message) => {
+        return message.data.flavor === props.itemData.name &&
+            message.data.speaker.token === props.casterData.id;
+    }).pop();
+
+    const chatMessage = await game.messages.get(lastMessage.id);
+    let content       = await duplicate(chatMessage.data.content);
+
+    const searchString  = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
+    const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${saveResults}`;
+
+    content = await content.replace(searchString, replaceString);
+    await chatMessage.update({
+        content
+    });
+
+    await ui.chat.scrollBottom();
 }
 
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
 /**
-* Logs the extracted property values to the console for debugging purposes
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
 */
-function logProps (props, title) {
-    console.group(`${title} Macro`);
+function logProps (props) {
+    console.groupCollapsed("%cmacro" + `%c${props.name}`,
+        "background-color: #333; color: #fff; padding: 3px 5px;",
+        "background-color: #004481; color: #fff; padding: 3px 5px;");
     Object.keys(props).forEach((key) => {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
 }
 
-/**
-* Takes the properties object and validates that all specified values have been defined before trying to execute
-* the macro
-*
-* @param  props  Properties to be evaluated
-*/
-function validateProps (props) {
-    let missingProps = [];
 
-    Object.keys(props).forEach((key) => {
-        if (props[key] === undefined || props[key] === null) {
-            missingProps.push(key);
-        }
+/**
+ * Removes the specified effect from all targets
+ */
+async function removeAll () {
+    const targets = canvas.tokens.placeables.filter((placeable) => {
+        return placeable.id !== props.tokenData.id &&
+            placeable.actor.effects.find((effect) => {
+                return effect.data.label === props.itemData.name;
+            });
     });
 
-    if (missingProps.length > 0) {
-        ui.notifications.error(`The following parameters are invalid: ${missingProps.join(", ")}`);
+    if (targets.length === 0) {
         return false;
     }
 
-    return true;
+    for (const target of targets) {
+        if (props.casterData.actor.id === await getProperty(target.actor.data.flags, "midi-qol.light.owner")) {
+            await MidiQOL.socket().executeAsGM("removeEffects", {
+                actorUuid: target.actor.uuid,
+                effects:   [target.actor.effects.find((effect) => {
+                    return (effect.data.label === props.itemData.name);
+                }).id]
+            });
+        }
+    }
 }
