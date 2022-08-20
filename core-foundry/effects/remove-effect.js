@@ -19,5 +19,8 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
         return;
     }
 
-    return await actorData.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+    return await MidiQOL.socket().executeAsGM("removeEffects", {
+        actorUuid: actorData.uuid,
+        effects:   [effect.id]
+    });
 }
