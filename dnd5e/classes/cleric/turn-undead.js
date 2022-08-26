@@ -38,45 +38,11 @@ if (!(game.modules.get("warpgate")?.active)) {
     return ui.notifications.error("Warpgate is required!");
 }
 
-
 // Get target information -----------------------------------------------------
-const targetList = props.targets.reduce((targetList, target) => {
-    const creatureTypes = ["undead"];
-    let validTarget   = target.actor.type === "character" ?
-                            creatureTypes.some((creatureType) => {
-                                return target.actor.data.data.details.race.toLowerCase().includes(creatureType);
-                            }) :
-                            creatureTypes.some((creatureType) => {
-                                return target.actor.data.data.details.type.value.toLowerCase().includes(creatureType);
-                            });
-
-    // Handle mismatches
-    if (!validTarget && target.actor.type === "character" && target.actor.data.data.details.race === (undefined || null)) {
-        console.error(`Invalid Target Type: ${target.name} | Skipped: Race Mismatch | Result: ${target.actor.data.data.details.race}`);
-        return targetList;
-    } else if (!validTarget && target.actor.type === "npc" && target.actor.data.data.details.type.value === (undefined || null)) {
-        console.error(`Invalid Target Type: ${target.name} | Skipped: Type Mismatch | Result: ${target.actor.data.data.details.type.value}`);
-        return targetList;
-    } else if (!validTarget && target.actor.type === "npc" && target.actor.data.data.details.type.value === "custom") {
-        validTarget = creatureTypes.some((creatureType) => {
-            return (target.actor.data.data.details.type.subtype || target.actor.data.data.details.type.custom).toLowerCase().includes(creatureType);
-        });
-
-        if (!validTarget) {
-            console.error(`Invalid Target Type: ${target.name} | Skipped: Custom Type Mismatch | Result: ${target.actor.data.data.details.type.custom} (${target.actor.data.data.details.type.subtype})`);
-            return targetList;
-        }
-    }
-
-    // Handle successful matches
-    console.warn(`Target Found: ${target.name} | Creature Type: ${target.actor.type === "character" ? target.actor.data.data.details.race : target.actor.data.data.details.type.value}`)
-    if (validTarget) {
-        targetList.push(target);
-    }
-
-    return targetList;
-}, []);
-
+const targetList = await filterTargets({
+    targets:       props.targets,
+    creatureTypes: ["undead"]
+});
 
 // Check target list ----------------------------------------------------------
 if (targetList.length === 0) {
@@ -85,13 +51,12 @@ if (targetList.length === 0) {
     return false;
 }
 
-
 // Handle turning targets -----------------------------------------------------
 const turnTargets = [];
 const levelCR     = await getDestroyCR(props.level);
 const gameRound   = game.combat ? game.combat.round : 0;
 
-for (let target of targetList) {
+for (const target of targetList) {
     const monsterCR     = target.actor.getRollData().details.cr;
     const resist        = ["Turn Resistance", "Turn Defiance"];
     const getResistance = target.actor.items.find((item) => {
@@ -103,8 +68,11 @@ for (let target of targetList) {
         return immunity.includes(item.name);
     });
 
-    const getAdvantage = getResistance ? { advantage: true, chatMessage: false, fastForward: true } : { chatMessage: false, fastFoward: true };
+    const getAdvantage = getResistance ?
+        { advantage: true, chatMessage: false, fastForward: true } :
+        { chatMessage: false, fastFoward: true };
 
+    // eslint-disable-next-line no-await-in-loop
     const save = await MidiQOL.socket().executeAsGM("rollAbility", {
         request:    "save",
         targetUuid: target.actor.uuid,
@@ -114,13 +82,31 @@ for (let target of targetList) {
 
     if (getImmunity) {
         console.warn(`Target Processed: ${target.name} | CR: ${monsterCR} | Result: Immune`);
-        turnTargets.push(`<div class="midi-qol-flex-container"><div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">${target.name} is immune</div><div><img src="${target.data.img}" width="30" height="30" style="border:0px"></div></div>`);
+        turnTargets.push(`
+            <div class="midi-qol-flex-container">
+                <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
+                    ${target.name} is immune
+                </div>
+                <div>
+                    <img src="${target.data.img}" width="30" height="30" style="border:0px">
+                </div>
+            </div>`
+        );
     } else {
 
         if (save.total < props.saveDC) {
             if (levelCR >= monsterCR) {
-                console.warn(`Target Processed: ${target.name} | CR: ${monsterCR} | DC: ${props.saveDC} | Save: ${save.total} | [Fail] | Result: Destroyed`);
-                turnTargets.push(`<div class="midi-qol-flex-container"><div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">${target.name} fails with ${save.total} [D]</div><div><img src="${target.data.img}" width="30" height="30" style="border:0px"></div></div>`);
+                logInfo(target.name, monsterCR, props.saveDC, save.Total, "Fail", "Destroyed");
+                turnTargets.push(`
+                    <div class="midi-qol-flex-container">
+                        <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
+                            ${target.name} fails with ${save.total} [D]
+                        </div>
+                        <div>
+                            <img src="${target.data.img}" width="30" height="30" style="border:0px">
+                        </div>
+                    </div>
+                `);
                 const maxHP = Number(target.actor.data.data.attributes.hp.max);
                 const updates = {
                     actor: {
@@ -129,12 +115,22 @@ for (let target of targetList) {
                     }
                 };
 
+                // eslint-disable-next-line no-await-in-loop
                 await warpgate.mutate(target, updates, "", { permanent: true });
 
                 playAnimation(target, "death");
             } else {
-                console.warn(`Target Processed: ${target.name} | CR: ${monsterCR} | DC: ${props.saveDC} | Save: ${save.total} | [Fail] | Result: Frightened`);
-                turnTargets.push(`<div class="midi-qol-flex-container"><div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">${target.name} fails with ${save.total} [F]</div><div><img src="${target.data.img}" width="30" height="30" style="border:0px"></div></div>`);
+                logInfo(target.name, monsterCR, props.saveDC, save.Total, "Fail", "Frightened");
+                turnTargets.push(`
+                    <div class="midi-qol-flex-container">
+                        <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
+                            ${target.name} fails with ${save.total} [F]
+                        </div>
+                        <div>
+                            <img src="${target.data.img}" width="30" height="30" style="border:0px">
+                        </div>
+                    </div>
+                `);
 
                 const effectData = {
                     label:    props.itemData.name,
@@ -162,6 +158,7 @@ for (let target of targetList) {
                     ]
                 };
 
+                // eslint-disable-next-line no-await-in-loop
                 await MidiQOL.socket().executeAsGM("createEffects", {
                     actorUuid: target.actor.uuid,
                     effects:   [effectData]
@@ -170,14 +167,23 @@ for (let target of targetList) {
                 playAnimation(target, "fear");
             }
         } else {
-            console.warn(`Target Skipped: ${target.name} | CR: ${monsterCR} | DC: ${props.saveDC} | Save: ${save.total} [Skipped] | Result: Save`);
-            turnTargets.push(`<div class="midi-qol-flex-container"><div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">${target.name} saves with ${save.total}</div><div><img src="${target.data.img}" width="30" height="30" style="border:0px"></div></div>`);
+            logInfo(target.name, monsterCR, props.saveDC, save.Total, "Skipped", "Save");
+            turnTargets.push(`
+                <div class="midi-qol-flex-container">
+                    <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
+                        ${target.name} saves with ${save.total}
+                    </div>
+                    <div>
+                        <img src="${target.data.img}" width="30" height="30" style="border:0px">
+                    </div>
+                </div>
+            `);
         }
     }
 }
 
 // Finalize Ability -----------------------------------------------------------
-await wait(600);
+warpgate.wait(600);
 const turnResults = `
     <div class="midi-qol-nobox midi-qol-bigger-text">
         ${CONFIG.DND5E.abilities[props.saveType]} Saving Throw: DC ${props.saveDC}
@@ -202,10 +208,10 @@ await ui.chat.scrollBottom();
    ========================================================================== */
 
 /**
-* Logs the global properties for the Macro to the console for debugging purposes
-*
-* @param  {Object}  props  Global properties
-*/
+ * Logs the global properties for the Macro to the console for debugging purposes
+ *
+ * @param  {Object}  props  Global properties
+ */
 function logProps (props) {
     console.groupCollapsed("%cmacro" + `%c${props.name}`,
         "background-color: #333; color: #fff; padding: 3px 5px;",
@@ -216,17 +222,8 @@ function logProps (props) {
     console.groupEnd();
 }
 
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        // eslint-disable-next-line no-promise-executor-return
-        return setTimeout(resolve, ms);
-    });
+function logInfo (name, cr, dc, save, status, result) {
+    console.warn(`Target Skipped: ${name} | CR: ${cr} | DC: ${dc} | Save: ${save} [${status}] | Result: ${result}`);
 }
 
 /**
@@ -242,6 +239,46 @@ async function getDestroyCR (level) {
                 level >= 11 ? 2 :
                     level >= 8 ? 1 :
                         level >= 5 ? 0.5 : 0;
+}
+
+/**
+ * Filters a target list by creature type
+ *
+ * @param    {object}          [options]
+ * @param    {Array<Actor5e>}  targets        Targets list to be filtered
+ * @param    {Array<string>}   creatureTypes  Creature types to filter by
+ * @returns                                   Filtered list of targets
+ */
+async function filterTargets ({ targets = [], creatureTypes = [] }) {
+
+    // Check inputs -----------------------------------------------------------
+    if (targets.length === 0) {
+        return targets;
+    }
+
+    if (creatureTypes.length === 0) {
+        ui.notifications.error("No creature types were specified for filtering!");
+        return targets;
+    }
+
+    // Create filtered targets list -------------------------------------------
+    return targets.reduce((targetsList, target) => {
+
+        // Check valid target
+        const validTarget = target.actor.type === "character" ?
+            creatureTypes.some((creatureType) => {
+                return target.actor.data.data.details.race.toLowerCase().includes(creatureType);
+            }) :
+            creatureTypes.some((creatureType) => {
+                return target.actor.data.data.details.type.value.toLowerCase().includes(creatureType);
+            });
+
+        if (validTarget) {
+            targetsList.push(target);
+        }
+
+        return targetsList;
+    }, []);
 }
 
 /**
