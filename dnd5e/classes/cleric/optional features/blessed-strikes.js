@@ -15,7 +15,17 @@ const props = {
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData:  lastArg.itemData || {},
     tokenData,
+
+    abilityID:      "BlessedStrikes",
+    allowedTypes:   ["weapon", "spell"],
+    animations: {
+        source: "jb2a.divine_smite.caster.blueyellow",
+        target: "jb2a.divine_smite.target.blueyellow"
+    },
+    damageDice: 1,
+    damageType: CONFIG.DND5E.damageTypes.radiant,
 
     hitTargets: lastArg.hitTargets,
     spellLevel: lastArg.spellLevel || 0,
@@ -32,76 +42,58 @@ logProps(props);
    ========================================================================== */
 if (props.state === "DamageBonus") {
 
-    // Check if Blessed Strikes already used
-    if (getProperty(props.actorData.data.flags, "midi-qol.BlessedStrikesUsed")) {
-        return false;
-    }
-
-    // Check if spell level greater than 1
-    if (props.spellLevel > 0) {
-        return false;
-    }
-
-    // Check target disposition
-    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
-        return false;
-    }
-
-    // Ask to apply Blessed Strikes
-    let useBlessedStrikes = false;
-    const dialog = new Promise((resolve) => {
-        new Dialog({
-            title: "Blessed Strikes",
-            content: "Apply Blessed Strikes?",
-            buttons: {
-                ok: {
-                    icon: "<i class=\"fas fa-check\"></i>",
-                    label: "Apply",
-                    callback: () => {
-                        resolve(true);
-                    }
-                },
-
-                cancel: {
-                    icon: "<i class=\"fas fa-times\"></i>",
-                    label: "Cancel",
-                    callback: () => {
-                        resolve(false);
-                    }
-                }
-            }
-        }).render(true);
-    });
-
-    useBlessedStrikes = await dialog;
-
-    if (!useBlessedStrikes) {
+    // Validate usage ---------------------------------------------------------
+    if (getProperty(props.actorData.data.flags, `midi-qol.${props.abilityID}Used`)) {
         return {};
     }
 
-    // Create tracking effect data
+    if (!props.allowedTypes.includes(props.itemData.type)) {
+        return {};
+    }
+
+    if (props.itemData.type === "spell" && props.spellLevel > 0) {
+        return {};
+    }
+
+    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
+        return {};
+    }
+
+    // Ask for attack augment -------------------------------------------------
+    const dialogResult = await Dialog.confirm({
+        title:       `Use ${props.name}`,
+        content:     `<p>Use ${props.name}?</p>`,
+        rejectClose: true
+    });
+
+    if (!dialogResult) {
+        return {};
+    }
+
+    // // Create tracking effect data --------------------------------------------
     const effectData = {
         changes: [{
-            key:      "flags.midi-qol.BlessedStrikesUsed",
+            key:      `flags.midi-qol.${props.abilityID}Used`,
             mode:     CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
             value:    "1",
             priority: 20
         }],
-        origin: props.uuid,
+        origin:   props.uuid,
         disabled: false,
         duration: {
             seconds: 1
         },
-        label: "Blessed Strikes already used this round"
+        label: `${props.name} already used this round`,
+        icon:  props.itemData.img
     };
 
     await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
 
-    playAnimation(props.tokenData, props.hitTargets[0]);
+    playAnimation();
 
-    // Return bonus damage
+    // Return bonus damage ----------------------------------------------------
     return {
-        damageRoll: `1d8[${CONFIG.DND5E.damageTypes.radiant}]`,
+        damageRoll: `${props.damageDice}d8[${props.damageType}]`,
         flavor:     "Blessed Strikes"
     };
 }
@@ -127,19 +119,22 @@ function logProps (props) {
 }
 
 
-function playAnimation (source, target) {
+/**
+ * Plays the animation for the attack when called
+ */
+function playAnimation () {
     if ((game.modules.get("sequencer")?.active)) {
         new Sequence()
             .effect()
-                .file("jb2a.divine_smite.caster.blueyellow")
-                .attachTo(source)
+                .file(props.animations.source)
+                .attachTo(props.tokenData)
                 .scaleToObject(1.75)
                 .fadeIn(300)
                 .fadeOut(300)
                 .waitUntilFinished()
             .effect()
-                .file("jb2a.divine_smite.target.blueyellow")
-                .attachTo(target)
+                .file(props.animations.target)
+                .attachTo(props.hitTargets[0])
                 .scaleToObject(1.75)
             .play();
     }

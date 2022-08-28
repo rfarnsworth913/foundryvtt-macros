@@ -70,7 +70,7 @@ for (const target of targetList) {
 
     const getAdvantage = getResistance ?
         { advantage: true, chatMessage: false, fastForward: true } :
-        { chatMessage: false, fastFoward: true };
+        { chatMessage: false, fastForward: true };
 
     // eslint-disable-next-line no-await-in-loop
     const save = await MidiQOL.socket().executeAsGM("rollAbility", {
@@ -116,7 +116,7 @@ for (const target of targetList) {
                 };
 
                 // eslint-disable-next-line no-await-in-loop
-                await warpgate.mutate(target, updates, "", { permanent: true });
+                await warpgate.mutate(target, updates, "", { permanent: true, description: "Target was destroyed!" });
 
                 playAnimation(target, "death");
             } else {

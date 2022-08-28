@@ -10,12 +10,35 @@
 const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
+let targetData = {};
+if (lastArg.hitTargets) {
+    targetData = canvas.tokens.get(lastArg?.hitTargets[0]?.id) || {};
+    targetData = Object.keys(targetData).length > 0 ? targetData : tokenData;
+}
+
 const props = {
     name: "Blessing of the Forge",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    caster: {
+        actorData: tokenData.actor || {},
+        tokenData: tokenData
+    },
+
+    target: {
+        actorData: targetData.actor || {},
+        tokenData: targetData
+    },
+
+    animation: {
+        intro: "jb2a.magic_signs.circle.02.transmutation.intro.dark_blue",
+        loop:  "jb2a.magic_signs.circle.02.transmutation.loop.dark_blue",
+        outro: "jb2a.magic_signs.circle.02.transmutation.outro.dark_blue"
+    },
+
+    itemData: lastArg.itemData,
+
+    lastArg
 };
 
 logProps(props);
@@ -24,29 +47,42 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "on") {
+if (!(game.modules.get("warpgate")?.active)) {
+    return ui.notifications.error("Warpgate is required!");
+}
 
-    // Get Item Information ---------------------------------------------------
-    const items = await getItems({ actorData: props.actorData });
-    let itemList = "";
-
-    items.forEach((item) => {
-        itemList += `<option value="${item.id}">${item.name}</option>`;
+if (props.state === "OnUse") {
+    // Get items to modify ----------------------------------------------------
+    const items = await getItems({
+        actorData: props.target.actorData
     });
 
-    if (itemList.length === 0) {
-        return ui.notifications.error("No valid items were found in your inventory");
+    if (items.weapons.length === 0 && items.armor.length === 0) {
+        return ui.notifications.error(`Could not find items to enchant on actor ${props.target.actorData.name}`);
     }
 
-    // Request Dialog ---------------------------------------------------------
+    // Generate dialog content ------------------------------------------------
+    let dialogContent = "";
+
+    if (items.weapons.length > 0) {
+        dialogContent += "<h3><strong>Weapons</strong></h3>";
+        dialogContent += getDialogContent(items.weapons, true);
+    }
+
+    if (items.armor.length > 0) {
+        dialogContent += items.weapons.length > 0 ? "<hr /><h3><strong>Armor</strong></h3>" : "";
+        dialogContent += getDialogContent(items.armor, items.weapons.length > 0 ? false : true);
+    }
+
+
+    // Enchant Dialog ---------------------------------------------------------
     new Dialog({
-        title: "Choose an item to enhance",
+        title: props.dialogTitle,
         content: `
-            <div class="form-group flexrow" style="align-items: center; padding: 5px;">
-                <label style="flex-grow: 1;">Items: </label>
-                <select style="flex-grow: 3;" id="items">
-                    ${itemList}
-                </select>
+            <div class="form-group flexcol" style="align-items: left; padding: 5px;">
+                <fieldset style="border: none">
+                    ${dialogContent}
+                </fieldset>
             </div>
         `,
         buttons: {
@@ -54,17 +90,16 @@ if (props.state === "on") {
                 icon: "<i class=\"fas fa-check\"></i>",
                 label: "Apply",
                 callback: async (html) => {
-                    const itemID   = html.find("#items").val();
-                    const itemData = props.actorData.items.get(itemID);
+                    const itemID   = html.find("input:checked")[0].id;
+                    const itemData = await fromUuid(itemID);
 
-                    applyEffects({
-                        actorData: props.actorData,
-                        itemData:  itemData,
-                        tokenData: props.tokenData
+                    await applyEffects({
+                        caster: props.caster,
+                        target: props.target,
+                        itemData
                     });
                 }
             },
-
             cancel: {
                 icon: "<i class=\"fas fa-times\"></i>",
                 label: "Cancel"
@@ -74,9 +109,7 @@ if (props.state === "on") {
 }
 
 if (props.state === "off") {
-    removeEffects({
-        actorData: props.actorData
-    });
+    removeEffects({ actorData: props.caster.actorData });
 }
 
 
@@ -100,6 +133,73 @@ function logProps (props) {
 }
 
 /**
+ * Returns the collection of non-magical weapons and armor that the player has
+ * in their inventory
+ *
+ * @param    {object}         [options]
+ * @param    {Actor5e}        actorData     Actor whose inventory should be checked
+ * @returns  {Array<Item5e>}                Array of selected items
+ */
+async function getItems ({ actorData } = {}) {
+    const armorTypes = ["heavy", "light", "medium", "shield"];
+    const items = {
+        weapons: [],
+        armor:   []
+    };
+
+    if (!actorData) {
+        return items;
+    }
+
+    // Initial filtering ------------------------------------------------------
+    actorData.items.forEach((item) => {
+        if (item.data.type === "weapon" && !item.data.data.properties.mgc) {
+            items.weapons.push(item);
+        }
+
+        if (item.data.type === "equipment" &&
+            armorTypes.includes(item.data.data.armor.type) &&
+            !item.data.flags?.magicitems.enabled) {
+            items.armor.push(item);
+        }
+    });
+
+    // Sort by item name ------------------------------------------------------
+    items.weapons.sort((a, b) => {
+        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+    });
+
+    items.armor.sort((a, b) => {
+        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+    });
+
+    return items;
+}
+
+/**
+ * Returns the standardized dialog content formatting
+ *
+ * @param    {Array<Item5e}  items    Items to process
+ * @param    {boolean}       checked  Allow checked flag for first item
+ * @returns                           Formatted dialog content
+ */
+function getDialogContent (items, checked = false) {
+    let dialogContent = "";
+
+    items.forEach((item) => {
+        dialogContent += `
+        <div style="padding-top: 3px; padding-bottom: 3px; display: flex; align-items: center;">
+            <input type="radio" id="${item.uuid}" name="enhancedItem" ${dialogContent.length === 0 && checked ? "checked" : ""} />
+            <img src="${item.img}" height="30px" width="30px" style="margin-left: 7px; margin-right: 7px; alt=${item.name} />
+            <label for="${item.name}">${item.name}</label>
+        </div>
+        `;
+    });
+
+    return dialogContent;
+}
+
+/**
  * Plays an animation on the character showing the effect being applied
  *
  * @param  {Token5e}  target  Where animation should be played
@@ -108,13 +208,13 @@ function playAnimation (target) {
     if ((game.modules.get("sequencer")?.active)) {
         new Sequence()
             .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.intro.dark_blue")
+                .file(props.animation.intro)
                 .atLocation(target)
                 .scaleToObject(2)
                 .belowTokens()
                 .waitUntilFinished(-550)
             .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.loop.dark_blue")
+                .file(props.animation.loop)
                 .atLocation(target)
                 .scaleToObject(2)
                 .belowTokens()
@@ -122,7 +222,7 @@ function playAnimation (target) {
                 .fadeOut(200)
                 .waitUntilFinished(-550)
             .effect()
-                .file("jb2a.magic_signs.circle.02.transmutation.outro.dark_blue")
+                .file(props.animation.outro)
                 .atLocation(target)
                 .scaleToObject(2)
                 .belowTokens()
@@ -131,65 +231,50 @@ function playAnimation (target) {
 }
 
 /**
- * Returns the collection of non-magical weapons and armor that the player has
- * in their inventory
- *
- * @param    {object}     [options]
- * @param    {Actor5e}    actorData  Actor to be operated on
- * @returns  Array<Item>             Collection of items matching the label
- */
-async function getItems ({ actorData } = {}) {
-    const armorTypes = ["heavy", "light", "medium", "shield"];
-
-    if (!actorData) {
-        return console.error("No actor specified");
-    }
-
-    return (actorData.items.filter((item) => {
-        return (item.data.type === "weapon" && !item.data.data.properties.mgc) ||
-               (item.data.type === "equipment" &&
-               (armorTypes.includes(item.data.data.armor.type) &&
-               !item.data.flags?.magicitems.enabled));
-    }));
-}
-
-/**
  * Handles applying changes to the specified items
  *
- * @param  {object}   [options]
- * @param  {Actor5e}  actorData  Actor to be operated on
- * @param  {Item5e}   itemData   Item to be operated item
- * @param  {Token5e}  tokenData  Token for animation
+ * @param  {object}  [options]
+ * @param  {object}  caster    Wrapper for caster actor and token data
+ * @param  {object}  target    Wrapper for target actor and token data
+ * @param  {Item5e}  itemData  Item to be operated item
  */
-async function applyEffects ({ actorData, itemData, tokenData } = {}) {
+async function applyEffects ({ caster, target, itemData } = {}) {
     const itemCopy = duplicate(itemData);
     const itemType = itemCopy.type;
 
     // Set tracking flag ------------------------------------------------------
-    DAE.setFlag(actorData, "BlessingForge", {
-        id:     itemData.id,
-        ac:     itemType === "equipment" ? itemCopy.data.armor.value : 0,
-        damage: itemType === "weapon" ? itemCopy.data.damage.parts[0][0] : 0,
-        attack: itemType === "weapon" ? itemCopy.data.attackBonus : 0
+    DAE.setFlag(caster.actorData, "BlessingForge", {
+        actorID:  target.tokenData.actor.id,
+        itemName: itemData.name
     });
 
     // Update item information ------------------------------------------------
+    const updates = { embedded: { Item: { [itemData.name]: { name: `${itemData.name} (Blessed)` } } } };
+
     if (itemType === "equipment") {
-        itemCopy.data.armor.value = itemCopy.data.armor.value + 1;
+        updates.embedded.Item[itemData.name] = {
+            ...updates.embedded.Item[itemData.name],
+            "data.armor.value": itemCopy.data.armor.value + 1
+        };
     } else {
-        itemCopy.data.damage.parts[0][0] = `${itemCopy.data.damage.parts[0][0]} + 1`;
-        itemCopy.data.attackBonus = itemCopy.data.attackBonus.length > 0 ?`${itemCopy.data.attackBonus} + 1` : 1;
+        updates.embedded.Item[itemData.name] = {
+            ...updates.embedded.Item[itemData.name],
+            "data.damage.parts": [[`${itemCopy.data.damage.parts[0][0]} + 1`, itemCopy.data.damage.parts[0][1]]],
+            "data.attackBonus":  itemCopy.data.attackBonus.length > 0 ?`${itemCopy.data.attackBonus} + 1` : 1
+        };
     }
 
-    itemCopy.name = `${itemCopy.name} (Blessed)`;
-
     // Apply changes ----------------------------------------------------------
-    actorData.updateEmbeddedDocuments("Item", [itemCopy]);
+    await warpgate.mutate(target.tokenData.document, updates, {}, {
+        name:        "Blessing of the Forge",
+        description: "Blessing of the Forge"
+    });
+
     ChatMessage.create({
         content: `${itemData.name}  has been enhanced.`
     });
 
-    playAnimation(tokenData);
+    playAnimation(caster.tokenData);
 }
 
 /**
@@ -199,33 +284,28 @@ async function applyEffects ({ actorData, itemData, tokenData } = {}) {
  * @param  {Actor5e}  actorData  Actor to be operated on
  */
 async function removeEffects ({ actorData } = {}) {
+
+    // Get dependencies -------------------------------------------------------
     const flag = DAE.getFlag(actorData, "BlessingForge");
 
-    // Check flag status ------------------------------------------------------
     if (!flag) {
         return false;
     }
 
-    // Restore original stats -------------------------------------------------
-    const item = actorData.items.get(flag.id);
+    // Get target -------------------------------------------------------------
+    const target = canvas.tokens.placeables.filter((token) => {
+        return token.actor.id === flag.actorID ? canvas.tokens.get(token.data._id) : false;
+    });
 
-    if (item) {
-        const itemCopy = duplicate(item);
-
-        if (itemCopy.type === "equipment") {
-            itemCopy.data.armor.value = flag.ac;
-        } else {
-            itemCopy.data.damage.parts[0][0] = flag.damage;
-            itemCopy.data.attackBonus = flag.attack;
-        }
-
-        itemCopy.name = itemCopy.name.replace(" (Blessed)", "");
-
-        actorData.updateEmbeddedDocuments("Item", [itemCopy]);
-        ChatMessage.create({
-            content: `${itemCopy.name}  has returned to normal`
-        });
+    if (target.length === 0) {
+        return false;
     }
 
+    // Restore original stats -------------------------------------------------
+    await warpgate.revert(target[0].document, "Blessing of the Forge");
     DAE.unsetFlag(actorData, "BlessingForge");
+
+    ChatMessage.create({
+        content: `${flag.itemName}  has been enhanced.`
+    });
 }

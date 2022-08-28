@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Divine Strike
+    Macro:         Divine Strikes
     Source:        Custom
     Usage:         DAE ItemMacro
    ========================================================================== */
@@ -11,16 +11,25 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Divine Strike",
+    name: "Divine Strikes",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData:  lastArg.itemData || {},
     tokenData,
 
-    casterLevel: tokenData.actor.getRollData().classes.cleric.levels || 0,
-    hitTargets:  lastArg.hitTargets,
-    spellLevel:  lastArg.spellLevel || 0,
-    uuid:        lastArg.uuid,
+    abilityID:      "DivineStrike",
+    allowedTypes:   ["weapon"],
+    animations: {
+        source: "jb2a.divine_smite.caster.orange",
+        target: "jb2a.divine_smite.target.orange"
+    },
+    damageDice: tokenData.actor.getRollData().classes.cleric.levels >= 14 ? 2 : 1,
+    damageType: CONFIG.DND5E.damageTypes.fire,
+
+    hitTargets: lastArg.hitTargets,
+    spellLevel: lastArg.spellLevel || 0,
+    uuid:       lastArg.uuid,
 
     lastArg,
 };
@@ -33,78 +42,58 @@ logProps(props);
    ========================================================================== */
 if (props.state === "DamageBonus") {
 
-    // Check if Divine Strike already used
-    if (getProperty(props.actorData.data.flags, "midi-qol.DivineStrikeUsed")) {
-        return false;
-    }
-
-    // Check if spell level greater than 1
-    if (props.spellLevel > 0) {
-        return false;
-    }
-
-    // Check target disposition
-    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
-        return false;
-    }
-
-    // Ask to apply Divine Strike
-    let useBlessedStrikes = false;
-    const dialog = new Promise((resolve) => {
-        new Dialog({
-            title: "Divine Strike",
-            content: "Apply Divine Strike?",
-            buttons: {
-                ok: {
-                    icon: "<i class=\"fas fa-check\"></i>",
-                    label: "Apply",
-                    callback: () => {
-                        resolve(true);
-                    }
-                },
-
-                cancel: {
-                    icon: "<i class=\"fas fa-times\"></i>",
-                    label: "Cancel",
-                    callback: () => {
-                        resolve(false);
-                    }
-                }
-            }
-        }).render(true);
-    });
-
-    useBlessedStrikes = await dialog;
-
-    if (!useBlessedStrikes) {
+    // Validate usage ---------------------------------------------------------
+    if (getProperty(props.actorData.data.flags, `midi-qol.${props.abilityID}Used`)) {
         return {};
     }
 
-    // Create tracking effect data
+    if (!props.allowedTypes.includes(props.itemData.type)) {
+        return {};
+    }
+
+    if (props.itemData.type === "spell" && props.spellLevel > 0) {
+        return {};
+    }
+
+    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
+        return {};
+    }
+
+    // Ask for attack augment -------------------------------------------------
+    const dialogResult = await Dialog.confirm({
+        title:       `Use ${props.name}`,
+        content:     `<p>Use ${props.name}?</p>`,
+        rejectClose: true
+    });
+
+    if (!dialogResult) {
+        return {};
+    }
+
+    // // Create tracking effect data --------------------------------------------
     const effectData = {
         changes: [{
-            key:      "flags.midi-qol.DivineStrikeUsed",
+            key:      `flags.midi-qol.${props.abilityID}Used`,
             mode:     CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
             value:    "1",
             priority: 20
         }],
-        origin: props.uuid,
+        origin:   props.uuid,
         disabled: false,
         duration: {
             seconds: 1
         },
-        label: "Divine Strike already used this round"
+        label: `${props.name} already used this round`,
+        icon:  props.itemData.img
     };
 
     await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
 
-    playAnimation(props.tokenData, props.hitTargets[0]);
+    playAnimation();
 
-    const dice = props.casterLevel >= 14 ? 2 : 1;
-
-    // Return bonus damage
+    // Return bonus damage ----------------------------------------------------
     return {
-        damageRoll: `${dice}d8[${CONFIG.DND5E.damageTypes.fire}]`,
+        damageRoll: `${props.damageDice}d8[${props.damageType}]`,
         flavor:     "Divine Strike"
     };
 }
@@ -131,24 +120,21 @@ function logProps (props) {
 
 
 /**
- * Plays animation on target
- *
- * @param  {Token5e}  source  Token to use in animation
- * @param  {Token5e}  target  Token to use in animation
- */
-function playAnimation (source, target) {
+* Plays the animation for the attack when called
+*/
+function playAnimation () {
     if ((game.modules.get("sequencer")?.active)) {
         new Sequence()
             .effect()
-                .file("jb2a.divine_smite.caster.orange")
-                .attachTo(source)
+                .file(props.animations.source)
+                .attachTo(props.tokenData)
                 .scaleToObject(1.75)
                 .fadeIn(300)
                 .fadeOut(300)
                 .waitUntilFinished()
             .effect()
-                .file("jb2a.divine_smite.target.orange")
-                .attachTo(target)
+                .file(props.animations.target)
+                .attachTo(props.hitTargets[0])
                 .scaleToObject(1.75)
             .play();
     }
