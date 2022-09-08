@@ -52,8 +52,9 @@ let content = "";
 
 items.forEach((item) => {
     content += `
-        <div>
-            <input type="radio" id="${item.id}" name="${item.name}" ${content.length > 0 ? "" : "checked"} />
+        <div style="padding-top: 3px; padding-bottom: 3px; display: flex; align-items: center;">
+            <input type="radio" id="${item.uuid}" name="enhancedItem" ${content.length === 0 ? "checked" : ""} />
+            <img src="${item.img}" height="30px" width="30px" style="margin-left: 7px; margin-right: 7px; alt=${item.name} />
             <label for="${item.name}">${item.name}</label>
         </div>
     `;
@@ -63,7 +64,7 @@ new Dialog({
     title: "Identify Item",
     content: `
         <form class="flexcol">
-            <fieldset>
+            <fieldset style="border: none;">
                 ${content}
             </fieldset>
         </form>
@@ -74,7 +75,7 @@ new Dialog({
             label: "Identify",
             callback: async (html) => {
                 const selectedItem = html.find("input:checked")?.[0];
-                const item         = props.actorData.items.get(selectedItem.id);
+                const item         = fromUuid(selectedItem.id);
                 ForienIdentification.identify(item);
                 item.sheet.render(true);
             }

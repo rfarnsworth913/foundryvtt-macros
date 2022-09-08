@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Remove Caster Concentration
+    Macro:         Staunch Wound
     Source:        Custom
     Usage:         DAE ItemMacro
    ========================================================================== */
@@ -8,12 +8,19 @@
     Macro Globals
    ========================================================================== */
 const lastArg   = args[args.length - 1];
+const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Remove Caster Concentration",
+    name: "Staunch Wound",
     state: args[0]?.tag || args[0] || "unknown",
 
-    casterData: DAE.DAEfromUuid(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1))
+    actorData: tokenData?.actor || {},
+    tokenData,
+
+    flavor: "Staunch Wound",
+    saveDC: 12,
+
+    lastArg
 };
 
 logProps(props);
@@ -22,17 +29,27 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "off") {
-    await removeEffect({
-        actorData:   props.casterData,
-        effectLabel: "Concentrating"
+if (props.state === "each") {
+    await game.MonksTokenBar.requestRoll([props.tokenData], {
+        request:  "skill:med",
+        dc:       props.saveDC,
+        flavor:   props.flavor,
+        showdc:   false,
+        contine:  "passed",
+        rollMode: "request",
+        callback: async () => {
+            await removeEffect({
+                actorData:   props.actorData,
+                effectLabel: "Bloody Wound"
+            });
+        }
     });
 }
 
 
 /* ==========================================================================
     Helpers
-    ========================================================================== */
+   ========================================================================== */
 
 /**
  * Logs the global properties for the Macro to the console for debugging purposes
@@ -63,11 +80,11 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
     }
 
     const effect = actorData.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
+        return effect.data.label.toLowerCase().startsWith(effectLabel.toLowerCase());
     });
 
     if (!effect) {
-        return {};
+        return;
     }
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
