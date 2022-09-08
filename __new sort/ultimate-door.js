@@ -1,4 +1,5 @@
 // https://cdn.discordapp.com/attachments/1001709111651618816/1001709116504408124/unknown.png
+// https://discord.com/channels/862414864692281386/1001709111651618816/1001709117360066703
 {
   "name": "Ultimate Door (Setup)",
   "type": "script",
