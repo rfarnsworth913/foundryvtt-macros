@@ -36,19 +36,19 @@ if (props.state === "DamageBonus" && props.targets.length > 0) {
     }
 
     // Create effect information
-    const modifier = props.actorData.data.data.attributes.spellcasting || "";
-    const tempHP   = props.actorData.data.data.abilities?.[modifier]?.mod || 0;
+    const modifier = props.actorData.getRollData().attributes.spellcasting || "";
+    const tempHP   = props.actorData.getRollData().abilities?.[modifier]?.mod || 0;
 
     const effectData = {
         changes: [
             {
-                key:      "data.attributes.hp.temp",
-                mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
+                key:      "system.attributes.hp.temp",
+                mode:     CONST.ACTIVE_EFFECT_MODES.UPGRADE,
                 value:    tempHP,
                 prioirty: 20
             },
             {
-                key:      "data.traits.ci.value",
+                key:      "system.traits.ci.value",
                 mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
                 value:    "frightened",
                 prioirty: 20
@@ -103,5 +103,5 @@ function isTargetingSelf (actorData, targets) {
         return false;
     }
 
-    return actorData?.name === targets?.[0]?.actor?.data?.name;
+    return actorData?.name === targets?.[0]?.actor?.name;
 }

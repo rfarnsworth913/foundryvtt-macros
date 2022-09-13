@@ -38,7 +38,7 @@ if (props.actorData === "") {
 props.effects.forEach(async (effectLabel) => {
 
     const effect = props.actorData.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
+        return effect.label.toLowerCase() === effectLabel.toLowerCase();
     });
 
     if (effect) {

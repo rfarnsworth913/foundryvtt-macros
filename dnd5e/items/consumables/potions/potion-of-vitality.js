@@ -8,7 +8,7 @@
     Macro Globals
    ========================================================================== */
 const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const tokenData = canvas.tokens.get(lastArg?.targets[0].id) || {};
 
 const props = {
     name: "Potion of Vitality",

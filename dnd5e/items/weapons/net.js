@@ -41,9 +41,8 @@ if (props.state === "on") {
 
     // Summon Coordinates -----------------------------------------------------
     const location  = props.tokenData.center;
-    const gridScale = game.scenes.current.data.grid;
-    location.x += gridScale * (0.5 * props.tokenData.data.width);
-    location.y -= gridScale * (0.5 * props.tokenData.data.height);
+    location.x += 0.5 * props.tokenData.width;
+    location.y -= 0.5 * props.tokenData.height;
 
     // Summon and apply updates -------------------------------------------
     const updates  = {
@@ -52,6 +51,7 @@ if (props.state === "on") {
             width:  0.5
         }
     };
+
     const target = await warpgate.spawnAt(location, props.summonToken, updates);
     await props.actorData.setFlag("midi-qol", props.summonLabel, target[0]);
 
@@ -72,7 +72,7 @@ if (props.state === "off") {
             await tokenAttacher.detachElementFromToken(canvas.tokens.get(target), props.tokenData, true);
         }
 
-        await warpgate.dismiss(target, game.scenes.current.data.document.id);
+        await warpgate.dismiss(target, game.scenes.current.data.id);
         await props.actorData.unsetFlag("midi-qol", props.summonLabel);
     }
 }
