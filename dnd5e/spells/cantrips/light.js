@@ -20,7 +20,7 @@ const props = {
     tokenData,
 
     casterData,
-    casterDisposition: casterData.data.disposition,
+    casterDisposition: casterData.disposition,
     itemData:          await fromUuid(lastArg.origin),
     saveDC:            casterData.actor.getRollData().attributes.spelldc,
     spellCasting:      casterData.actor.getRollData().attributes.spellcasting,
@@ -46,7 +46,7 @@ if (props.state === "on") {
                 ${props.tokenData.name}
             </div>
             <div>
-                <img src="${props.tokenData.data.img}" width="30" height="30" style="border:0px">
+                <img src="${props.tokenData.document.texture.src}" width="30" height="30" style="border:0px">
             </div>
         </div>
     `;
@@ -60,7 +60,7 @@ if (props.state === "on") {
 
 
     // Check token disposition ------------------------------------------------
-    if (props.tokenData.data.disposition !== props.casterDisposition) {
+    if (props.tokenData.disposition !== props.casterDisposition) {
         const save = await MidiQOL.socket().executeAsGM("rollAbility", {
             request: "save",
             targetUuid: props.actorData.uuid,
@@ -78,7 +78,7 @@ if (props.state === "on") {
             await MidiQOL.socket().executeAsGM("removeEffects", {
                 actorUuid: props.tokenData.actor.uuid,
                 effects:   [props.tokenData.actor.effects.find((effect) => {
-                    return effect.data.label === props.itemData.name;
+                    return effect.label === props.itemData.name;
                 }).id]
             });
         }
@@ -89,7 +89,7 @@ if (props.state === "on") {
                     ${props.tokenData.name} ${saveResult} with ${save.total}
                 </div>
                 <div>
-                    <img src="${props.tokenData.data.img}" width="30" height="30" style="border:0px">
+                    <img src="${props.tokenData.document.texture.src}" width="30" height="30" style="border:0px">
                 </div>
             </div>
         `;
@@ -108,12 +108,12 @@ if (props.state === "on") {
 
     // Update Chat with Results -----------------------------------------------
     const lastMessage = game.messages.filter((message) => {
-        return message.data.flavor === props.itemData.name &&
-            message.data.speaker.token === props.casterData.id;
+        return message.flavor === props.itemData.name &&
+            message.speaker.token === props.casterData.id;
     }).pop();
 
     const chatMessage = await game.messages.get(lastMessage.id);
-    let content       = await duplicate(chatMessage.data.content);
+    let content       = await duplicate(chatMessage.content);
 
     const searchString  = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
     const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${saveResults}`;
@@ -154,7 +154,7 @@ async function removeAll () {
     const targets = canvas.tokens.placeables.filter((placeable) => {
         return placeable.id !== props.tokenData.id &&
             placeable.actor.effects.find((effect) => {
-                return effect.data.label === props.itemData.name;
+                return effect.label === props.itemData.name;
             });
     });
 
@@ -163,11 +163,11 @@ async function removeAll () {
     }
 
     for (const target of targets) {
-        if (props.casterData.actor.id === await getProperty(target.actor.data.flags, "midi-qol.light.owner")) {
+        if (props.casterData.actor.id === await getProperty(target.actor.flags, "midi-qol.light.owner")) {
             await MidiQOL.socket().executeAsGM("removeEffects", {
                 actorUuid: target.actor.uuid,
                 effects:   [target.actor.effects.find((effect) => {
-                    return (effect.data.label === props.itemData.name);
+                    return (effect.label === props.itemData.name);
                 }).id]
             });
         }

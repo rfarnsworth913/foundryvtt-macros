@@ -29,13 +29,13 @@ logProps(props);
 if (props.state === "DamageBonus" && props.targets.length > 0) {
     const damageType = props.lastArg.damageDetail[0]?.type || "unknown";
 
-    // Exit if we are not doing healing or only targeting self
+    // Exit if we are not doing healing or only targeting self ----------------
     if (damageType !== CONFIG.DND5E.healingTypes.healing.toLowerCase() ||
         isTargetingSelf(props.actorData, props.targets)) {
         return false;
     }
 
-    // Create effect information
+    // Create effect information ----------------------------------------------
     const modifier = props.actorData.getRollData().attributes.spellcasting || "";
     const tempHP   = props.actorData.getRollData().abilities?.[modifier]?.mod || 0;
 
@@ -56,6 +56,11 @@ if (props.state === "DamageBonus" && props.targets.length > 0) {
         ],
         origin:   props.lastArg.itemUuid,
         disabled: false,
+        flags: {
+            dae: {
+                specialDuration: ["turnEndSource"]
+            }
+        },
         duration: {
             rounds:     1,
             turns:      1,
@@ -67,8 +72,21 @@ if (props.state === "DamageBonus" && props.targets.length > 0) {
         label: props.name
     };
 
-    // Apply effect to self
-    await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    // Apply effect to self ---------------------------------------------------
+    await MidiQOL.socket().executeAsGM("createEffects", {
+        actorUuid: props.actorData.uuid,
+        effects:   [effectData]
+    });
+
+    // Remove Frightened Condition --------------------------------------------
+    const hasEffect = game.dfreds.effectInterface.hasEffectApplied("Frightened", props.actorData.uuid);
+
+    if (hasEffect) {
+        game.dfreds.effectInterface.removeEffect({
+            effectName: "Frightened",
+            uuid: props.actorData.uuid
+        });
+    }
 }
 
 

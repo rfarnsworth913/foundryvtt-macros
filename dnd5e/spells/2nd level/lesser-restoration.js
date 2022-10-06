@@ -34,11 +34,11 @@ logProps(props);
 
 // Get Effects on the target Actor --------------------------------------------
 const effects = props.target.actor.effects.filter((item) => {
-    return props.conditions.includes(item.data.label);
+    return props.conditions.includes(item.label);
 });
 
 const selectOptions = effects.reduce((list, activeEffect) => {
-    const condition = activeEffect.data.label;
+    const condition = activeEffect.label;
     list.push(`<option value="${condition}">${condition}</option>`);
     return list;
 }, []);
@@ -69,7 +69,7 @@ new Dialog({
             callback: async (html) => {
                 const element = html.find("#element").val();
                 const effect  = props.target.actor.effects.find((item) => {
-                    return item.data.label === element;
+                    return item.label === element;
                 });
 
                 await MidiQOL.socket().executeAsGM("removeEffects", {
@@ -82,17 +82,17 @@ new Dialog({
                     <div class="midi-qol-nobox">
                         <div class="midi-qol-flex-container">
                             <div>Cures ${element}:</div>
-                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target.data._id}">
+                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target._id}">
                                 ${props.target.name}
                             </div>
                             <div>
-                                <img src="${props.target.data.img}" width="30" height="30" style="border:0px"></img>
+                                <img src="${props.target.img}" width="30" height="30" style="border:0px"></img>
                             </div>
                         </div>
                     </div>
                 `;
 
-                let content         = duplicate(chatMessage.data.content);
+                let content         = duplicate(chatMessage.content);
                 const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
                 const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
 

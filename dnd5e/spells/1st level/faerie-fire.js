@@ -7,12 +7,17 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
+const lastArg   = args[args.length - 1];
+
 const props = {
     name: "Faerie Fire",
     state: args[0]?.macroPass || args[0] || "unknown",
 
-    color: "red",
-    templateID: args[0]?.templateId || ""
+    color:      "red",
+    targets:    lastArg.failedSaveUuids,
+    templateID: args[0]?.templateId || "",
+
+    lastArg
 };
 
 logProps(props);
@@ -21,6 +26,8 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+
+// Casting animation ----------------------------------------------------------
 if (props.state === "preActiveEffects") {
 
     // Animate applying effect ------------------------------------------------
@@ -28,8 +35,6 @@ if (props.state === "preActiveEffects") {
         const template = canvas.templates.placeables.find((template) => {
             return template.id === props.templateID;
         });
-
-        console.warn(template);
 
         if (!template) {
             return false;
@@ -72,6 +77,18 @@ if (props.state === "preActiveEffects") {
     }
 }
 
+// Remove Invisibility --------------------------------------------------------
+if (props.state === "postActiveEffects") {
+    props.targets.forEach(async (target) => {
+        const token = await fromUuid(target);
+
+        await removeEffect({
+            actorData:   token.actor,
+            effectLabel: "Invisible"
+        });
+    });
+}
+
 
 /* ==========================================================================
     Helpers
@@ -90,4 +107,31 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
+}
+
+/**
+ * Removes an effect from a selected actor
+ *
+ * @param    {object}   [options]
+ * @param    {Actor5e}  actor        Target actor
+ * @param    {string}   effectLabel  Effect to be found on target actor
+ * @returns  {Promise<Function>}     Deletion status of effect
+ */
+async function removeEffect ({ actorData, effectLabel = "" } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    const effect = actorData.effects.find((effect) => {
+        return effect.label.toLowerCase() === effectLabel.toLowerCase();
+    });
+
+    if (!effect) {
+        return;
+    }
+
+    return await MidiQOL.socket().executeAsGM("removeEffects", {
+        actorUuid: actorData.uuid,
+        effects:   [effect._id]
+    });
 }

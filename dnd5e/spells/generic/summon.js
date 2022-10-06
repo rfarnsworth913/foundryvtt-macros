@@ -1,7 +1,7 @@
 /* ==========================================================================
     Macro:         Summon
     Source:        Generial Summoning Macro
-    Usage:         DAE ItemMacro {{ Actor Name }} @item
+    Usage:         DAE ItemMacro {{ Actor Name }}
    ========================================================================== */
 
 /* ==========================================================================
@@ -10,13 +10,15 @@
 const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
+console.warn(args);
+
 const props = {
     name: "Summon",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
 
-    summonID:    `${args[2]?.name.replace(" ", "_")}_Summoned_Token`,
+    summonID:    `${args[1]?.replace(" ", "_")}_Summoned_Token`,
     summonToken: args[1] || ""
 };
 

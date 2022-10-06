@@ -1,0 +1,66 @@
+/* ==========================================================================
+    Macro:         Stalwart
+    Source:        Custom
+    Usage:         ItemMacro
+   ========================================================================== */
+
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg   = args[args.length - 1];
+const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+
+const props = {
+    name: "Stalwart",
+    state: args[0]?.tag || args[0] || "unknown",
+
+    actorData: tokenData?.actor || {},
+    tokenData,
+    uuid:      tokenData.actor.uuid,
+
+    conditions: [
+        "Prone",
+        "Stunned"
+    ],
+
+    lastArg
+};
+
+logProps(props);
+
+
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+
+// Remove conditions ----------------------------------------------------------
+props.conditions.forEach((condition) => {
+    const hasEffect = game.dfreds.effectInterface.hasEffectApplied(condition, props.uuid);
+
+    if (hasEffect) {
+        game.dfreds.effectInterface.removeEffect({
+            effectName: condition,
+            uuid: props.uuid
+        });
+    }
+});
+
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
+/**
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
+function logProps (props) {
+    console.groupCollapsed("%cmacro" + `%c${props.name}`,
+        "background-color: #333; color: #fff; padding: 3px 5px;",
+        "background-color: #004481; color: #fff; padding: 3px 5px;");
+    Object.keys(props).forEach((key) => {
+        console.log(`${key}: `, props[key]);
+    });
+    console.groupEnd();
+}

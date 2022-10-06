@@ -45,6 +45,7 @@ module.exports = {
         "Sequence":      "readonly",
         "Sequencer":     "readonly",
         "tokenAttacher": "readonly",
+        "TokenMagic":    "readonly",
         "ui":            "readonly",
         "warpgate":      "readonly"
     },
