@@ -83,18 +83,20 @@ if (props.state === "OnUse") {
 
 // Damage Bonus ---------------------------------------------------------------
 if (props.state === "DamageBonus") {
+    const weaponUsed = await fromUuid(props.lastArg.uuid);
+    const weaponData = await weaponUsed.getChatData();
 
-    if (!["mwak"].includes(props.lastArg.item.data.actionType)) {
+    if (!["mwak"].includes(weaponData.actionType)) {
         return false;
     }
 
     const target        = canvas.tokens.get(props.lastArg.hitTargets[0].id);
-    const spellDC       = props.actorData.data.data.attributes.spelldc;
+    const spellDC       = props.actorData.system.attributes.spelldc;
     const concentration = props.actorData.effects.find((item) => {
-        return item.data.label === game.i18n.localize("Concentrating");
+        return item.label === game.i18n.localize("Concentrating");
     });
-    const spellLevel = getProperty(props.actorData.data.flags, "midi-qol.spellLevel");
-    const spellUuid  = getProperty(props.actorData.data.flags, "midi-qol.spellID");
+    const spellLevel = getProperty(props.actorData.flags, "midi-qol.spellLevel");
+    const spellUuid  = getProperty(props.actorData.flags, "midi-qol.spellID");
     const spellItem  = await fromUuid(spellUuid);
     const itemName   = game.i18n.localize(spellItem.name);
     const damageType = "fire";
@@ -125,7 +127,6 @@ if (props.state === "DamageBonus") {
         origin: spellUuid,
         flags: {
             dae: {
-                itemData: spellItem.data,
                 token:    target.actor.uuid
             }
         },
@@ -146,7 +147,7 @@ if (props.state === "DamageBonus") {
             effects:   [effectData]
         });
 
-        const concentrationUpdate = await getProperty(props.actorData.data.flags, "midi-qol.concentration-data.targets");
+        const concentrationUpdate = await getProperty(props.actorData.flags, "midi-qol.concentration-data.targets");
         await concentrationUpdate.push({
             tokenUuid: target.document.uuid,
             actorUuid: target.actor.uuid

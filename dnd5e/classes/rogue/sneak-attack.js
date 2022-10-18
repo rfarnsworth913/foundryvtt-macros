@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Divine Strikes
+    Macro:         Sneak Attack
     Source:        Custom
-    Usage:         DAE ItemMacro
+    Usage:         Damage Bonus Macro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,27 +11,21 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Divine Strikes",
+    name: "Sneak Attack",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData:  lastArg.itemData || {},
+    itemData:  lastArg.itemData,
     tokenData,
 
-    abilityID:      "DivineStrike",
-    allowedTypes:   ["weapon"],
+    damageDice: tokenData.actor.getRollData()?.scale?.rogue?.["sneak-attack"] ?? "2d6",
+    damageType: lastArg.damageDetail[0].type,
+
     animations: {
-        source: "jb2a.divine_smite.caster.orange",
-        target: "jb2a.divine_smite.target.orange"
+        source: "jb2a.sneak_attack.dark_purple"
     },
-    damageDice: tokenData.actor.getRollData().classes.cleric.levels >= 14 ? 2 : 1,
-    damageType: CONFIG.DND5E.damageTypes.fire,
 
-    hitTargets: lastArg.hitTargets,
-    spellLevel: lastArg.spellLevel || 0,
-    uuid:       lastArg.uuid,
-
-    lastArg,
+    lastArg
 };
 
 logProps(props);
@@ -42,38 +36,34 @@ logProps(props);
    ========================================================================== */
 if (props.state === "DamageBonus") {
 
-    // Validate usage ---------------------------------------------------------
-    if (getProperty(props.actorData.data.flags, `midi-qol.${props.abilityID}Used`)) {
-        return {};
+    // Check for usage flag ---------------------------------------------------
+    if (getProperty(props.actorData.flags, "midi-qol.SneakAttackUsed")) {
+        return false;
     }
 
-    if (!props.allowedTypes.includes(props.itemData.type)) {
-        return {};
+    if (!props.lastArg.advantage) {
+        return false;
     }
 
-    if (props.itemData.type === "spell" && props.spellLevel > 0) {
-        return {};
+    if (!props.itemData.system.actionType === "rwak" && !props.itemData.system.properties.fin) {
+        return false;
     }
 
-    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
-        return {};
-    }
-
-    // Ask for attack augment -------------------------------------------------
+    // Ask to apply Sneak Attack ----------------------------------------------
     const dialogResult = await Dialog.confirm({
-        title:       `Use ${props.name}`,
-        content:     `<p>Use ${props.name}?</p>`,
+        title:       "Sneak Attack",
+        content:     "<p>Apply Sneak Attack?</p>",
         rejectClose: true
     });
 
     if (!dialogResult) {
-        return {};
+        return false;
     }
 
-    // // Create tracking effect data --------------------------------------------
+    // Create tracking effect -------------------------------------------------
     const effectData = {
         changes: [{
-            key:      `flags.midi-qol.${props.abilityID}Used`,
+            key:      `flags.midi-qol.${props.name.replace(" ", "")}Used`,
             mode:     CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
             value:    "1",
             priority: 20
@@ -81,22 +71,27 @@ if (props.state === "DamageBonus") {
         origin:   props.uuid,
         disabled: false,
         duration: {
-            seconds: 1
+            turn: 1
         },
         label: `${props.name} already used this round`,
-        icon:  props.itemData.img
+        icon:  "worlds/assets/icons/features/class/rogue/sneak-attack.png"
     };
 
-    await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    await createEffects({
+        actorData: props.actorData,
+        effects:   [effectData]
+    });
 
-    playAnimation();
 
     // Return bonus damage ----------------------------------------------------
+    playAnimation();
+
     return {
-        damageRoll: `${props.damageDice}d8[${props.damageType}]`,
-        flavor:     "Divine Strike"
+        damageRoll: `${props.damageDice}[${props.damageType}]`,
+        flavor:     props.name
     };
 }
+
 
 
 /* ==========================================================================
@@ -104,10 +99,10 @@ if (props.state === "DamageBonus") {
    ========================================================================== */
 
 /**
- * Logs the global properties for the Macro to the console for debugging purposes
- *
- * @param  {Object}  props  Global properties
- */
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
 function logProps (props) {
     console.groupCollapsed("%cmacro" + `%c${props.name}`,
         "background-color: #333; color: #fff; padding: 3px 5px;",
@@ -118,6 +113,28 @@ function logProps (props) {
     console.groupEnd();
 }
 
+/**
+ * Creates an effect on a selected actor
+ *
+ * @param    {object}         [options]
+ * @param    {Actor5e}        actor        Target actor
+ * @param    {Array<object>}  effects  Effects to be applied to target
+ * @returns  {Promise<Function>}       Deletion status of effect
+ */
+async function createEffects ({ actorData, effects = [] } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    if (!effects || effects.length === 0) {
+        return console.error("No effects specified");
+    }
+
+    return await MidiQOL.socket().executeAsGM("createEffects", {
+        actorUuid: actorData.uuid,
+        effects
+    });
+}
 
 /**
  * Plays the animation for the attack when called
@@ -132,10 +149,6 @@ function playAnimation () {
                 .fadeIn(300)
                 .fadeOut(300)
                 .waitUntilFinished()
-            .effect()
-                .file(props.animations.target)
-                .attachTo(props.hitTargets[0])
-                .scaleToObject(1.75)
             .play();
     }
 }

@@ -1,21 +1,26 @@
 /* ==========================================================================
-    Macro:         Piercer
+    Macro:         Soul Hunger
     Source:        Custom
-    Usage:         DamageBonusMacro
+    Usage:         Damage Bonus Macro
    ========================================================================== */
 
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
 const lastArg   = args[args.length - 1];
+const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Piercer",
+    name: "Soul Hunger",
     state: args[0]?.tag || args[0] || "unknown",
 
-    diceSides:  lastArg.damageRoll.terms[0].faces ?? 0,
-    damageType: lastArg.item.data.damage.parts[0][1] ?? "unknown",
-    isCritical: lastArg?.isCritical || false
+    actorData: tokenData?.actor || {},
+    tokenData,
+
+    animation: "jb2a.energy_strands.in.purple.01.2",
+    target:    canvas.tokens.get(lastArg.targets[0].id),
+
+    lastArg
 };
 
 logProps(props);
@@ -24,11 +29,39 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "DamageBonus" && props.isCritical && props.damageType === "piercing") {
-    return {
-        damageRoll: `1d${props.diceSides}[${props.damageType}]`,
-        flavor:     "Piercer"
-    };
+if (props.state === "DamageBonus") {
+
+    // Validate target condition ----------------------------------------------
+    const targetActor = props.target.actor;
+
+    if (targetActor.system.attributes.hp.value > 0) {
+        return false;
+    }
+
+    // Apply healing to self --------------------------------------------------
+    const roll = await new Roll("2d8").roll({ async: false });
+
+    new MidiQOL.DamageOnlyWorkflow(
+        actor,
+        token,
+        roll.total,
+        "healing",
+        [props.tokenData],
+        roll,
+        {
+            flavor: "Soul Hunger - Damage Roll (Healing)"
+        }
+    );
+
+    // Play animation ---------------------------------------------------------
+    if (game.modules.get("sequencer")?.active) {
+        new Sequence()
+            .effect()
+                .file(props.animation)
+                .attachTo(props.tokenData)
+                .scaleToObject(2)
+            .play();
+    }
 }
 
 
