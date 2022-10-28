@@ -31,32 +31,31 @@ logProps(props);
    ========================================================================== */
 if (props.state === "OnUse") {
 
-    await wait(1000);
+    // Get workflow -----------------------------------------------------------
+    const messageHistory = Object.values(MidiQOL.Workflow.workflows).filter((workflow) => {
+        return workflow.workflowType === "Workflow" &&
+               workflow.damageTotal > 0 &&
+               workflow.hitTargets.filter((hitTarget) => {
+                   return hitTarget.name === props.actorData.name;
+               });
+    });
+
 
     // Heal self --------------------------------------------------------------
-    const damage = (props.workflow.damageTotal * 2).toString();
-    const roll = await new Roll(damage).roll({ async: false });
+    const damage = messageHistory[messageHistory.length - 1].damageTotal;
+    const roll = await new Roll(damage.toString()).roll({ async: false });
 
-    await MidiQOL.applyTokenDamage([{
-        damage: roll.total,
-        type:   "healing"
-    }],
-    roll.total,
-    new Set([props.tokenData]),
-    props.lastArg.itemData,
-    new Set());
-
-    // new MidiQOL.DamageOnlyWorkflow(
-    //     actor,
-    //     token,
-    //     roll.total,
-    //     "healing",
-    //     [props.tokenData],
-    //     roll,
-    //     {
-    //         flavor: "Magic Resistance (Healing)"
-    //     }
-    // );
+    new MidiQOL.DamageOnlyWorkflow(
+        actor,
+        token,
+        roll.total,
+        "healing",
+        [props.tokenData],
+        roll,
+        {
+            flavor: "Magic Resistance (Healing)"
+        }
+    );
 
     // Remove Reaction Tracker ------------------------------------------------
     await removeEffect({
@@ -119,17 +118,5 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
         effects:   [effect.id]
-    });
-}
-
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
     });
 }

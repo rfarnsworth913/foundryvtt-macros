@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Summon
+    Macro:         Spell Break
     Source:        Custom
-    Usage:         ItemMacro
+    Usage:         Damage Bonus Macro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,18 +11,13 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Summon",
+    name: "Spell Break",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData:  lastArg.itemData,
+    tokenData,
 
-    duration: {
-        seconds:    60,
-        startRound: game.combat ? game.combat.round : 0,
-        startTime:  game.time.worldTime
-    },
-    summonName: "",
+    target: canvas.tokens.get(lastArg.hitTargets[0].id),
 
     lastArg
 };
@@ -33,40 +28,46 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+if (props.state === "DamageBonus") {
 
-// Check Requirements ---------------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
+    // Check for effect -------------------------------------------------------
+    const effect = await hasEffect({
+        actorData:   props.target.actor,
+        effectLabel: props.name
+    });
 
-if (props.state === "OnUse") {
-
-    // Perform summon ---------------------------------------------------------
-    const updates  = {};
-    const summoned = await warpgate.spawn(props.summonName, { embedded: updates }, {}, {});
-
-
-    // Add tracking flag ------------------------------------------------------
-    if (summoned.length !== 1) {
+    if (effect) {
         return false;
     }
 
-    const summonedID = `Scene.${canvas.scene.id}.Token.${summoned[0]}`;
+    // Apply effect to target -------------------------------------------------
     const effectData = {
+        label:    props.name,
+        icon:     "worlds/assets/icons/features/monsters/spell-break.png",
+        origin:   props.lastArg.uuid,
+        disalbed: false,
         changes: [{
-            key:      "flags.dae.deleteUuid",
-            mode:     CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
-            value:    summonedID,
-            priority: 30
+            key:      "flags.midi-qol.disadvantage.concentration",
+            mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
+            priority: 20,
+            value:    1
         }],
-        label:    `${props.summonName} Summon`,
-        duration: props.duration,
-        origin:   props.itemData.uuid,
-        icon:     props.itemData.img
+        flags: {
+            dae: {
+                specialDuration: ["turnEnd"]
+            }
+        },
+        duration: {
+            seconds:    12,
+            rounds:     1,
+            turns:      1,
+            startRound: game.combat ? game.combat.round : 0,
+            startTime:  game.time.worldTime
+        }
     };
 
     await createEffects({
-        actorData: props.actorData,
+        actorData: props.target.actor,
         effects:   [effectData]
     });
 }
@@ -112,4 +113,22 @@ async function createEffects ({ actorData, effects = [] } = {}) {
         actorUuid: actorData.uuid,
         effects
     });
+}
+
+/**
+ * Checks if a specified actor has the expected effect applied to their character
+ *
+ * @param    {object}   [options]
+ * @param    {Actor5e}  actorData     Target Actor
+ * @param    {string}   effectLabel   Effect to be found on target actor
+ * @returns  {Promise<Boolean>}       Status of the effect on target
+ */
+async function hasEffect ({ actorData, effectLabel = "" } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    return Boolean(actorData.effects.find((effect) => {
+        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
+    }));
 }

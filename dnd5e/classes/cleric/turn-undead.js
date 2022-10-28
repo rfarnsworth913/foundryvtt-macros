@@ -57,7 +57,8 @@ const levelCR     = await getDestroyCR(props.level);
 const gameRound   = game.combat ? game.combat.round : 0;
 
 for (const target of targetList) {
-    const monsterCR     = target.actor.getRollData().details.cr;
+    const targetData    = target.actor.getRollData();
+    const monsterCR     = targetData.details.cr;
     const resist        = ["Turn Resistance", "Turn Defiance"];
     const getResistance = target.actor.items.find((item) => {
         return resist.includes(item.name);
@@ -193,7 +194,7 @@ const turnResults = `
     </div>
 </div>`;
 const chatMessage = await game.messages.get(lastArg.itemCardId);
-let content       = await duplicate(chatMessage.data.content);
+let content       = await duplicate(chatMessage.content);
 
 const searchString  = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
 const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${turnResults}`;
@@ -263,15 +264,14 @@ async function filterTargets ({ targets = [], creatureTypes = [] }) {
 
     // Create filtered targets list -------------------------------------------
     return targets.reduce((targetsList, target) => {
+        const targetData = target.actor.getRollData();
 
         // Check valid target
-        const validTarget = target.actor.type === "character" ?
-            creatureTypes.some((creatureType) => {
-                return target.actor.data.data.details.race.toLowerCase().includes(creatureType);
-            }) :
-            creatureTypes.some((creatureType) => {
-                return target.actor.data.data.details.type.value.toLowerCase().includes(creatureType);
-            });
+        const validTarget = creatureTypes.some((creatureType) => {
+            return (targetData.details?.type?.custom)?.toLowerCase()?.includes(creatureType) ||
+                (targetData.details?.type?.value)?.toLowerCase()?.includes(creatureType) ||
+                (targetData.details?.race)?.toLowerCase()?.includes(creatureType);
+        });
 
         if (validTarget) {
             targetsList.push(target);

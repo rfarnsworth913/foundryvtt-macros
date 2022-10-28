@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Lesser Restoration
+    Macro:         Stillness of Mind
     Source:        https://www.patreon.com/posts/lesser-57539886
     Usage:         ItemMacro
    ========================================================================== */
@@ -10,7 +10,7 @@
 const lastArg   = args[args.length - 1];
 
 const props = {
-    name: "Lesser Restoration",
+    name: "Stillness of Mind",
     state: args[0]?.tag || args[0] || "unknown",
 
     itemCardId: lastArg.itemCardId,
@@ -53,7 +53,7 @@ if (selectOptions.length === 0) {
 
 // Create Dialog and Handle Cure ----------------------------------------------
 new Dialog({
-    title: `Lesser Restoration: ${props.target.name}`,
+    title: `Stillness of Mind: ${props.target.name}`,
     content: `
         <form class="flexcol">
             <div class="form-group">
@@ -87,7 +87,7 @@ new Dialog({
                                 ${props.target.name}
                             </div>
                             <div>
-                                <img src="${props.target.img}" width="30" height="30" style="border:0px"></img>
+                                <img src="${props.target.document.texture.src}" width="30" height="30" style="border:0px"></img>
                             </div>
                         </div>
                     </div>
