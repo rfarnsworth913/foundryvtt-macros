@@ -1,5 +1,5 @@
 /* ==========================================================================
-    Macro:         Lesser Restoration
+    Macro:         Protection from Poison
     Source:        https://www.patreon.com/posts/lesser-57539886
     Usage:         ItemMacro
    ========================================================================== */
@@ -10,18 +10,11 @@
 const lastArg   = args[args.length - 1];
 
 const props = {
-    name: "Lesser Restoration",
+    name: "Protection from Poison",
     state: args[0]?.tag || args[0] || "unknown",
 
     itemCardId: lastArg.itemCardId,
-    target:     canvas.tokens.get(lastArg.targets[0].id),
-
-    conditions: [
-        "Blinded",
-        "Deafened",
-        "Paralyzed",
-        "Poisoned"
-    ]
+    target:     canvas.tokens.get(lastArg.targets[0].id)
 };
 
 logProps(props);
@@ -32,12 +25,9 @@ logProps(props);
    ========================================================================== */
 
 // Get Effects on the target Actor --------------------------------------------
-const effects = props.target.actor.effects.filter((effect) => {
-    const changes = effect.changes.filter((change) => {
-        return props.conditions.includes(change.value.replace("(CE)", "").trim());
-    });
-
-    return changes.length > 0 || props.conditions.includes(effect.label) ? true : false;
+const effects = props.target.actor.effects.filter((item) => {
+    return item.label.toLowerCase().includes("poison") &&
+        item.label !== "Protection from Poison";
 });
 
 const selectOptions = effects.reduce((list, activeEffect) => {
@@ -55,7 +45,7 @@ if (selectOptions.length === 0) {
 
 // Create Dialog and Handle Cure ----------------------------------------------
 new Dialog({
-    title: `Lesser Restoration: ${props.target.name}`,
+    title: `Protection from Poison: ${props.target.name}`,
     content: `
         <form class="flexcol">
             <div class="form-group">

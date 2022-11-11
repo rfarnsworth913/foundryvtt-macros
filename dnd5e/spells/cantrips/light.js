@@ -20,7 +20,7 @@ const props = {
     tokenData,
 
     casterData,
-    casterDisposition: casterData.disposition,
+    casterDisposition: casterData.document.disposition,
     itemData:          await fromUuid(lastArg.origin),
     saveDC:            casterData.actor.getRollData().attributes.spelldc,
     spellCasting:      casterData.actor.getRollData().attributes.spellcasting,
@@ -60,7 +60,7 @@ if (props.state === "on") {
 
 
     // Check token disposition ------------------------------------------------
-    if (props.tokenData.disposition !== props.casterDisposition) {
+    if (props.tokenData.document.disposition !== props.casterDisposition) {
         const save = await MidiQOL.socket().executeAsGM("rollAbility", {
             request: "save",
             targetUuid: props.actorData.uuid,

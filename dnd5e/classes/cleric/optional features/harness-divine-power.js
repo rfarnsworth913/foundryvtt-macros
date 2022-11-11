@@ -26,7 +26,7 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.actorData.data.data.spells.spell1.max === 0) {
+if (props.actorData.system.spells.spell1.max === 0) {
     return ui.notifications.error(`No spell slots found on ${props.actorData.name}`);
 }
 
@@ -87,7 +87,7 @@ new Dialog ({
                 spellRefund(props.actorData, slot);
                 const rollResults   = `<div>Regains 1 spell slot, Level ${num}.</div>`;
                 const chatMessage   = game.messages.get(props.itemCardID);
-                let content         = duplicate(chatMessage.data.content);
+                let content         = duplicate(chatMessage.content);
                 const searchString  = /<div class="midi-qol-saves-display">[\\s\\S]*<div class="end-midi-qol-saves-display">/g;
                 const replaceString = `<div class="midi-qol-saves-display"><div class="end-midi-qol-saves-display">${rollResults}`;
                 content = content.replace(searchString, replaceString);
@@ -124,8 +124,8 @@ function logProps (props) {
  * @param  {number}   slot       Spell level to be updated
  */
 async function spellRefund (actorData, slot) {
-    const actor_data = duplicate(actorData.data._source);
-    actor_data.data.spells[slot].value = actor_data.data.spells[slot].value + 1;
+    const actor_data = duplicate(actorData._source);
+    actor_data.system.spells[slot].value = actor_data.system.spells[slot].value + 1;
     await actorData.update(actor_data);
 }
 
@@ -137,7 +137,7 @@ async function spellRefund (actorData, slot) {
  * @returns  {number}              Number of spell slots for specified level
  */
 function getSpellSlots (actorData, level) {
-    return actorData.data.data.spells[`spell${level}`];
+    return actorData.system.spells[`spell${level}`];
 }
 
 /**
@@ -147,8 +147,8 @@ function getSpellSlots (actorData, level) {
  * @returns  {boolean}             Status of spell slots
  */
 function hasAvailableSlots (actorData) {
-    for (const slot in actorData.data.data.spells) {
-        if (actorData.data.data.spells[slot].value < actorData.data.data.spells[slot].max) {
+    for (const slot in actorData.system.spells) {
+        if (actorData.system.spells[slot].value < actorData.system.spells[slot].max) {
             return true;
         }
     }

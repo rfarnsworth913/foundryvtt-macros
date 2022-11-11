@@ -34,7 +34,7 @@ const props = {
     lastArg,
 };
 
-logProps(props);
+console.log(logProps);
 
 
 /* ==========================================================================
@@ -43,7 +43,7 @@ logProps(props);
 if (props.state === "DamageBonus") {
 
     // Validate usage ---------------------------------------------------------
-    if (getProperty(props.actorData.data.flags, `midi-qol.${props.abilityID}Used`)) {
+    if (getProperty(props.actorData.flags, `midi-qol.${props.abilityID}Used`)) {
         return {};
     }
 
@@ -55,7 +55,7 @@ if (props.state === "DamageBonus") {
         return {};
     }
 
-    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
+    if (props.hitTargets[0].disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
         return {};
     }
 
@@ -70,7 +70,7 @@ if (props.state === "DamageBonus") {
         return {};
     }
 
-    // // Create tracking effect data --------------------------------------------
+    // Create tracking effect data --------------------------------------------
     const effectData = {
         changes: [{
             key:      `flags.midi-qol.${props.abilityID}Used`,
@@ -94,7 +94,7 @@ if (props.state === "DamageBonus") {
     // Return bonus damage ----------------------------------------------------
     return {
         damageRoll: `${props.damageDice}d8[${props.damageType}]`,
-        flavor:     "Divine Strike"
+        flavor:     "Blessed Strikes"
     };
 }
 
@@ -104,10 +104,10 @@ if (props.state === "DamageBonus") {
    ========================================================================== */
 
 /**
- * Logs the global properties for the Macro to the console for debugging purposes
- *
- * @param  {Object}  props  Global properties
- */
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
 function logProps (props) {
     console.groupCollapsed("%cmacro" + `%c${props.name}`,
         "background-color: #333; color: #fff; padding: 3px 5px;",

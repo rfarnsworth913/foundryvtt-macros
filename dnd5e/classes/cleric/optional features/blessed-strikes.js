@@ -43,7 +43,7 @@ logProps(props);
 if (props.state === "DamageBonus") {
 
     // Validate usage ---------------------------------------------------------
-    if (getProperty(props.actorData.data.flags, `midi-qol.${props.abilityID}Used`)) {
+    if (getProperty(props.actorData.flags, `midi-qol.${props.abilityID}Used`)) {
         return {};
     }
 
@@ -55,7 +55,7 @@ if (props.state === "DamageBonus") {
         return {};
     }
 
-    if (props.hitTargets[0].data.disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
+    if (props.hitTargets[0].disposition !== CONST.TOKEN_DISPOSITIONS.HOSTILE) {
         return {};
     }
 
@@ -70,7 +70,7 @@ if (props.state === "DamageBonus") {
         return {};
     }
 
-    // // Create tracking effect data --------------------------------------------
+    // Create tracking effect data --------------------------------------------
     const effectData = {
         changes: [{
             key:      `flags.midi-qol.${props.abilityID}Used`,

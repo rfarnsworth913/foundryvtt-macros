@@ -151,10 +151,10 @@ for (const target of targetList) {
                     },
                     changes: [
                         {
-                            key:      "macro.CE",
+                            key:      "StatusEffect",
                             mode:     0,
                             prioirty: 20,
-                            value:    "Frightened"
+                            value:    "Frightened (CE)"
                         }
                     ]
                 };
@@ -289,7 +289,7 @@ async function filterTargets ({ targets = [], creatureTypes = [] }) {
  */
 function playAnimation (target, mode) {
     const animation = mode === "fear" ?
-        "jb2a.toll_the_dead.purple.skull_smoke" :
+        "jb2a.toll_the_dead.grey.skull_smoke" :
         "jb2a.explosion.03.bluewhite";
 
     if (game.modules.get("sequencer")?.active) {

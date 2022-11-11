@@ -153,13 +153,13 @@ async function getItems ({ actorData } = {}) {
 
     // Initial filtering ------------------------------------------------------
     actorData.items.forEach((item) => {
-        if (item.data.type === "weapon" && !item.data.data.properties.mgc) {
+        if (item.type === "weapon" && !item.system.properties.mgc) {
             items.weapons.push(item);
         }
 
-        if (item.data.type === "equipment" &&
-            armorTypes.includes(item.data.data.armor.type) &&
-            !item.data.flags?.magicitems.enabled) {
+        if (item.type === "equipment" &&
+            armorTypes.includes(item.system.armor.type) &&
+            !item.flags?.magicitems.enabled) {
             items.armor.push(item);
         }
     });
@@ -254,13 +254,14 @@ async function applyEffects ({ caster, target, itemData } = {}) {
     if (itemType === "equipment") {
         updates.embedded.Item[itemData.name] = {
             ...updates.embedded.Item[itemData.name],
-            "data.armor.value": itemCopy.data.armor.value + 1
+            "system.armor.value": itemCopy.system.armor.value + 1
         };
     } else {
         updates.embedded.Item[itemData.name] = {
             ...updates.embedded.Item[itemData.name],
-            "data.damage.parts": [[`${itemCopy.data.damage.parts[0][0]} + 1`, itemCopy.data.damage.parts[0][1]]],
-            "data.attackBonus":  itemCopy.data.attackBonus.length > 0 ?`${itemCopy.data.attackBonus} + 1` : 1
+            "system.damage.parts": [[`${itemCopy.system.damage.parts[0][0]} + 1`, itemCopy.system.damage.parts[0][1]]],
+            "system.attackBonus":  itemCopy.system.attackBonus.length > 0 ?`${itemCopy.system.attackBonus} + 1` : 1,
+            "system.properties.mgc": true
         };
     }
 
@@ -294,7 +295,7 @@ async function removeEffects ({ actorData } = {}) {
 
     // Get target -------------------------------------------------------------
     const target = canvas.tokens.placeables.filter((token) => {
-        return token.actor.id === flag.actorID ? canvas.tokens.get(token.data._id) : false;
+        return token.document.actorId === flag.actorID ? canvas.tokens.get(token.id) : false;
     });
 
     if (target.length === 0) {
@@ -306,6 +307,6 @@ async function removeEffects ({ actorData } = {}) {
     DAE.unsetFlag(actorData, "BlessingForge");
 
     ChatMessage.create({
-        content: `${flag.itemName}  has been enhanced.`
+        content: `${flag.itemName}  has reverted to it's original state.`
     });
 }

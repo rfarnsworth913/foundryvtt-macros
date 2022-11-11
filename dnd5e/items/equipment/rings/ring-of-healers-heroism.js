@@ -62,8 +62,6 @@ if (props.state === "DamageBonus" && props.targets.length > 0) {
             }
         },
         duration: {
-            rounds:     1,
-            turns:      1,
             seconds:    12,
             startRound: game.combat ? game.combat.round : 0,
             startTime:  game.time.worldTime

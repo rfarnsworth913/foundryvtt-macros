@@ -1,0 +1,310 @@
+/* ==========================================================================
+    Macro:         Magic Weapon
+    Source:        Custom
+    Usage:         DAE ItemMacro
+   ========================================================================== */
+
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg   = args[args.length - 1];
+const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+
+let targetData = {};
+if (lastArg.hitTargets) {
+    targetData = canvas.tokens.get(lastArg?.hitTargets[0]?.id) || {};
+    targetData = Object.keys(targetData).length > 0 ? targetData : tokenData;
+}
+
+const bonus = lastArg.spellLevel >= 7 ? "3" : lastArg.spellLevel >= 5 ? "2" : "1";
+
+const props = {
+
+    // General Information ----------------------------------------------------
+    name: "Magic Weapon",
+    state: args[0]?.tag || args[0] || "unknown",
+
+
+    // Actor Information ------------------------------------------------------
+    caster: {
+        actorData: tokenData.actor || {},
+        tokenData
+    },
+
+    target: {
+        actorData: targetData?.actor || {},
+        tokenData: targetData
+    },
+
+    // Item Filtering ---------------------------------------------------------
+    dialogTitle:  "Enhance Weapon",
+    allowMagical: false,
+    itemFilter:   [],
+
+    // Item Modifiers ---------------------------------------------------------
+    enhancements: {
+        attackBonus: bonus,
+        damageBonus: bonus,
+        additionalDamage: `${bonus}d4`
+    },
+
+    damageTypes: [
+        "Acid",
+        "Cold",
+        "Fire",
+        "Lightning",
+        "Thunder"
+    ],
+
+    // Casting Animation ------------------------------------------------------
+    animation: {
+        intro: "jb2a.magic_signs.circle.02.transmutation.intro.blue",
+        loop:  "jb2a.magic_signs.circle.02.transmutation.loop.blue",
+        outro: "jb2a.magic_signs.circle.02.transmutation.outro.blue"
+    },
+
+    lastArg
+};
+
+logProps(props);
+
+
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+if (props.state === "OnUse") {
+
+    // Get items to modify ----------------------------------------------------
+    const items = await getItems({
+        actorData:    props.target.actorData,
+        allowMagical: props.allowMagical,
+        itemFilter:   props.itemFilter
+    });
+
+    if (items.length === 0) {
+        return ui.notifications.error(`Could not find items to enchant on actor ${props.actorData.name}`);
+    }
+
+    // Generate dialog content ------------------------------------------------
+    const selectOptions = props.damageTypes.reduce((list, damageType) => {
+        list.push(`<option value="${damageType.toLowerCase()}">${damageType}</option>`);
+        return list;
+    }, []);
+
+    const weaponSelection = items.reduce((list, weapon, index) => {
+        list.push(`
+            <div style="padding-top: 3px; padding-bottom: 3px; display: flex; align-items: center;">
+                <input type="radio" id="${weapon.uuid}" name="${weapon.name}" ${index > 0 ? "" : "checked"} />
+                <img src="${weapon.img}" height="30px" width="30px" style="margin-left: 7px; margin-right: 7px; alt=${item.name} />
+                <label for="${weapon.name}">${weapon.name}</label>
+            </div>
+        `);
+        return list;
+    }, []);
+
+    // Display dialog ---------------------------------------------------------
+    new Dialog({
+        title: props.dialogTitle,
+        content: `
+            <form class="form-group flexcol" style="align-items: left; padding: 5px;">
+                <p class="message-content"><strong>Step 1:</strong> Select a damage type:</p>
+                    <select id="damageType">
+                        ${selectOptions}
+                    </select>
+                <p class="message-content"style="border-top: 1px solid #B2BEB5; margin-top: 7px; padding-top: 7px;">
+                   <strong>Step 2:</strong> Select a weapon to enhance:
+                </p>
+                <fieldset style="border: none">
+                    ${weaponSelection}
+                </fieldset>
+            </form>
+        `,
+        buttons: {
+            apply: {
+                icon: "<i class=\"fas fa-check\"></i>",
+                label: "Apply",
+                callback: async (html) => {
+                    const selectedWeapon = html.find("input:checked")?.[0];
+                    const damageType     = html.find("#damageType").val();
+                    await applyUpdates(selectedWeapon?.id, damageType);
+                }
+            },
+            cancel: {
+                icon: "<i class=\"fas fa-times\"></i>",
+                label: "Cancel"
+            }
+        }
+    }).render(true);
+}
+
+if (props.state === "off") {
+    await removeUpdates({
+        actorData: props.caster.actorData
+    });
+}
+
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
+/**
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
+function logProps (props) {
+    console.groupCollapsed("%cmacro" + `%c${props.name}`,
+        "background-color: #333; color: #fff; padding: 3px 5px;",
+        "background-color: #004481; color: #fff; padding: 3px 5px;");
+    Object.keys(props).forEach((key) => {
+        console.log(`${key}: `, props[key]);
+    });
+    console.groupEnd();
+}
+
+/**
+ * Returns the items that are available for enchantment.  Allow magical applies a filter
+ * to allow returning magical items as well as standard items.
+ *
+ * @param    {object}         [options]
+ * @param    {Actor5e}        actorData     Actor whose inventory should be checked
+ * @param    {boolean}        allowMagical  Allow returning of magical items
+ * @param    {Array<string>}  itemFilter    Sub-set of items to filter the items by
+ * @returns  {Array<Item5e>}                Array of selected items
+ */
+async function getItems ({ actorData, allowMagical = false, itemFilter = [] } = {}) {
+    if (!actorData) {
+        return [];
+    }
+
+    // Initial filtering ------------------------------------------------------
+    let weapons = actorData.items.filter((item) => {
+        return allowMagical ? item.type === "weapon" :
+            item.type === "weapon" && !item.system.properties.mgc;
+    });
+
+    // Filter weapon types ----------------------------------------------------
+    if (itemFilter.length > 0) {
+        weapons = weapons.filter((weapon) => {
+            return itemFilter.includes(weapon.system.baseItem);
+        });
+    }
+
+    // Sort by item name ------------------------------------------------------
+    weapons.sort((a, b) => {
+        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+    });
+
+    return weapons;
+}
+
+/**
+ * Applies updates to the targeted item, tracking the change as a flag on the caster
+ *
+ * @param  {string}  uuid        Unique Identifier of the item to be modified
+ * @param  {string}  damageType  New damage type added to weapon
+ */
+async function applyUpdates (uuid, damageType) {
+    const itemCopy = duplicate(await fromUuid(uuid));
+
+    // Setup tracking flag ----------------------------------------------------
+    DAE.setFlag(props.caster.actorData, "elementalWeapon", {
+        actorID:  props.target.actorData.id,
+        itemName: itemCopy.name
+    });
+
+    // Define updates ---------------------------------------------------------
+    const updates = { embedded: { Item: { [itemCopy.name]: { name: `${itemCopy.name} (Enchanted)` } } } };
+
+    updates.embedded.Item[itemCopy.name] = {
+        ...updates.embedded.Item[itemCopy.name],
+        "system.attackBonus": itemCopy.system.attackBonus.length > 0 ?
+            `${itemCopy.system.attackBonus} + ${props.enhancements.attackBonus}` :
+            props.enhancements.attackBonus,
+        "system.damage.parts": [
+            [
+                `${itemCopy.system.damage.parts[0][0]} + ${props.enhancements.damageBonus}`,
+                itemCopy.system.damage.parts[0][1]
+            ],
+            [`${props.enhancements.additionalDamage}`, damageType]
+        ],
+        "system.properties.mgc": true
+    };
+
+    // Apply changes ----------------------------------------------------------
+    await warpgate.mutate(props.target.tokenData.document, updates, {}, {
+        name:        props.name,
+        description: `${props.name}: ${itemCopy.name}`
+    });
+
+    ChatMessage.create({
+        content: `${itemCopy.name}  has been enhanced.`
+    });
+
+    playAnimation(props.caster.tokenData);
+}
+
+/**
+ * Removes the applied effects from the target and reverts the item to it's original state
+ *
+ * @param  {object}   [options]
+ * @param  {Actor5e}  actorData  Caster that is tracking the modified item
+ */
+async function removeUpdates ({ actorData } = {}) {
+
+    // Get dependencies -------------------------------------------------------
+    const flag = DAE.getFlag(actorData, "elementalWeapon");
+
+    if (!flag) {
+        return false;
+    }
+
+    // Get target -------------------------------------------------------------
+    const target = canvas.tokens.placeables.filter((token) => {
+        return token.document.actorId === flag.actorID ? canvas.tokens.get(token.id) : false;
+    });
+
+    if (target.length === 0) {
+        return false;
+    }
+
+    // Restore original stats -------------------------------------------------
+    await warpgate.revert(target[0].document, props.name);
+    DAE.unsetFlag(actorData, "elementalWeapon");
+
+    ChatMessage.create({
+        content: `${flag.itemName}  has reverted to it's original state.`
+    });
+}
+
+/**
+ * Plays an animation on the character showing the effect being applied
+ *
+ * @param  {Token5e}  target  Where animation should be played
+ */
+function playAnimation (target) {
+    if ((game.modules.get("sequencer")?.active)) {
+        new Sequence()
+            .effect()
+                .file(props.animation.intro)
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+                .waitUntilFinished(-550)
+            .effect()
+                .file(props.animation.loop)
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+                .fadeIn(200)
+                .fadeOut(200)
+                .waitUntilFinished(-550)
+            .effect()
+                .file(props.animation.outro)
+                .atLocation(target)
+                .scaleToObject(2)
+                .belowTokens()
+            .play();
+    }
+}
