@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Disassembly
-    Source:        Custom
-    Usage:         ItemMacro
+    Macro:         Color Spray
+    Source:        https://www.patreon.com/posts/color-spray-73242885
+    Usage:         DAE On Use
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,11 +11,15 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Disassembly",
+    name: "Color Spray",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData:  lastArg.item,
     tokenData,
+
+    colorHP: lastArg.damageTotal,
+    immuneConditions: ["blinded"],
 
     lastArg
 };
@@ -26,19 +30,14 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
-
-if (props.state === "OnUse") {
-    const summonNumber = await new Roll("1d6").roll({ async: true });
-    game.dice3d.showForRoll(summonNumber);
-
-    for (let i = 0; i < summonNumber.total; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        await warpgate.spawn("Bonecrawler");
-    }
-}
+const targets = props.lastArg.targets.filter((target) => {
+    return target.actor.getRollData().attributes.hp.value > 0;
+}).sort((a, b) => {
+    return canvas.tokens.get(a.id).actor.getRollData().attributes.hp.value <
+        canvas.tokens.get(b.id).actor.getRollData().attributes.hp.value ? -1 : 1;
+});
+let remainingColorHP = props.colorHP;
+const colorTargets = [];
 
 
 /* ==========================================================================

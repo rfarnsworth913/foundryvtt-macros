@@ -1,6 +1,6 @@
 /* ==========================================================================
-    Macro:         Disassembly
-    Source:        Custom
+    Macro:         Hunter's Mark
+    Source:        MidiQOL Examples
     Usage:         ItemMacro
    ========================================================================== */
 
@@ -11,13 +11,19 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Disassembly",
+    name: "Hunter's Mark",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
 
-    lastArg
+    hitTargets: lastArg.hitTargets,
+    isCritical: lastArg.isCritical || false,
+    itemData:   lastArg.item,
+    itemID:     lastArg.itemUuid,
+    spellLevel: lastArg.spellLevel,
+
+    lastArg,
 };
 
 logProps(props);
@@ -26,17 +32,33 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
+if (props.hitTargets.length === 0) {
+    return false;
 }
 
-if (props.state === "OnUse") {
-    const summonNumber = await new Roll("1d6").roll({ async: true });
-    game.dice3d.showForRoll(summonNumber);
 
-    for (let i = 0; i < summonNumber.total; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        await warpgate.spawn("Bonecrawler");
+// Handle Bonus Damage --------------------------------------------------------
+if (props.state === "DamageBonus") {
+
+    if (props.actorData?.flags?.dae?.onUpdateTarget) {
+        const isMarked = props.actorData.flags.dae.onUpdateTarget.find((flag) => {
+            console.warn(flag);
+            return flag.flagName === "Hunter's Mark" && flag.sourceTokenUuid === props.lastArg.hitTargetUuids[0];
+        });
+
+        console.warn(props.actorData, isMarked);
+
+        if (!isMarked) {
+            return false;
+        }
+
+        const [[, damageType]] = props.itemData.system.damage.parts;
+        const diceMulti = props.isCritical ? 2 : 1;
+
+        return {
+            damageRoll: `${diceMulti}d6[${damageType}]`,
+            flavor:     `Hunter's Mark (${damageType})`
+        };
     }
 }
 

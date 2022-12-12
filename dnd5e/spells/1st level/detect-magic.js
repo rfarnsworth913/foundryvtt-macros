@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Disassembly
+    Macro:         Detect Magic
     Source:        Custom
-    Usage:         ItemMacro
+    Usage:         DAE ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,13 +11,16 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Disassembly",
+    name: "Detect Magic",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
 
-    lastArg
+    compendiumID: "shared-compendiums.shared-spells",
+    itemLabel:    "Detect Magic (Ping)",
+
+    lastArg,
 };
 
 logProps(props);
@@ -26,18 +29,45 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+
 if (!(game.modules.get("warpgate")?.active)) {
     return ui.notifications.error("Warpgate is required!");
 }
 
-if (props.state === "OnUse") {
-    const summonNumber = await new Roll("1d6").roll({ async: true });
-    game.dice3d.showForRoll(summonNumber);
+if (props.state === "on") {
 
-    for (let i = 0; i < summonNumber.total; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        await warpgate.spawn("Bonecrawler");
+    // Get source item --------------------------------------------------------
+    const compendium = game.packs.get(props.compendiumID);
+    const orgItem    = await compendium.getDocuments({ name: props.itemLabel });
+
+    if (orgItem.length === 0) {
+        return false;
     }
+
+
+    // Mutate the item --------------------------------------------------------
+    const itemData = duplicate(orgItem[0]);
+
+
+    // Add item to target -----------------------------------------------------
+    const updates = {
+        embedded: {
+            Item: {
+                "Detect Magic (Ping)": {
+                    ...itemData
+                }
+            }
+        }
+    };
+
+    await warpgate.mutate(props.tokenData.document, updates, {}, {
+        name:        props.itemLabel,
+        description: `Adding ability: ${props.itemLabel}`
+    });
+}
+
+if (props.state === "off") {
+    await warpgate.revert(props.tokenData.document, props.itemLabel);
 }
 
 

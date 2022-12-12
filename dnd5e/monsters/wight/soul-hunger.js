@@ -18,6 +18,7 @@ const props = {
     tokenData,
 
     animation: "jb2a.energy_strands.in.purple.01.2",
+    damage:    lastArg.damageTotal,
     target:    canvas.tokens.get(lastArg.targets[0].id),
 
     lastArg
@@ -34,7 +35,7 @@ if (props.state === "DamageBonus") {
     // Validate target condition ----------------------------------------------
     const targetActor = props.target.actor;
 
-    if (targetActor.system.attributes.hp.value > 0) {
+    if (targetActor.system.attributes.hp.value - props.damage > 0) {
         return false;
     }
 

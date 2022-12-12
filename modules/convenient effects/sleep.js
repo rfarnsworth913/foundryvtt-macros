@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Disassembly
+    Macro:         Sleep
     Source:        Custom
-    Usage:         ItemMacro
+    Usage:         DAE macro.execute Sleep
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,13 +11,15 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Disassembly",
+    name: "Sleep",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
-
-    lastArg
+    animation: {
+        intro: "jb2a.sleep.target.blue",
+        loop:  "jb2a.sleep.symbol.blue"
+    },
+    label:     `Sleep-${lastArg.tokenId}`,
+    tokenData
 };
 
 logProps(props);
@@ -26,18 +28,39 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
+
+// Check dependencies ---------------------------------------------------------
+if (!(game.modules.get("sequencer")?.active)) {
+    return false;
 }
 
-if (props.state === "OnUse") {
-    const summonNumber = await new Roll("1d6").roll({ async: true });
-    game.dice3d.showForRoll(summonNumber);
 
-    for (let i = 0; i < summonNumber.total; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        await warpgate.spawn("Bonecrawler");
-    }
+// Apply animation ------------------------------------------------------------
+if (props.state === "on") {
+    new Sequence()
+        .effect()
+            .file(props.animation.intro)
+            .attachTo(props.tokenData)
+            .scaleToObject(1.5)
+            .endTime(2000)
+            .waitUntilFinished(-500)
+        .effect()
+            .file(props.animation.loop)
+            .attachTo(props.tokenData)
+            .persist()
+            .scaleToObject(1.5)
+            .name(props.label)
+            .fadeOut(600)
+        .play();
+}
+
+
+// Remove animation -----------------------------------------------------------
+if (props.state === "off") {
+    Sequencer.EffectManager.endEffects({
+        name:   props.label,
+        object: props.tokenData
+    });
 }
 
 

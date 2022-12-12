@@ -33,8 +33,8 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("tokenmagic")?.active)) {
-    return ui.notifications.error("Token Magic is required!");
+if (!(game.modules.get("warpgate")?.active)) {
+    return ui.notifications.error("Warpgate is required!");
 }
 
 
@@ -48,8 +48,6 @@ if (!actorList) {
 }
 
 const getActorImages = actorList.contents.reduce((list, target) => {
-    console.warn(target, target.prototypeToken.texture.src);
-
     list += `
         <label class="radio-label">
             <input type="radio" name="disguiseForm" value="${target.prototypeToken.texture.src}" />
@@ -59,8 +57,6 @@ const getActorImages = actorList.contents.reduce((list, target) => {
     `;
     return list;
 }, "");
-
-let transformParams;
 
 
 // Apply disguise -------------------------------------------------------------
@@ -115,33 +111,13 @@ if (props.state === "on") {
                     const [disguise] = html.find("input[type='radio'][name='disguiseForm']:checked");
                     const disguiseImage = disguise.value;
 
-                    console.warn(disguiseImage);
-
-                    transformParams = [{
-                        filterType: "polymorph",
-                        filterId:   props.itemData.name,
-                        type:       props.transitionType,
-                        padding:    70,
-                        madnify:    1,
-                        imagePath:  disguiseImage,
-                        animated: {
-                            progress: {
-                                active:       true,
-                                animType:     "halfCosOscillation",
-                                val1:         0,
-                                val2:         100,
-                                loops:        1,
-                                loopDuration: 1000
-                            }
+                    const updates = {
+                        token: {
+                            "texture.src": disguiseImage
                         }
-                    }];
+                    };
 
-                    await wait(props.transitionWait);
-                    if (props.tokenData.TMFXhasFilterId(props.itemData.name)) {
-                        await TokenMagic.deleteFilters(props.tokenData, props.itemData.name);
-                    }
-                    await wait(props.transitionWait);
-                    await TokenMagic.addUpdateFilters(props.tokenData, transformParams);
+                    await warpgate.mutate(props.tokenData.document, updates, {}, { name: props.itemData.name });
                 }
             }
         }
@@ -151,22 +127,13 @@ if (props.state === "on") {
 
 // Remove disguise ------------------------------------------------------------
 if (props.state === "off") {
-    transformParams = [{
-        filterType: "polymorph",
-        filterId:   props.itemData.name,
-        type:       props.transitionType,
-        animation: {
-            progression: {
-                active: true,
-                loops:  1
-            }
-        }
-    }];
-
-    await wait(props.transitionWait);
-    await TokenMagic.addUpdateFilters(props.tokenData, transformParams);
-    await wait(props.transitionWait);
-    await TokenMagic.deleteFilters(props.tokenData, props.itemName);
+    await warpgate.revert(props.tokenData.document, props.itemData.name);
+    ChatMessage.create({
+        content: `${props.itemData.name} wears off`,
+        speaker: ChatMessage.getSpeaker({
+            actor: props.actorData
+        })
+    });
 }
 
 
@@ -187,16 +154,4 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
-    });
 }

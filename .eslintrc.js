@@ -44,6 +44,7 @@ module.exports = {
         "Roll":          "readonly",
         "Sequence":      "readonly",
         "Sequencer":     "readonly",
+        "Tagger":        "readonly",
         "tokenAttacher": "readonly",
         "TokenMagic":    "readonly",
         "ui":            "readonly",
