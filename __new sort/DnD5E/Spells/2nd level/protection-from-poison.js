@@ -26,12 +26,12 @@ logProps(props);
 
 // Get Effects on the target Actor --------------------------------------------
 const effects = props.target.actor.effects.filter((item) => {
-    return item.data.label.toLowerCase().includes("poison") &&
-        item.data.label !== "Protection from Poison";
+    return item.label.toLowerCase().includes("poison") &&
+        item.label !== "Protection from Poison";
 });
 
 const selectOptions = effects.reduce((list, activeEffect) => {
-    const condition = activeEffect.data.label;
+    const condition = activeEffect.label;
     list.push(`<option value="${condition}">${condition}</option>`);
     return list;
 }, []);
@@ -62,7 +62,7 @@ new Dialog({
             callback: async (html) => {
                 const element = html.find("#element").val();
                 const effect  = props.target.actor.effects.find((item) => {
-                    return item.data.label === element;
+                    return item.label === element;
                 });
 
                 await MidiQOL.socket().executeAsGM("removeEffects", {
@@ -75,17 +75,17 @@ new Dialog({
                     <div class="midi-qol-nobox">
                         <div class="midi-qol-flex-container">
                             <div>Cures ${element}:</div>
-                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target.data._id}">
+                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target._id}">
                                 ${props.target.name}
                             </div>
                             <div>
-                                <img src="${props.target.data.img}" width="30" height="30" style="border:0px"></img>
+                                <img src="${props.target.mesh.document.texture.src}" width="30" height="30" style="border:0px"></img>
                             </div>
                         </div>
                     </div>
                 `;
 
-                let content         = duplicate(chatMessage.data.content);
+                let content         = duplicate(chatMessage.content);
                 const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
                 const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
 
@@ -104,10 +104,10 @@ new Dialog({
    ========================================================================== */
 
 /**
- * Logs the global properties for the Macro to the console for debugging purposes
- *
- * @param  {Object}  props  Global properties
- */
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
 function logProps (props) {
     console.groupCollapsed("%cmacro" + `%c${props.name}`,
         "background-color: #333; color: #fff; padding: 3px 5px;",

@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Heat Metal
+    Macro:         Add Character Ability
     Source:        Custom
-    Usage:         ItemMacro
+    Usage:         DAE ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,19 +11,28 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Heat Metal",
+    name: "Add Character Ability",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
 
-    compendiumID: "shared-compendiums.shared-spells",
-    itemLabel:    "Heat Metal (Attack)",
+    compendiumID: "shared-compendiums.shared-class-features",
+    itemLabel:    "",
 
-    spellLevel: args[2] || lastArg.spellLevel,
-    target:     args[1] ? canvas.tokens.get(args[1]) : lastArg.hitTargets[0],
+    selectedAbility: args[1] ?? -1,
+    wildSurgeAbilities: [
+        "Wild Surge (Shadowy Tendrils)",
+        "Wild Surge (Teleport)",
+        "Wild Surge (Summon Pixie)",
+        "Wild Surge (Enchant Weapon)",
+        "Wild Surge (Retribution)",
+        "Wild Surge (Armor Bonus)",
+        "Wild Surge (Difficult Terrain)",
+        "Wild Surge (Bolt of Light)"
+    ],
 
-    lastArg
+    lastArg,
 };
 
 logProps(props);
@@ -37,37 +46,11 @@ if (!(game.modules.get("warpgate")?.active)) {
     return ui.notifications.error("Warpgate is required!");
 }
 
-// Setup Tracking -------------------------------------------------------------
-if (props.state === "OnUse") {
-    const { itemData } = lastArg;
-    const effectData = {
-        changes: [{
-            key:      "macro.itemMacro",
-            mode:     CONST.ACTIVE_EFFECT_MODES.CUSTOM,
-            value:    `${props.target.id} ${props.spellLevel}`,
-            priority: 20
-        }],
-        origin: itemData.uuid,
-        disabled: false,
-        duration: {
-            seconds:    60,
-            rounds:     10,
-            startRound: game.combat ? game.combat.round : 0,
-            startTime:  game.time.worldTime
-        },
-        icon:  itemData.img,
-        label: itemData.name
-    };
-
-    await MidiQOL.socket().executeAsGM("createEffects", {
-        actorUuid: props.actorData.uuid,
-        effects:   [effectData]
-    });
-}
-
-
-// Create Effects -------------------------------------------------------------
 if (props.state === "on") {
+
+    // Determine Ability ------------------------------------------------------
+    props.itemLabel = props.wildSurgeAbilities[props.selectedAbility - 1];
+
 
     // Get source item --------------------------------------------------------
     const compendium = game.packs.get(props.compendiumID);
@@ -80,13 +63,13 @@ if (props.state === "on") {
 
     // Mutate the item --------------------------------------------------------
     const itemData = duplicate(orgItem[0]);
-    itemData.system.damage.parts = [[`${props.spellLevel}d8`, "fire"]];
+
 
     // Add item to target -----------------------------------------------------
     const updates = {
         embedded: {
             Item: {
-                "Heat Metal (Attack)": {
+                "Wild Surge (Ability)": {
                     ...itemData
                 }
             }
@@ -97,41 +80,10 @@ if (props.state === "on") {
         name:        props.itemLabel,
         description: `Adding ability: ${props.itemLabel}`
     });
-
-    // Apply tracking effect --------------------------------------------------
-    const targetUuid = props.target.actor.uuid;
-    const hasEffect  = await game.dfreds.effectInterface.hasEffectApplied("Heat Metal", targetUuid);
-
-    if (!hasEffect) {
-        game.dfreds.effectInterface.addEffect({
-            effectName: "Heat Metal (Flag)",
-            uuid:       targetUuid
-        });
-    }
 }
 
-
-// Remove Effects -------------------------------------------------------------
 if (props.state === "off") {
-
-    // Remove attack from self ------------------------------------------------
     await warpgate.revert(props.tokenData.document, props.itemLabel);
-
-    // Remove condition from any other target(s) ------------------------------
-    const targets = canvas.tokens.placeables.filter((token) => {
-        return token.actor.effects.find((effect) => {
-            return effect.data.label === "Heat Metal (Flag)";
-        });
-    });
-
-    targets.forEach((target) => {
-        const { uuid } = target.actor;
-
-        game.dfreds.effectInterface.removeEffect({
-            effectName: "Heat Metal (Flag)",
-            uuid
-        });
-    });
 }
 
 

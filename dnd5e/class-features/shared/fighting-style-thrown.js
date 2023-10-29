@@ -1,0 +1,51 @@
+/* ==========================================================================
+    Macro:         Thrown Weapon Damage Bonus
+    Source:        Custom
+    Usage:         DamageBonusMacro
+   ========================================================================== */
+
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg = args[args.length - 1];
+
+const props = {
+    name: "Thrown Weapon Damage Bonus",
+    state: args[0]?.tag || args[0] || "unknown",
+
+    damageType: lastArg.item.system.damage.parts[0][1] ?? "unknown",
+    isThrown:   lastArg.item.system.properties.thr || false
+};
+
+logProps(props);
+
+
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+if (props.state === "DamageBonus" && props.isThrown) {
+    return {
+        damageRoll: `2[${props.damageType}]`,
+        flavor: "Thrown Weapon Damage Bonus"
+    };
+}
+
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
+/**
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
+function logProps (props) {
+    console.groupCollapsed("%cmacro" + `%c${props.name}`,
+        "background-color: #333; color: #fff; padding: 3px 5px;",
+        "background-color: #004481; color: #fff; padding: 3px 5px;");
+    Object.keys(props).forEach((key) => {
+        console.log(`${key}: `, props[key]);
+    });
+    console.groupEnd();
+}

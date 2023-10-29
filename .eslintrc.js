@@ -34,6 +34,7 @@ module.exports = {
         "DAE":           "readonly",
         "Dialog":        "readonly",
         "duplicate":     "readonly",
+        "FilePicker":    "readonly",
         "ForienIdentification": "readonly",
         "fromUuid":      "readonly",
         "game":          "readonly",

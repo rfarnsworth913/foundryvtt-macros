@@ -1,6 +1,6 @@
 /* ==========================================================================
     Macro:         Spirit Guardians
-    Source:        Custom
+    Source:        MidiQOL Database
     Usage:         DAE ItemMacro
    ========================================================================== */
 
@@ -17,8 +17,7 @@ const props = {
     actorData: tokenData?.actor || {},
     tokenData,
 
-    damageType: tokenData.actor.getRollData().details.alignment.includes("Evil") ? "necrotic" : "radiant",
-    spellLevel: lastArg.spellLevel,
+    itemData: await fromUuid(lastArg.origin),
 
     lastArg
 };
@@ -29,89 +28,70 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "on") {
-    const itemData = {
-        "name": "Spirit Guardians (Attack)",
-        "type": "feat",
-        "img": "worlds/assets/icons/spells/3rd%20level/spirit-guardians.png",
-        "data": {
-            "description": {
-                "value": "<p><a href=\"https://www.dndbeyond.com/spells/spirit-guardians\" target=\"_blank\" rel=\"noopener\">DnD Beyond: Spirit Guardians</a></p>\n<h3><strong>Summary</strong></h3>\n<p>You call forth spirits to protect you. They flit around you to a distance of 15 feet for the duration. If you are good or neutral, their spectral form appears angelic or fey (your choice). If you are evil, they appear fiendish.</p>\n<p>Handler for applying attacks manually.</p>",
-            },
-            "source": "Player's Handbook",
-            "activation": {
-                "type": "special",
-                "cost": 1
-            },
-            "duration": {
-                "value": null,
-                "units": "inst"
-            },
-            "target": {
-                "value": 1,
-                "width": null,
-                "units": "",
-                "type": "creature"
-            },
-            "range": {
-                "value": 15,
-                "long": null,
-                "units": "ft"
-            },
-            "ability": "",
-            "actionType": "save",
-            "attackBonus": 0,
-            "chatFlavor": "",
-            "critical": {
-                "threshold": null,
-                "damage": ""
-            },
-            "damage": {
-                "parts": [[`${props.spellLevel}d8`, props.damageType]],
-                "versatile": ""
-            },
-            "formula": "",
-            "save": {
-                "ability": "wis",
-                "dc": null,
-                "scaling": "spell"
-            },
-            "requirements": "Spirit Guardians Active",
-            "recharge": {
-                "value": null,
-                "charged": false
+if (props.state === "on" && args[1] !== props.lastArg.tokenId && props.lastArg.tokenId === game?.combat.current.tokenId) {
+
+    // Get target actor -------------------------------------------------------
+    let targetActor = await fromUuid(props.lastArg.actorUuid);
+    if (targetActor.actor) {
+        targetActor = targetActor.actor;
+    }
+
+    // Item Setup -------------------------------------------------------------
+    const itemData = mergeObject(duplicate(props.itemData.toObject(false)), {
+        type: "weapon",
+        effects: [],
+        flags: {
+            "midi-qol": {
+                noProvokeReaction: true,
+                onUseMacroName:    null
             }
         },
-        "effects": [],
-        "flags": {
-            "midi-qol": {
-                "effectActivation": false
+        system: {
+            actionType: "save",
+            save: {
+                dc:      Number.parseInt(args[3]),
+                ability: "wis",
+                scaling: "flag"
             },
-            "midiProperties": {
-                "nodam": false,
-                "fulldam": false,
-                "halfdam": true,
-                "rollOther": false,
-                "critOther": false,
-                "magicdam": true,
-                "magiceffect": true,
-                "concentration": false,
-                "toggleEffect": false
+            damage: {
+                parts: [[`${args[2]}d8`, "radiant"]]
             },
-            "core": {
-                "sourceId": "Item.gVDGdMkukyiPoK9f"
-            }
+            "target.type": "self",
+            componens: {
+                concentration: false,
+                material:      false,
+                ritual:        false,
+                somatic:       false,
+                value:         "",
+                vocal:         false,
+            },
+            duration: {
+                units: "inst",
+                value: undefined
+            },
+            weaponType: "improv"
         }
+    }, {
+        overwrite:    true,
+        inlace:       true,
+        insertKeys:   true,
+        insertValues: true
+    });
+
+    itemData.system.target.type = "self";
+    setProperty(itemData.flags, "autoanimations.killAnim", true);
+    itemData.flags.autoanimations.killAnim = true;
+
+    // Apply to target --------------------------------------------------------
+    const item = new CONFIG.Item.documentClass(itemData, { parent: targetActor });
+    const options = {
+        showFullCard:    false,
+        createWorkflow:  true,
+        versatile:       false,
+        configureDialog: false
     };
 
-    await props.actorData.createEmbeddedDocuments("Item", [itemData]);
-}
-
-if (props.state === "off") {
-    await removeItem({
-        actorData: props.actorData,
-        itemLabel: "Spirit Guardians (Attack)"
-    });
+    await MidiQOL.completeItemRoll(item, options);
 }
 
 
@@ -132,23 +112,4 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Finds and removes an item from the specified actor's inventory
- *
- * @param    {Actor5e}  actorData  Actor to be operated on
- * @param    {String}   itemLabel  Item name to be removed from inventory
- * @returns  {Promise}             Removal handler
- */
-async function removeItem ({ actorData, itemLabel = "" } = {}) {
-    const getItem = actorData.items.find((item) => {
-        return item.name === itemLabel;
-    });
-
-    if(!getItem) {
-        return {};
-    }
-
-    return await getItem.delete();
 }

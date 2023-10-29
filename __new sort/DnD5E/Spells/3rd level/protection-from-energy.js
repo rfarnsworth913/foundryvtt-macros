@@ -73,18 +73,21 @@ if (props.state === "on") {
 
                     // Apply Effect
                     if (effect) {
-                        await props.actorData.updateEmbeddedDocuments("ActiveEffect", [{
-                            _id: effect.id,
-                            changes: [
-                                ...effect.data.changes,
-                                {
-                                    key:      "data.traits.dr.value",
-                                    mode:     2,
-                                    priority: 20,
-                                    value:    resistance
-                                }
-                            ]
-                        }]);
+                        await MidiQOL.socket().executeAsGM("updateEffects", {
+                            actorUuid: props.actorData.uuid,
+                            updates: [{
+                                _id: effect.id,
+                                changes: [
+                                    ...effect.data.changes,
+                                    {
+                                        key:      "data.traits.dr.value",
+                                        mode:     2,
+                                        priority: 20,
+                                        value:    resistance
+                                    }
+                                ]
+                            }]
+                        });
 
                         // Create Animation Effect
                         if ((game.modules.get("sequencer")?.active)) {
@@ -183,6 +186,6 @@ async function getEffect ({ actorData, effectLabel = "" } = {}) {
     }
 
     return (actorData.effects.find((effect) => {
-        return effect.data.label.toLowerCase() === effectLabel.toLowerCase();
+        return effect.label.toLowerCase() === effectLabel.toLowerCase();
     }));
 }
