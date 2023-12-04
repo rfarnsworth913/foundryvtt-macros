@@ -16,6 +16,7 @@ const props = {
 
     actorData: tokenData?.actor || {},
     tokenData,
+    itemData: await fromUuid(lastArg.efData.origin),
 
     lastArg
 };
@@ -27,8 +28,31 @@ logProps(props);
     Macro Logic
    ========================================================================== */
 if (props.state === "on") {
-    const hookID = Hooks.on("applyTokenStatusEffect", (options) => {
-        console.warn(options);
+    const hookID = Hooks.on("updateActor", async () => {
+
+        // Check if character is at zero HP
+        const isAtZero = props.actorData.system.attributes.hp.value <= 0;
+        const isRaging = await getEffect({ actorData: props.actorData, effectLabel: "Rage" });
+
+        if (isAtZero && isRaging) {
+            const { value } = props.itemData.system.uses;
+            const saveDC = 10 + (5 * value);
+
+            // Request save from user
+            await game.MonksTokenBar.requestRoll([props.tokenData], {
+                request:  "save:con",
+                dc:       saveDC,
+                flavor:   "Relentless Rage",
+                showdc:   true,
+                silent:   true,
+                continue: "passed",
+                rollMode: "request",
+                callback: async () => {
+                    await actor.update({ "system.attributes.hp.value": 1 });
+                    await props.itemData.update({ "system.uses.value": value + 1 });
+                }
+            });
+        }
     });
 
     DAE.setFlag(props.actorData, "relentlessRage", hookID);
@@ -38,40 +62,8 @@ if (props.state === "off") {
     const hookID = DAE.getFlag(props.actorData, "relentlessRage");
     DAE.unsetFlag(props.actorData, "relentlessRage");
 
-    Hooks.off("applyTokenStatusEffect", hookID);
+    Hooks.off("updateActor", hookID);
 }
-
-// if (props.state === "OnUse") {
-
-//     // Check current health ---------------------------------------------------
-//     const isAtZero = props.actorData.system.attributes.hp.value <= 0;
-
-//     if (!isAtZero) {
-//         ui.notifications.warn("You are not at 0 HP!");
-//         return false;
-//     }
-
-//     // Get Relentless Rage ----------------------------------------------------
-//     const item = actor.items.getName("Relentless Rage");
-
-//     if (!item) {
-//         ui.notifications.error("Relentless Rage was not found on actor!");
-//         return false;
-//     }
-
-//     // Saving Throw -----------------------------------------------------------
-//     const { value } = item.system.uses;
-//     const saveDC = 10 + 5 * value;
-
-//     const { total } = await actor.rollAbilitySave("con", { event, saveDC });
-
-//     if (total < saveDC) {
-//         return false;
-//     }
-
-//     await actor.update({ "system.attributes.hp.value": 1 });
-//     await item.update({ "system.uses.value": value + 1 });
-// }
 
 
 /* ==========================================================================
@@ -91,4 +83,22 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
+}
+
+/**
+ * Returns the specified effect
+ *
+ * @param    {object}   [options]
+ * @param    {Actor5e}  actorData     Target Actor
+ * @param    {string}   effectLabel   Effect to be found on target actor
+ * @returns  {Promise<ActiveEffect>}  Effect
+ */
+async function getEffect ({ actorData, effectLabel = "" } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    return (actorData.effects.find((effect) => {
+        return effect.label.toLowerCase() === effectLabel.toLowerCase();
+    }));
 }
