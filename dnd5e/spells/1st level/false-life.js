@@ -1,0 +1,77 @@
+/* ==========================================================================
+    Macro:         False Life
+    Source:        Custom
+    Usage:         Macro ItemMacro
+   ========================================================================== */
+
+/* ==========================================================================
+    Macro Globals
+   ========================================================================== */
+const lastArg   = args[args.length - 1];
+const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+
+const props = {
+    name: "False Life",
+    state: args[0]?.tag || args[0] || "unknown",
+
+    actorData: tokenData?.actor || {},
+    tokenData,
+
+    lastArg,
+};
+
+logProps(props);
+
+
+/* ==========================================================================
+    Macro Logic
+   ========================================================================== */
+
+// Check dependencies ---------------------------------------------------------
+if (!(game.modules.get("sequencer")?.active)) {
+    return ui.notifications.error("Sequencer is required!");
+}
+
+
+// Apply animation to effected target(s) --------------------------------------
+if (props.state === "on") {
+    new Sequence()
+        .effect()
+            .file("jb2a.token_border.circle.static.green.001")
+            .attachTo(props.tokenData)
+            .scaleToObject(1.85)
+            .persist()
+            .name(`FalseLife-${props.tokenData.uuid}`)
+            .waitUntilFinished(-500)
+            .fadeIn(300)
+            .fadeOut(300)
+        .play();
+}
+
+// Remove effect from target(s) -----------------------------------------------
+if (props.state === "off") {
+    Sequencer.EffectManager.endEffects({
+        name: `FalseLife-${props.tokenData.uuid}`,
+        object: props.tokenData
+    });
+}
+
+
+/* ==========================================================================
+    Helpers
+   ========================================================================== */
+
+/**
+* Logs the global properties for the Macro to the console for debugging purposes
+*
+* @param  {Object}  props  Global properties
+*/
+function logProps (props) {
+    console.groupCollapsed("%cmacro" + `%c${props.name}`,
+        "background-color: #333; color: #fff; padding: 3px 5px;",
+        "background-color: #004481; color: #fff; padding: 3px 5px;");
+    Object.keys(props).forEach((key) => {
+        console.log(`${key}: `, props[key]);
+    });
+    console.groupEnd();
+}

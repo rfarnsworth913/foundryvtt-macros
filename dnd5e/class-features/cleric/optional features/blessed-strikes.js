@@ -83,8 +83,8 @@ if (props.state === "DamageBonus") {
         duration: {
             seconds: 1
         },
-        label: `${props.name} already used this round`,
-        icon:  props.itemData.img
+        name: `${props.name} already used this round`,
+        icon: "assets/icons/dnd5e/classes/features/cleric/blessed-strikes.webp"
     };
 
     await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
