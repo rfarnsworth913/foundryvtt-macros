@@ -1,6 +1,6 @@
 /* ==========================================================================
-    Macro:         Death Ward
-    Source:        https://github.com/chrisk123999/foundry-macros/blob/main/Spells/Death%20Ward/Chris-DeathWardWorld.js
+    Macro:         Raise Dead
+    Source:        Custom
     Usage:         ItemMacro
    ========================================================================== */
 
@@ -11,11 +11,18 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Death Ward",
+    name: "Raise Dead",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
+
+    animations: {
+        intro: "jb2a.magic_signs.circle.02.necromancy.intro.green",
+        loop:  "jb2a.magic_signs.circle.02.necromancy.loop.green",
+        outro: "jb2a.magic_signs.circle.02.necromancy.outro.green"
+    },
+    target: lastArg.hitTargets[0] || {},
 
     lastArg
 };
@@ -26,12 +33,28 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "off") {
-    const isAtZero = props.actorData.system.attributes.hp.value <= 0;
-
-    if (isAtZero) {
-        await actor.update({ "system.attributes.hp.value": 1 });
-    }
+if ((game.modules.get("sequencer")?.active)) {
+    new Sequence()
+        .effect()
+            .file(props.animations.intro)
+            .scaleToObject(1.75)
+            .atLocation(props.target)
+            .belowTokens()
+            .waitUntilFinished(-500)
+        .effect()
+            .file(props.animations.loop)
+            .scaleToObject(1.75)
+            .atLocation(props.target)
+            .belowTokens()
+            .fadeIn(200)
+            .fadeOut(200)
+            .waitUntilFinished(-500)
+        .effect()
+            .file(props.animations.outro)
+            .scaleToObject(1.75)
+            .atLocation(props.target)
+            .belowTokens()
+        .play();
 }
 
 
@@ -52,16 +75,4 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
-    });
 }

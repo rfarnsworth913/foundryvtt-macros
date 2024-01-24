@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Death Ward
-    Source:        https://github.com/chrisk123999/foundry-macros/blob/main/Spells/Death%20Ward/Chris-DeathWardWorld.js
-    Usage:         ItemMacro
+    Macro:         Alchemical Savant
+    Source:        Custom
+    Usage:         Damage Bonus Macro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,11 +11,14 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Death Ward",
+    name: "Alchemical Savant",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData:  lastArg.itemData || {},
     tokenData,
+
+    damageTypes: ["healing", "acid", "fire", "necrotic", "poison"],
 
     lastArg
 };
@@ -26,11 +29,25 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "off") {
-    const isAtZero = props.actorData.system.attributes.hp.value <= 0;
+if (props.state === "DamageBonus") {
+    // Check damage type ------------------------------------------------------
+    const applyDamage = props.lastArg.damageDetail.reduce((list, damageDetails) => {
+        if (props.damageTypes.includes(damageDetails.type)) {
+            list.push(damageDetails);
+        }
 
-    if (isAtZero) {
-        await actor.update({ "system.attributes.hp.value": 1 });
+        return list;
+    }, []);
+
+    // Apply damage if damage type is valid -----------------------------------
+    if (applyDamage.length > 0) {
+        const intModifier = props.actorData.system.abilities.int.mod;
+        const damageBonus = intModifier >= 1 ? intModifier : 1;
+
+        return {
+            damageRoll: damageBonus,
+            flavor:     props.name
+        };
     }
 }
 
@@ -52,16 +69,4 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
-    });
 }

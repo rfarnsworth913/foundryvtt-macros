@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Death Ward
-    Source:        https://github.com/chrisk123999/foundry-macros/blob/main/Spells/Death%20Ward/Chris-DeathWardWorld.js
-    Usage:         ItemMacro
+    Macro:         Circle of Mortality
+    Source:        Custom
+    Usage:         DAE ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,7 +11,7 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Death Ward",
+    name: "Circle of Mortality",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
@@ -26,12 +26,32 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "off") {
-    const isAtZero = props.actorData.system.attributes.hp.value <= 0;
+if (props.state === "on") {
+    const hookID = Hooks.on("midi-qol.preDamageRollComplete", async (workflow) => {
 
-    if (isAtZero) {
-        await actor.update({ "system.attributes.hp.value": 1 });
-    }
+        // Check if damage should be modified----------------------------------
+        const [target] = workflow.targets;
+
+        if (workflow.damageDetail[0].type === "healing" &&
+            target.actor.system.attributes.hp.value === 0) {
+            const formula    = workflow.damageRoll._formula;
+            const diceSides  = workflow.damageRoll.terms[0].faces;
+            const diceNumber = workflow.damageRoll.terms[0].number;
+            const healingAmount = diceSides * diceNumber;
+
+            const roll = new Roll(formula.replace(/[0-9]+d[0-9]+/, healingAmount)).roll({ async: false });
+            workflow.setDamageRoll(roll);
+        }
+    });
+
+    DAE.setFlag(props.actorData, "circleOfMortality", hookID);
+}
+
+if (props.state === "off") {
+    const hookID = DAE.getFlag(props.actorData, "circleOfMortality");
+    DAE.unsetFlag(props.actorData, "circleOfMortality");
+
+    Hooks.off("midi-qol.preDamageRollComplete", hookID);
 }
 
 
@@ -52,16 +72,4 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Simple Async wait function
- *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
- */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
-    });
 }
