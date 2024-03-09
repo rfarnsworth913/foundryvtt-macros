@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Bane
+    Macro:         Sacred Flame
     Source:        Custom
-    Usage:         ItemMacro After Active Effects
+    Usage:         ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,17 +11,17 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Bane",
+    name: "Sacred Flame",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
-    target: lastArg.hitTargets[0] || {},
 
-    animation: {
-        intro: "jb2a.bless.200px.intro.purple",
-        loop:  "jb2a.bless.200px.loop.purple"
+    animations: {
+        source: "jb2a.sacred_flame.source.yellow",
+        target: "jb2a.sacred_flame.target.yellow"
     },
+    target: lastArg.hitTargets[0] || {},
 
     lastArg
 };
@@ -32,41 +32,20 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-
-// Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
-    return ui.notifications.error("Sequencer is required!");
-}
-
-
-// Apply animation to effected target(s) --------------------------------------
-if (props.state === "on") {
+if ((game.modules.get("sequencer")?.active)) {
     new Sequence()
         .effect()
-            .belowTokens()
-            .scale(1.5)
-            .file(props.animation.intro)
-            .attachTo(props.tokenData)
+            .file(props.animations.source)
+            .scaleToObject(1.75)
+            .atLocation(props.tokenData)
             .waitUntilFinished(-500)
         .effect()
-            .belowTokens()
-            .scale(1.5)
-            .file(props.animation.loop)
-            .attachTo(props.tokenData)
-            .persist()
-            .name(`Bane-${props.tokenData.uuid}`)
-            .waitUntilFinished(-500)
-            .fadeIn(300)
-            .fadeOut(300)
+            .file(props.animations.target)
+            .scaleToObject(1.75)
+            .atLocation(props.target)
+            .fadeIn(200)
+            .fadeOut(200)
         .play();
-}
-
-// Remove effect from target(s) -----------------------------------------------
-if (props.state === "off") {
-    Sequencer.EffectManager.endEffects({
-        name:   `Bane-${props.tokenData.uuid}`,
-        object: props.tokenData
-    });
 }
 
 

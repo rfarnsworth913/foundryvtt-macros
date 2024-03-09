@@ -59,7 +59,7 @@ async function getRoll (roll, rollType, props) {
 
     game.dice3d?.showForRoll(roll);
 
-    for (let dice of diceRoll) {
+    for (const dice of diceRoll) {
         if (dice.discarded) {
             getDice += `<li class="roll die d20 discarded">${dice.result}</li>`;
         } else {
@@ -92,7 +92,7 @@ async function getRoll (roll, rollType, props) {
     const replaceString = `<div class="midi-qol-saves-display"><div class="end-midi-qol-saves-display">${rollResults}`;
 
     content = content.replace(searchString, replaceString);
-    chatMessage.update({ content });
+    await chatMessage.update({ content });
 }
 
 

@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Bane
+    Macro:         Shield of Faith
     Source:        Custom
-    Usage:         ItemMacro After Active Effects
+    Usage:         DAE ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,16 +11,17 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Bane",
+    name: "Shield of Faith",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
-    target: lastArg.hitTargets[0] || {},
 
+    targetData: await fromUuid(lastArg.tokenUuid) || {},
     animation: {
-        intro: "jb2a.bless.200px.intro.purple",
-        loop:  "jb2a.bless.200px.loop.purple"
+        intro: "jb2a.shield.01.intro.yellow",
+        loop:  "jb2a.shield.01.loop.yellow",
+        outro: "jb2a.shield.01.outro_explode.yellow"
     },
 
     lastArg
@@ -38,35 +39,39 @@ if (!(game.modules.get("sequencer")?.active)) {
     return ui.notifications.error("Sequencer is required!");
 }
 
-
-// Apply animation to effected target(s) --------------------------------------
+// Apply Shield Animation to effected target(s) -------------------------------
 if (props.state === "on") {
     new Sequence()
         .effect()
-            .belowTokens()
-            .scale(1.5)
             .file(props.animation.intro)
-            .attachTo(props.tokenData)
+            .attachTo(props.targetData)
+            .scaleToObject(1.5)
             .waitUntilFinished(-500)
         .effect()
-            .belowTokens()
-            .scale(1.5)
             .file(props.animation.loop)
-            .attachTo(props.tokenData)
+            .attachTo(props.targetData)
+            .scaleToObject(1.5)
             .persist()
-            .name(`Bane-${props.tokenData.uuid}`)
-            .waitUntilFinished(-500)
+            .name(`Shield-of-Faith-${props.tokenData.uuid}`)
             .fadeIn(300)
             .fadeOut(300)
+            .extraEndDuration(800)
         .play();
 }
 
-// Remove effect from target(s) -----------------------------------------------
+// Remove Shield Animation from effected target(s) ----------------------------
 if (props.state === "off") {
     Sequencer.EffectManager.endEffects({
-        name:   `Bane-${props.tokenData.uuid}`,
-        object: props.tokenData
+        name:   `Shield-of-Faith-${props.tokenData.uuid}`,
+        object: props.targetData
     });
+
+    new Sequence()
+        .effect()
+            .file(props.animation.outro)
+            .attachTo(props.targetData)
+            .scaleToObject(1.5)
+        .play();
 }
 
 
