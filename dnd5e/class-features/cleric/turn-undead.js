@@ -18,7 +18,7 @@ const props = {
     state:     args[0]?.tag || args[0] || "unknown",
 
     actorData,
-    casterLevel: Number((actorData.details?.cr) || (actorData.classes?.cleric?.levels) || 0),
+    casterLevel: Number((actorData.details?.spellLevel) || (actorData.classes?.cleric?.levels) || 0),
     itemData:    lastArg?.item,
     itemUUID:    lastArg?.uuid || lastArg?.itemUuid,
     saveType:    actorData.attributes.spellcasting || "wis",
@@ -113,7 +113,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
                 // Target Destroyed -------------------------------------------
                 if (levelCR >= monsterCR) {
                     logStatus(target.name, monsterCR, props.spellDC, save.total, "Fail", "Destroyed");
-                    turnTargets(target, save, "is destroyed", "D");
+                    turnTargets.push(getHTMLStructure(target, save, "is destroyed", "Destroyed"));
                     const maxHP = Number(targetData.attributes.hp.max);
                     const updates = {
                         actor: {
@@ -121,7 +121,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
                             ["system.attributes.hp.max"]:   maxHP
                         }
                     };
-                    await warpgate.mutate(target.document, updates, {}, { permanent: true });
+                    await warpgate.mutate(target, updates, {}, { permanent: true });
 
                 // Target Turned ----------------------------------------------
                 } else {

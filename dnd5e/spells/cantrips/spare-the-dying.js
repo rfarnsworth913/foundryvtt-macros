@@ -1,27 +1,21 @@
 /* ==========================================================================
-    Macro:         Bane
+    Macro:         Spare the Dying
     Source:        Custom
-    Usage:         ItemMacro After Active Effects
+    Usage:         UseItem
    ========================================================================== */
 
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
 const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const tokenData = await fromUuidSync(lastArg.targetUuids[0]);
 
 const props = {
-    name: "Bane",
+    name: "Spare the Dying",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
-    target: lastArg.hitTargets[0] || {},
-
-    animation: {
-        intro: "jb2a.bless.200px.intro.purple",
-        loop:  "jb2a.bless.200px.loop.purple"
-    },
 
     lastArg
 };
@@ -32,40 +26,17 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+if (props.state === "OnUse") {
 
-// Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
-    return ui.notifications.error("Sequencer is required!");
-}
-
-
-// Apply animation to effected target(s) --------------------------------------
-if (props.state === "on") {
-    new Sequence()
-        .effect()
-            .scale(1.5)
-            .file(props.animation.intro)
-            .attachTo(props.tokenData)
-            .waitUntilFinished(-500)
-        .effect()
-            .belowTokens()
-            .scale(1.5)
-            .file(props.animation.loop)
-            .attachTo(props.tokenData)
-            .persist()
-            .name(`Bane-${props.tokenData.uuid}`)
-            .waitUntilFinished(-500)
-            .fadeIn(300)
-            .fadeOut(300)
-        .play();
-}
-
-// Remove effect from target(s) -----------------------------------------------
-if (props.state === "off") {
-    Sequencer.EffectManager.endEffects({
-        name:   `Bane-${props.tokenData.uuid}`,
-        object: props.tokenData
-    });
+    // Check if conditions are valid to update actor data ---------------------
+    if (props.actorData.system.attributes.hp.value <= 0 &&
+        props.actorData.system.attributes.death.failure < 3) {
+        console.warn("Updating actor data to prevent death...");
+        props.actorData.update({
+            "system.attributes.death.success": 3,
+            "system.attributes.death.failure": 0
+        });
+    }
 }
 
 

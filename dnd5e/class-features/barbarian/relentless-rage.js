@@ -28,7 +28,7 @@ logProps(props);
     Macro Logic
    ========================================================================== */
 if (props.state === "on") {
-    const hookID = Hooks.on("updateActor", async () => {
+    const hookID = Hooks.on("dnd5e.applyDamage", async () => {
 
         // Check if character is at zero HP
         const isAtZero = props.actorData.system.attributes.hp.value <= 0;
@@ -62,7 +62,7 @@ if (props.state === "off") {
     const hookID = DAE.getFlag(props.actorData, "relentlessRage");
     DAE.unsetFlag(props.actorData, "relentlessRage");
 
-    Hooks.off("updateActor", hookID);
+    Hooks.off("dnd5e.applyDamage", hookID);
 }
 
 

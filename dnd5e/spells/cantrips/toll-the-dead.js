@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Bane
-    Source:        Custom
-    Usage:         ItemMacro After Active Effects
+    Macro:         Toll the Dead
+    Source:        MidiQOL Example Spells
+    Usage:         On Item Use
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,17 +11,13 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Bane",
-    state: args[0]?.tag || args[0] || "unknown",
+    name:      "Toll the Dead",
+    macroPass: "preDamageRoll",
+    state:     args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData:  await fromUuidSync(lastArg.uuid),
     tokenData,
-    target: lastArg.hitTargets[0] || {},
-
-    animation: {
-        intro: "jb2a.bless.200px.intro.purple",
-        loop:  "jb2a.bless.200px.loop.purple"
-    },
 
     lastArg
 };
@@ -32,40 +28,26 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+if (props.state === "OnUse" || props.macroPass === "preDamageRoll") {
+    const target   = await fromUuidSync(props.lastArg.targetUuids[0]);
+    const needsD12 = target.actor.system.attributes.hp.value < target.actor.system.attributes.hp.max;
+    let formula    = props.itemData.system.damage.parts[0][0];
+    let scalingFormula = props.itemData.system.scaling.formula;
 
-// Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
-    return ui.notifications.error("Sequencer is required!");
-}
+    if (needsD12) {
+        formula = formula.replace("d8", "d12");
+        if (scalingFormula) {
+            scalingFormula = scalingFormula.replace("d8", "d12");
+        }
+    } else {
+        formula = formula.replace("d12", "d8");
+        if (scalingFormula) {
+            scalingFormula = scalingFormula.replace("d12", "d8");
+        }
+    }
 
-
-// Apply animation to effected target(s) --------------------------------------
-if (props.state === "on") {
-    new Sequence()
-        .effect()
-            .scale(1.5)
-            .file(props.animation.intro)
-            .attachTo(props.tokenData)
-            .waitUntilFinished(-500)
-        .effect()
-            .belowTokens()
-            .scale(1.5)
-            .file(props.animation.loop)
-            .attachTo(props.tokenData)
-            .persist()
-            .name(`Bane-${props.tokenData.uuid}`)
-            .waitUntilFinished(-500)
-            .fadeIn(300)
-            .fadeOut(300)
-        .play();
-}
-
-// Remove effect from target(s) -----------------------------------------------
-if (props.state === "off") {
-    Sequencer.EffectManager.endEffects({
-        name:   `Bane-${props.tokenData.uuid}`,
-        object: props.tokenData
-    });
+    props.itemData.system.scaling.formula = scalingFormula;
+    props.itemData.system.damage.parts[0][0] = formula;
 }
 
 

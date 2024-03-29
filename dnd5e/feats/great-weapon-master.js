@@ -1,20 +1,21 @@
 /* ==========================================================================
-    Macro:         Rage
+    Macro:         Great Weapon Master
     Source:        Custom
-    Usage:         DAE Hooks Macro
+    Usage:         OnUse
    ========================================================================== */
 
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Rage",
+    name: "Great Weapon Master",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
+    itemData: lastArg.item,
     tokenData,
 
     lastArg,
@@ -26,64 +27,53 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
+if (props.state === "OnUse") {
 
-// Handle setup of Hooks ------------------------------------------------------
-if (props.state === "on") {
-    const hooks = [];
-
-    // Set Initial Rage State -------------------------------------------------
-    DAE.setFlag(props.actorData, "barbarianRageState", true);
-
-    // Handle Unconscious Condition -------------------------------------------
-    const unconsciousHook = Hooks.on("preCreateActiveEffect", async (effect) => {
-        if (actor.uuid === props.actorData.uuid && effect.name === "Unconscious") {
-            await removeEffect({ actorData: props.actorData, effectLabel: "Rage" });
-        }
+    // Check if effect exists and remove it -----------------------------------
+    const greatWweaponMaster = await getEffect({
+        actorData: props.actorData,
+        effectLabel: "Great Weapon Master"
     });
-    hooks.push({ type: "preCreateActiveEffect", id:   unconsciousHook });
 
-    // Handle Attack Condition ------------------------------------------------
-    const attackHook = Hooks.on("dnd5e.preRollAttack", async () => {
-        DAE.setFlag(props.actorData, "barbarianRageState", true);
-    });
-    hooks.push({ type: "dnd5e.preRollAttack", id: attackHook });
-
-    // Handle Damage Condition ------------------------------------------------
-    const damageHook = Hooks.on("dnd5e.applyDamage", async (actor) => {
-        if (actor.uuid === props.actorData.uuid) {
-            DAE.setFlag(props.actorData, "barbarianRageState", true);
-        }
-    });
-    hooks.push({ type: "dnd5e.applyDamage", id: damageHook });
-
-    DAE.setFlag(props.actorData, "barbarianRage", hooks);
-}
-
-// Handle checking conditons --------------------------------------------------
-if (props.state === "each") {
-    const continueRage = DAE.getFlag(props.actorData, "barbarianRageState");
-
-    if (!continueRage) {
+    if (greatWweaponMaster) {
         await removeEffect({
             actorData: props.actorData,
-            effectLabel: "Rage"
+            effectLabel: "Great Weapon Master"
         });
-    } else {
-        DAE.unsetFlag(props.actorData, "barbarianRageState");
-    }
-}
 
-// Handle remvoing Hooks ------------------------------------------------------
-if (props.state === "off") {
-    const hooks = DAE.getFlag(props.actorData, "barbarianRage");
-    DAE.unsetFlag(props.actorData, "barbarianRage");
-    DAE.unsetFlag(props.actorData, "barbarianRageState");
-
-    if (hooks) {
-        hooks.forEach((hook) => {
-            Hooks.off(hook.type, hook.id);
-        });
+        return false;
     }
+
+    // Add effect if it didn't exist before -----------------------------------
+    const effects = [{
+        changes: [
+            {
+                key: "system.bonuses.mwak.damage",
+                mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+                value: "+10",
+                priority: 20
+            },
+            {
+                key: "system.bonuses.mwak.attack",
+                mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+                value: "-5",
+                priority: 20
+            }
+        ],
+        origin: props.itemData.uuid,
+        disabled: false,
+        label: props.itemData.name,
+        icon: props.itemData.img,
+        flags: {
+            dae: {
+                showIcon: true
+            }
+        }
+    }];
+    await createEffects({
+        actorData: props.actorData,
+        effects,
+    });
 }
 
 
@@ -107,14 +97,25 @@ function logProps (props) {
 }
 
 /**
- * Simple Async wait function
+ * Creates an effect on a selected actor
  *
- * @param    {number}   Number of milliseconds to wait
- * @returns  {Promise}  Promise to resolve
+ * @param    {object}         [options]
+ * @param    {Actor5e}        actor        Target actor
+ * @param    {Array<object>}  effects  Effects to be applied to target
+ * @returns  {Promise<Function>}       Deletion status of effect
  */
-async function wait (ms) {
-    return new Promise((resolve) => {
-        return setTimeout(resolve, ms);
+async function createEffects ({ actorData, effects = [] } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    if (!effects || effects.length === 0) {
+        return console.error("No effects specified");
+    }
+
+    return await MidiQOL.socket().executeAsGM("createEffects", {
+        actorUuid: actorData.uuid,
+        effects
     });
 }
 
@@ -159,6 +160,6 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }

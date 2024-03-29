@@ -37,6 +37,7 @@ module.exports = exports = {
         "FilePicker": "readonly",
         "ForienIdentification": "readonly",
         "fromUuid": "readonly",
+        "fromUuidSync": "readonly",
         "game": "readonly",
         "getProperty": "readonly",
         "Hooks": "readonly",
