@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 const { itemData } = lastArg.efData.flags.dae;
 
@@ -19,18 +19,18 @@ const props = {
     itemData,
     tokenData,
 
-    description:  "<p>A simple overview of the spell</p>",
-    sourceFolder: "Summoned",
-    summonCount:  2,
-    summonRange:  60,
+    description: "<p>A spectral, floating hand appears at a point you choose within range.</p>",
+    sourceFolder: "Mage Hand",
+    summonCount: 1,
+    summonRange: 30,
 
     animations: {
-        intro:      "jb2a.magic_signs.circle.02.conjuration.intro.blue",
-        loop:       "jb2a.magic_signs.circle.02.conjuration.loop.blue",
-        outro:      "jb2a.magic_signs.circle.02.conjuration.outro.blue",
+        intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
+        loop: "jb2a.magic_signs.circle.02.conjuration.loop.blue",
+        outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
 
         belowToken: "jb2a.impact.ground_crack.02.orange",
-        complete:   "jb2a.magic_signs.circle.02.conjuration.complete.blue",
+        complete: "jb2a.magic_signs.circle.02.conjuration.complete.blue",
         loopOffset: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
     },
 
@@ -60,7 +60,7 @@ if (props.state === "on") {
     if (!actorList) {
         await warpgate.wait(1000);
         await removeEffect({
-            actorData:   props.actorData,
+            actorData: props.actorData,
             effectLabel: props.itemData.name
         });
         return ui.notifications.error(
@@ -69,7 +69,7 @@ if (props.state === "on") {
 
     const actorImages = [];
     actorList.contents.forEach((actorData) => {
-        const actorImage = actorData.prototypeToken.texture.src;
+        const actorImage = actorData.prototypeToken.texture.src.replace("400x400.webm", "Thumb.webp");
 
         actorImages.push(`
             <label for="${actorData.id}" class="radio-label">
@@ -138,7 +138,7 @@ if (props.state === "on") {
                 callback: async (html) => {
                     // Get selected actor -------------------------------------
                     const actorDataID = await html.find("input[name='summonForm']:checked").val();
-                    const actorData   = await fromUuid(actorDataID);
+                    const actorData = await fromUuid(actorDataID);
 
                     // Setup summon range -------------------------------------
                     const range = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [{
@@ -152,7 +152,17 @@ if (props.state === "on") {
                     }]);
 
                     // Handle summoning ---------------------------------------
-                    const updates     = {};
+                    const updates = {
+                        actor: {
+                            name: "Mage Hand"
+                        },
+                        token: {
+                            texture: {
+                                scaleX: 0.5,
+                                scaleY: 0.5,
+                            }
+                        }
+                    };
                     const summonedIDs = [];
 
                     for (let i = 0; i < props.summonCount; i++) {
@@ -240,7 +250,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
 
@@ -289,7 +299,7 @@ function summonAnimation (tokenID, index = 0) {
 
     const tokenData = canvas.tokens.get(tokenID);
     const imageSize = tokenData.width * tokenData.document.texture.scaleX;
-    const image     = tokenData.document.texture.src;
+    const image = tokenData.document.texture.src;
 
     new Sequence()
         .wait(200 * (1 + index))
@@ -319,7 +329,7 @@ function summonAnimation (tokenID, index = 0) {
             .belowTokens()
             .scaleToObject(2)
             .zIndex(0.2)
-        .wait(100)
+            .wait(100)
         .effect()
             .file(props.animations.complete)
             .atLocation(tokenData)
@@ -356,7 +366,7 @@ function summonAnimation (tokenID, index = 0) {
             .duration(1200)
             .attachTo(tokenData, { bindAlpha: false })
             .waitUntilFinished(-800)
-        .animation()
+            .animation()
             .on(tokenData)
             .fadeIn(250)
         .play();
