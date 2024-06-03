@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -40,7 +40,7 @@ if (props.state === "on") {
             await removeEffect({ actorData: props.actorData, effectLabel: "Rage" });
         }
     });
-    hooks.push({ type: "preCreateActiveEffect", id:   unconsciousHook });
+    hooks.push({ type: "preCreateActiveEffect", id: unconsciousHook });
 
     // Handle Attack Condition ------------------------------------------------
     const attackHook = Hooks.on("dnd5e.preRollAttack", async () => {
@@ -56,6 +56,14 @@ if (props.state === "on") {
     });
     hooks.push({ type: "dnd5e.applyDamage", id: damageHook });
 
+    // Handle Strength Check Condition ----------------------------------------
+    const strengthCheckHook = Hooks.on("dnd5e.rollAbilityTest", async (actor, roll, abilityId) => {
+        if (abilityId === "str" && actor.uuid === props.actorData.uuid) {
+            DAE.setFlag(props.actorData, "barbarianRageState", true);
+        }
+    });
+    hooks.push({ type: "dnd5e.rollAbilityTest", id: strengthCheckHook });
+
     DAE.setFlag(props.actorData, "barbarianRage", hooks);
 }
 
@@ -64,7 +72,7 @@ if (props.state === "each") {
     const continueRage = DAE.getFlag(props.actorData, "barbarianRageState");
     const persistentRage = await getItems({
         actorData: props.actorData,
-        itemLabel: "Persistent Rage"
+        itemLabel: "Feral Instincts"
     });
 
     if (!continueRage && !persistentRage.length > 0) {
@@ -133,7 +141,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
 
