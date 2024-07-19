@@ -38,8 +38,6 @@ if (props.targetActor === "" || props.spellLevel === 5 || props.failedSaves.leng
 const duration = getDuration(props.spellLevel);
 const concentration = await getEffect({ actorData: props.actorData, effectLabel: "Concentrating" });
 
-console.warn(concentration);
-
 if (concentration) {
     await wait(500);
     await updateEffects({
@@ -55,8 +53,6 @@ if (concentration) {
 
 // Update Target Effect -------------------------------------------------------
 const effect = await getEffect({ actorData: props.targetActor, effectLabel: "Charmed" });
-
-console.warn(effect);
 
 if (effect) {
     await wait(500);

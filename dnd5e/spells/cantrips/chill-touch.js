@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Infectus Bite
+    Macro:         Chill Touch
     Source:        Custom
-    Usage:         DAE ItemMacro
+    Usage:         OnUse ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,13 +11,14 @@ const lastArg   = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Infectus Bite",
+    name: "Chill Touch",
     state: args[0]?.tag || args[0] || "unknown",
-    macroPass: args[0]?.macroPass || "",
 
     actorData: tokenData?.actor || {},
     itemData: lastArg.itemData,
     tokenData,
+
+    targetData: lastArg?.hitTargets[0] || {},
 
     lastArg
 };
@@ -28,64 +29,48 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
-    const targets = props.lastArg.hitTargets;
 
-    if (targets.length === 0) {
-        return false;
-    }
-
-    await game.MonksTokenBar.requestRoll(targets, {
-        request:  "save:con",
-        dc:       11,
-        flavor:   "Infected Bite",
-        showdc:   false,
-        silent:   true,
-        continue: "failed",
-        rollMode: "request",
-        callback: async ({ tokenresults }) => {
-            if (tokenresults[0].passed) {
-                return false;
-            }
-
-            const effectData = {
-                changes: [
-                    {
-                        key:      "StatusEffect",
-                        value:    "Convenient Effect: Diseased",
-                        mode:     CONST.ACTIVE_EFFECT_MODES.CUSTOM,
-                        priority: 20
-                    },
-                    {
-                        key:      "system.traits.di.value",
-                        value:    "healing",
-                        mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
-                        priority: 20
-                    },
-                    {
-                        key:      "system.attributes.hp.max",
-                        value:    "-1d6",
-                        mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
-                        priority: 20
-                    }
-                ],
-                label: "Infected Bite (Disease)",
-                duration: {
-                    seconds:   604800,
-                    startTime: game.time.worldTime
-                },
-                origin: props.itemData.uuid,
-                icon:   "icons/svg/biohazard.svg"
-            };
-
-            await createEffects({
-                actorData: targets[0].actor,
-                effects:   [effectData]
-            });
+// Create and apply effect ----------------------------------------------------
+const effectData = [{
+    changes: [{
+        key:      "system.traits.di.value",
+        mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
+        value:    "healing",
+        priority: 20
+    }],
+    label:    `${props.name}`,
+    icon:     props.itemData.img,
+    origin:   lastArg.uuid,
+    disabled: false,
+    flags: {
+        dae: {
+            itemData:        props.itemData,
+            specialDuration: ["turnStartSource"]
         }
+    },
+    duration: {
+        rounds:     1,
+        seconds:    12,
+        startRound: game.combat ? game.combat.round : 0,
+        startTime:  game.time.worldTime
+    }
+}];
+
+const targetRollData = props.targetData.actor.getRollData();
+
+if (targetRollData.details.type.value.toLowerCase() === "undead") {
+    effectData[0].changes.push({
+        key:      "flags.midi-qol.disadvantage.attack.all",
+        mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
+        value:    1,
+        priority: 20
     });
 }
 
+await createEffects({
+    actorData: props.targetData.actor,
+    effects:   effectData
+});
 
 /* ==========================================================================
     Helpers
