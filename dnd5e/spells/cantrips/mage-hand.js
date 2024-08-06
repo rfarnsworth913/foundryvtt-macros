@@ -9,29 +9,31 @@
    ========================================================================== */
 const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
-const { itemData } = lastArg.efData.flags.dae;
 
 const props = {
-    name: "Summon",
+    name: "Mage Hand",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData,
+    itemData: await fromUuidSync(lastArg?.origin),
     tokenData,
 
     description: "<p>A spectral, floating hand appears at a point you choose within range.</p>",
     sourceFolder: "Mage Hand",
-    summonCount: 1,
-    summonRange: 30,
+    summonRange: 60,
 
     animations: {
-        intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
-        loop: "jb2a.magic_signs.circle.02.conjuration.loop.blue",
-        outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
+        summoner: {
+            intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
+            loop:  "jb2a.magic_signs.circle.02.conjuration.loop.blue",
+            outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
+        },
 
-        belowToken: "jb2a.impact.ground_crack.02.orange",
-        complete: "jb2a.magic_signs.circle.02.conjuration.complete.blue",
-        loopOffset: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
+        summon: {
+            belowToken: "jb2a.impact.ground_crack.02.orange",
+            topCircle:   "jb2a.magic_signs.circle.02.conjuration.complete.blue",
+            lowerCircle: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
+        }
     },
 
     lastArg
@@ -45,11 +47,11 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
+if (!(game.modules.get("portal-lib")?.active)) {
+    return ui.notifications.error("Portal Library is required!");
 }
 
-// Handle summoning target(s) -------------------------------------------------
+// Summon Handler -------------------------------------------------------------
 if (props.state === "on") {
 
     // Get possible summons ---------------------------------------------------
@@ -58,7 +60,6 @@ if (props.state === "on") {
     });
 
     if (!actorList) {
-        await warpgate.wait(1000);
         await removeEffect({
             actorData: props.actorData,
             effectLabel: props.itemData.name
@@ -67,18 +68,18 @@ if (props.state === "on") {
             `Cannot find folder name ${props.itemData.name}.  Please create the folder and setup as required.`);
     }
 
-    const actorImages = [];
-    actorList.contents.forEach((actorData) => {
+    const actorImages = actorList.contents.reduce((acc, actorData) => {
         const actorImage = actorData.prototypeToken.texture.src.replace("400x400.webm", "Thumb.webp");
 
-        actorImages.push(`
+        return acc +=`
             <label for="${actorData.id}" class="radio-label">
                 <input type="radio" id="${actorData.id}" name="summonForm" value="${actorData.uuid}" />
                 <img src="${actorImage}" style="border: 0; width: 50px; height: 50;" />
                 ${actorData.name}
             </label>
-        `);
-    });
+        `;
+    }, "").trim();
+
 
     // Summon dialog box ------------------------------------------------------
     return new Dialog({
@@ -91,7 +92,7 @@ if (props.state === "on") {
                     width: 100%;
                     align-items: flex-start;
                     max-height: 400px;
-                    overflow-y: scroll;
+                    overflow-y: auto;
                     overflow-x: hidden;
                     margin-bottom: 15px;
                 }
@@ -128,7 +129,7 @@ if (props.state === "on") {
                 ${props.description}
                 <hr />
                 <div class="form-group">
-                    ${actorImages.join("")}
+                    ${actorImages}
                 </div>
             </form>
         `,
@@ -138,7 +139,14 @@ if (props.state === "on") {
                 callback: async (html) => {
                     // Get selected actor -------------------------------------
                     const actorDataID = await html.find("input[name='summonForm']:checked").val();
-                    const actorData = await fromUuid(actorDataID);
+
+                    if (!actorDataID) {
+                        await removeEffect({
+                            actorData: props.actorData,
+                            effectLabel: props.itemData.name
+                        });
+                        return ui.notifications.error("Please select a creature to summon.");
+                    }
 
                     // Setup summon range -------------------------------------
                     const range = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [{
@@ -148,38 +156,44 @@ if (props.state === "on") {
                         y: props.tokenData.y + canvas.grid.size / 2,
                         direction: 0,
                         distance: props.summonRange,
-                        borderColor: "#ff0000"
+                        document: {
+                            borderColor: "#ff0000"
+                        }
                     }]);
 
                     // Handle summoning ---------------------------------------
-                    const updates = {
+                    const updateData = {
                         actor: {
                             name: "Mage Hand"
                         },
                         token: {
+                            name: "Mage Hand",
                             texture: {
                                 scaleX: 0.5,
                                 scaleY: 0.5,
                             }
                         }
                     };
-                    const summonedIDs = [];
 
-                    for (let i = 0; i < props.summonCount; i++) {
-                        // eslint-disable-next-line no-await-in-loop
-                        const summoned = await warpgate.spawn(actorData.name, updates, {}, {});
-                        const summonedID = `${summoned[0]}`;
-                        summonedIDs.push(summonedID);
-                    }
+                    const portal = new Portal();
+                    portal.addCreature(actorDataID, { updateData })
+                        .range(60)
+                        .delay(1500)
+                        .pick();
+
+                    const summons = await portal.spawn();
 
                     // Summoning Animations -----------------------------------
+                    const summonIDs = [];
+
                     summonerAnimation(props.tokenData);
-                    summonedIDs.forEach((summonedID, index) => {
-                        summonAnimation(summonedID, index);
+                    summons.forEach(async (summonedToken, index) => {
+                        summonIDs.push(summonedToken.id);
+                        summonAnimation(summonedToken.id, index);
                     });
 
                     // Store summoned values in DAE Flags ---------------------
-                    DAE.setFlag(props.actorData, props.itemData.name.replace(" ", ""), summonedIDs);
+                    DAE.setFlag(props.actorData, props.itemData.name.replace(" ", ""), summonIDs);
                     await range[0].delete();
                 }
             },
@@ -198,15 +212,14 @@ if (props.state === "on") {
 
 }
 
-// Handle unsummoning target(s) -----------------------------------------------
+// Unsummon Handler -----------------------------------------------------------
 if (props.state === "off") {
     const summonedIDs = DAE.getFlag(props.actorData, props.itemData.name.replace(" ", ""));
     DAE.unsetFlag(props.actorData, props.itemData.name.replace(" ", ""));
 
-    summonedIDs.forEach(async (summonedID) => {
-        await warpgate.dismiss(summonedID, game.scenes.current.id, game.user.id);
-    });
+    await game.scenes.current.deleteEmbeddedDocuments("Token", summonedIDs);
 }
+
 
 /* ==========================================================================
     Helpers
@@ -256,6 +269,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
 /**
  * Simple summoner animation that plays on the summoner token
+ *
  * @param {Token5e}  tokenData  Token data of the summoner
  */
 function summonerAnimation (tokenData) {
@@ -265,13 +279,13 @@ function summonerAnimation (tokenData) {
 
     new Sequence()
         .effect()
-            .file(props.animations.intro)
+            .file(props.animations.summoner.intro)
             .scaleToObject(1.75)
             .atLocation(tokenData)
             .belowTokens()
             .waitUntilFinished(-500)
         .effect()
-            .file(props.animations.loop)
+            .file(props.animations.summoner.loop)
             .scaleToObject(1.75)
             .atLocation(tokenData)
             .belowTokens()
@@ -279,12 +293,13 @@ function summonerAnimation (tokenData) {
             .fadeOut(200)
             .waitUntilFinished(-500)
         .effect()
-            .file(props.animations.outro)
+            .file(props.animations.summoner.outro)
             .scaleToObject(1.75)
             .atLocation(tokenData)
             .belowTokens()
         .play();
 }
+
 
 /**
  * Simple summoning animation that plays on the summoned token
@@ -298,31 +313,12 @@ function summonAnimation (tokenID, index = 0) {
     }
 
     const tokenData = canvas.tokens.get(tokenID);
-    const imageSize = tokenData.width * tokenData.document.texture.scaleX;
     const image = tokenData.document.texture.src;
 
     new Sequence()
         .wait(200 * (1 + index))
         .effect()
-            .file(props.animations.complete)
-            .atLocation(tokenData, { offset: { y: -((imageSize - 1) / 2) }, gridUnits: true })
-            .scaleToObject(1.1)
-            .filter("ColorMatrix", { saturate: -1, brightness: 0 })
-            .filter("Blur", { blurX: 5, blurY: 10 })
-            .animateProperty(
-                "spriteContainer",
-                "position.y",
-                { from: -3, to: -0.3, duration: 500, ease: "easeOutCubic", gridUnits: true }
-            )
-            .fadeOut(100)
-            .rotate(-90)
-            .scaleOut(0, 100, { ease: "easeOutCubic" })
-            .duration(500)
-            .attachTo(tokenData, { bindAlpha: false })
-            .zIndex(5)
-            .waitUntilFinished(-300)
-        .effect()
-            .file(props.animations.belowToken)
+            .file(props.animations.summon.belowToken)
             .atLocation(tokenData)
             .opacity(1)
             .randomRotation()
@@ -331,12 +327,25 @@ function summonAnimation (tokenID, index = 0) {
             .zIndex(0.2)
             .wait(100)
         .effect()
-            .file(props.animations.complete)
+            .file(props.animations.summon.topCircle)
             .atLocation(tokenData)
-            .opacity(1)
+            .scaleIn(0, 200, { ease: "easeOutCubic" })
             .scaleToObject(1.5)
+            .duration(1200)
+            .fadeIn(200, { ease: "easeOutCirc", delay: 200 })
+            .fadeOut(300, { ease: "linear" })
+            .filter("ColorMatrix", { saturate: -1, brightness: 2 })
+            .filter("Blur", { blurX: 5, blurY: 10 })
+            .zIndex(0.1)
         .effect()
-            .file(props.animations.loopOffset)
+            .file(props.animations.summon.topCircle)
+            .atLocation(tokenData)
+            .scaleIn(0, 200, { ease: "easeOutCubic" })
+            .scaleToObject(1.5)
+            .fadeOut(5000, { ease: "easeOutQuint" })
+            .duration(10000)
+        .effect()
+            .file(props.animations.summon.lowerCircle)
             .atLocation(tokenData)
             .scaleIn(0, 200, { ease: "easeOutCubic" })
             .belowTokens()
@@ -348,7 +357,7 @@ function summonAnimation (tokenID, index = 0) {
             .filter("Blur", { blurX: 5, blurY: 10 })
             .zIndex(0.1)
         .effect()
-            .file(props.animations.loopOffset)
+            .file(props.animations.summon.lowerCircle)
             .atLocation(tokenData)
             .scaleIn(0, 200, { ease: "easeOutCubic" })
             .belowTokens()

@@ -19,7 +19,7 @@ const props = {
     itemData,
     tokenData,
 
-    itemName:   itemData.name,
+    itemName: itemData.name,
 
     lastArg
 };
@@ -31,11 +31,6 @@ logProps(props);
     Macro Logic
    ========================================================================== */
 
-// Check for required modules -------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
-
 // Setup for the spell --------------------------------------------------------
 const actorList = game.folders.contents.find((folder) => {
     return folder.name === props.itemName;
@@ -45,8 +40,8 @@ const actorImages = actorList.contents.reduce((list, actorData) => {
     const actorImage = actorData.prototypeToken.texture.src;
 
     return list += `
-        <label for="${actorData.id}" class="radio-label">
-            <input type="radio" id="${actorData.id}" name="disguiseForm" value="${actorImage}" />
+        <label for="${actorData.uuid}" class="radio-label">
+            <input type="radio" id="${actorData.uuid}" name="disguiseForm" value="${actorData.uuid}" />
             <img src="${actorImage}" style="border: 0; width: 50px; height: 50;" />
             ${actorData.name}
         </label>
@@ -58,8 +53,7 @@ if (props.state === "on") {
     // Exit if the required folder is missing ---------------------------------
     if (!actorList) {
         await wait(1000);
-        const effect = await getEffect({ actorData: props.actorData, effectLabel: props.itemName });
-        await effect.delete();
+        await removeEffect({ actorData: props.actorData, effectLabel: props.itemName });
         return ui.notifications.error(
             `Cannot find folder name ${props.itemName}.  Please create the folder and setup as required.`);
     }
@@ -113,14 +107,34 @@ if (props.state === "on") {
             change: {
                 label: "Change",
                 callback: async (html) => {
-                    const disguiseImage = await html.find("input[name='disguiseForm']:checked").val();
-                    const tokenSettings = { img: props.actorData.prototypeToken.texture.src };
-                    const updates = { "token": { img: disguiseImage } };
-                    const callbacks = { delta: async (delta, token) => {
-                        return await mergeObject(delta, { token: tokenSettings });
-                    }};
+                    const targetActorID = html.find("input[name='disguiseForm']:checked").val();
+                    const targetActor = await fromUuidSync(targetActorID);
 
-                    return await warpgate.mutate(props.tokenData.document, updates, callbacks, { name: props.itemName });
+                    await props.actorData.transformInto(targetActor, {
+                        keepAE: false,
+                        keepBackgroundAE : true,
+                        keepBio: false,
+                        keepClass: false,
+                        keepClassAE : true,
+                        keepEquipmentAE : true,
+                        keepFeatAE : true,
+                        keepFeats: false,
+                        keepItems: false,
+                        keepMental: false,
+                        keepOriginAE : true,
+                        keepOtherOriginAE : true,
+                        keepPhysical: false,
+                        keepSaves: false,
+                        keepSelf : true,
+                        keepSkills: false,
+                        keepSpellAE : true,
+                        keepSpells: false,
+                        keepVision: false,
+                        mergeSaves: false,
+                        mergeSkills: false,
+                        renderSheet : true,
+                        transformToken : true,
+                    });
                 }
             },
             cancel: {
@@ -135,7 +149,11 @@ if (props.state === "on") {
 }
 
 if (props.state === "off") {
-    await warpgate.revert(props.tokenData.document, props.itemName);
+    await props.actorData.revertOriginalForm();
+
+    await wait(1000);
+    const newActorData = await fromUuidSync(props.actorData.uuid);
+    await removeEffect({ actorData: newActorData, effectLabel: props.itemName });
 
     return ChatMessage.create({
         content: `${props.itemName} wears off!`,
@@ -161,24 +179,6 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
-}
-
-/**
- * Returns the specified effect
- *
- * @param    {object}   [options]
- * @param    {Actor5e}  actorData     Target Actor
- * @param    {string}   effectLabel   Effect to be found on target actor
- * @returns  {Promise<ActiveEffect>}  Effect
- */
-async function getEffect ({ actorData, effectLabel = "" } = {}) {
-    if (!actorData) {
-        return console.error("No actor specified!");
-    }
-
-    return (actorData.effects.find((effect) => {
-        return effect.name.toLowerCase() === effectLabel.toLowerCase();
-    }));
 }
 
 /**
