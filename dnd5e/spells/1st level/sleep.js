@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -15,7 +15,7 @@ const props = {
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData:  lastArg.item,
+    itemData: lastArg.item,
     tokenData,
 
     sleepHP: await lastArg.damageTotal,
@@ -93,7 +93,7 @@ if (props.state === "OnUse") {
         const sleptResults = `<div><div class="midi-qol-nobox">${sleptList}</div></div>`;
 
         const chatMessage = game.messages.get(props.lastArg.itemCardId);
-        let content = duplicate(chatMessage.content);
+        let content = foundry.utils.duplicate(chatMessage.content);
 
         const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
         const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${sleptResults}`;

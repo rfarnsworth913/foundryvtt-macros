@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 /* ==========================================================================
     Macro:         Light
     Source:        https://www.patreon.com/posts/light-69533664
@@ -95,7 +94,7 @@ if (props.state === "on") {
         `;
         saveResults = `
             <div class="midi-qol-nobox midi-qol-bigger-text">
-                ${CONFIG.DND5E.abilities[saveType]} Saving Throw: DC ${props.saveDC}
+                ${CONFIG.DND5E.abilities[saveType].label} Saving Throw: DC ${props.saveDC}
             </div>
             <div>
                 <div class="midi-qol-nobox">${results}</div>
@@ -113,7 +112,7 @@ if (props.state === "on") {
     }).pop();
 
     const chatMessage = await game.messages.get(lastMessage.id);
-    let content = await duplicate(chatMessage.content);
+    let content = await foundry.utils.duplicate(chatMessage.content);
 
     const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
     const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${saveResults}`;
@@ -163,11 +162,11 @@ async function removeAll () {
     }
 
     for (const target of targets) {
-        if (props.casterData.id === await getProperty(target.actor.flags, "midi-qol.light.owner")) {
+        if (props.casterData.id === await foundry.utils.getProperty(target.actor.flags, "midi-qol.light.owner")) {
             await MidiQOL.socket().executeAsGM("removeEffects", {
                 actorUuid: target.actor.uuid,
                 effects: [target.actor.effects.find((effect) => {
-                    return (effect.name === props.itemData.name);
+                    return effect.name === props.itemData.name;
                 }).id]
             });
         }

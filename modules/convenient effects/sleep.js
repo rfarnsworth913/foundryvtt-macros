@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Bless
+    Macro:         Sleep
     Source:        Custom
-    Usage:         ItemMacro After Active Effects
+    Usage:         DAE macro.execute Sleep
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,19 +11,15 @@ const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Bless",
+    name: "Sleep",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
-    target: lastArg.hitTargets[0] || {},
-
     animation: {
-        intro: "jb2a.bless.200px.intro.yellow",
-        loop: "jb2a.bless.200px.loop.yellow"
+        intro: "jb2a.sleep.target.blue",
+        loop: "jb2a.sleep.symbol.blue"
     },
-
-    lastArg
+    label: `Sleep-${lastArg.tokenId}`,
+    tokenData
 };
 
 logProps(props);
@@ -35,35 +31,34 @@ logProps(props);
 
 // Check dependencies ---------------------------------------------------------
 if (!(game.modules.get("sequencer")?.active)) {
-    return ui.notifications.error("Sequencer is required!");
+    return false;
 }
 
 
-// Apply animation to effected target(s) --------------------------------------
+// Apply animation ------------------------------------------------------------
 if (props.state === "on") {
     new Sequence()
         .effect()
-            .scale(1.5)
             .file(props.animation.intro)
             .attachTo(props.tokenData)
+            .scaleToObject(1.5)
+            .endTime(2000)
             .waitUntilFinished(-500)
         .effect()
-            .belowTokens()
-            .scale(1.5)
             .file(props.animation.loop)
             .attachTo(props.tokenData)
             .persist()
-            .name(`Bless-${props.tokenData.uuid}`)
-            .waitUntilFinished(-500)
-            .fadeIn(300)
-            .fadeOut(300)
+            .scaleToObject(1.5)
+            .name(props.label)
+            .fadeOut(600)
         .play();
 }
 
-// Remove effect from target(s) -----------------------------------------------
+
+// Remove animation -----------------------------------------------------------
 if (props.state === "off") {
     Sequencer.EffectManager.endEffects({
-        name: `Bless-${props.tokenData.uuid}`,
+        name: props.label,
         object: props.tokenData
     });
 }

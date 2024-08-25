@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -20,7 +20,7 @@ const props = {
 
     animation: {
         intro: "jb2a.bless.200px.intro.purple",
-        loop:  "jb2a.bless.200px.loop.purple"
+        loop: "jb2a.bless.200px.loop.purple"
     },
 
     lastArg
@@ -34,7 +34,7 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
+if (!game.modules.get("sequencer")?.active) {
     return ui.notifications.error("Sequencer is required!");
 }
 
@@ -63,7 +63,7 @@ if (props.state === "on") {
 // Remove effect from target(s) -----------------------------------------------
 if (props.state === "off") {
     Sequencer.EffectManager.endEffects({
-        name:   `Bane-${props.tokenData.uuid}`,
+        name: `Bane-${props.tokenData.uuid}`,
         object: props.tokenData
     });
 }
