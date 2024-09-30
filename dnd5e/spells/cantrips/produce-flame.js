@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -29,10 +29,6 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
-
 if (props.state === "on") {
 
     // Get source item --------------------------------------------------------
@@ -44,33 +40,21 @@ if (props.state === "on") {
     }
 
     // Mutate the item --------------------------------------------------------
-    const itemData = duplicate(orgItem[0]);
-
-    // Add item to target -----------------------------------------------------
+    const itemData = foundry.utils.duplicate(orgItem[0]);
     const { spellLevel } = props.actorData.getRollData().details;
     const spellDamage = spellLevel < 3 ? 1 :
-                        spellLevel < 6 ? 2 :
-                        spellLevel < 0 ? 3 : 4;
+        spellLevel < 6 ? 2 :
+            spellLevel < 0 ? 3 : 4;
 
-    const updates = {
-        embedded: {
-            Item: {
-                "Produce Flame (Attack)": {
-                    ...itemData,
-                    "system.damage.parts": [[`${spellDamage}d8`, "fire"]]
-                }
-            }
-        }
-    };
+    itemData.name = props.itemLabel;
+    itemData.system.damage.parts = [[`${spellDamage}d8`, "fire"]];
 
-    await warpgate.mutate(props.tokenData.document, updates, {}, {
-        name: props.itemLabel,
-        description: `Adding ability: ${props.itemLabel}`
-    });
+    // Add item to target -----------------------------------------------------
+    await addItem({ actorData: props.actorData, itemData });
 }
 
 if (props.state === "off") {
-    warpgate.revert(props.tokenData.document, props.itemLabel);
+    await removeItem({ actorData: props.actorData, itemLabel: props.itemLabel });
 }
 
 
@@ -91,4 +75,34 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
+}
+
+/**
+ * Creates an item in the specified actor's inventory
+ *
+ * @param    {Actor5e}  actorData  Actor to be operated on
+ * @param    {Item5e}   itemData   Item to be added
+ * @returns  {Promise}             Removal handler
+ */
+async function addItem ({ actorData, itemData } = {}) {
+    return await actorData.createEmbeddedDocuments("Item", [itemData]);
+}
+
+/**
+ * Finds and removes an item from the specified actor's inventory
+ *
+ * @param    {Actor5e}  actorData  Actor to be operated on
+ * @param    {String}   itemLabel  Item name to be removed from inventory
+ * @returns  {Promise}             Removal handler
+ */
+async function removeItem ({ actorData, itemLabel = "" } = {}) {
+    const getItem = actorData.items.find((item) => {
+        return item.name === itemLabel;
+    });
+
+    if (!getItem) {
+        return {};
+    }
+
+    return await actorData.deleteEmbeddedDocuments("Item", [getItem.id])
 }

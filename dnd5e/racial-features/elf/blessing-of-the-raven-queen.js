@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Produce Flame
+    Macro:         Blessing of the Raven Queen
     Source:        Custom
-    Usage:         DAE ItemMacro
+    Usage:         OnUse
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,14 +11,14 @@ const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "[Action] Produce Flame",
-    state: args[0]?.macroPass || args[0] || "unknown",
+    name: "Blessing of the Raven Queen",
+    state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
     tokenData,
 
-    hitTargets: lastArg.hitTargets,
-    itemLabel: "Produce Flame (Attack)",
+    characterLevel: tokenData?.actor?.system?.details?.level,
+    itemData: lastArg?.item || {},
 
     lastArg
 };
@@ -29,19 +29,34 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-if (props.state === "postAttackRoll" && props.hitTargets.length === 0) {
-    await removeEffect({
-        actorData: props.actorData,
-        effectLabel: "Produce Flame"
-    });
+if (props.characterLevel < 3) {
+    return console.error("Character level is too low to use this feature.");
 }
 
-if (props.state === "preActiveEffects") {
-    await removeEffect({
-        actorData: props.actorData,
-        effectLabel: "Produce Flame"
-    });
-}
+const effectData = [{
+    changes: [{
+        key: "system.traits.dr.all",
+        mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+        value: 1,
+        priority: 20
+    }],
+    label: props.name,
+    icon: props.itemData.img,
+    origin: props.itemData.uuid,
+    disabled: false,
+    flags: {
+        dae: {
+            specialDuration: ["turnEnd"]
+        }
+    },
+    duration: {
+        seconds: 6,
+        startRound: game.combat ? game.combat.round : 0,
+        startTime: game.time.worldTime
+    }
+}];
+
+await createEffects({ actorData: props.actorData, effects: effectData });
 
 
 /* ==========================================================================
@@ -64,28 +79,24 @@ function logProps (props) {
 }
 
 /**
- * Removes an effect from a selected actor
+ * Creates an effect on a selected actor
  *
- * @param    {object}   [options]
- * @param    {Actor5e}  actor        Target actor
- * @param    {string}   effectLabel  Effect to be found on target actor
- * @returns  {Promise<Function>}     Deletion status of effect
+ * @param    {object}         [options]
+ * @param    {Actor5e}        actor        Target actor
+ * @param    {Array<object>}  effects  Effects to be applied to target
+ * @returns  {Promise<Function>}       Deletion status of effect
  */
-async function removeEffect ({ actorData, effectLabel = "" } = {}) {
+async function createEffects ({ actorData, effects = [] } = {}) {
     if (!actorData) {
         return console.error("No actor specified!");
     }
 
-    const effect = actorData.effects.find((effect) => {
-        return effect.name.toLowerCase() === effectLabel.toLowerCase();
-    });
-
-    if (!effect) {
-        return;
+    if (!effects || effects.length === 0) {
+        return console.error("No effects specified");
     }
 
-    return await MidiQOL.socket().executeAsGM("removeEffects", {
+    return await MidiQOL.socket().executeAsGM("createEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects
     });
 }
