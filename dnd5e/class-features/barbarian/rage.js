@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -40,16 +40,16 @@ if (props.state === "on") {
             await removeEffect({ actorData: props.actorData, effectLabel: "Rage" });
         }
     });
-    hooks.push({ type: "preCreateActiveEffect", id:   unconsciousHook });
+    hooks.push({ type: "preCreateActiveEffect", id: unconsciousHook });
 
     // Handle Attack Condition ------------------------------------------------
-    const attackHook = Hooks.on("dnd5e.preRollAttack", async () => {
+    const attackHook = Hooks.on("dnd5e.preRollAttackV2", () => {
         DAE.setFlag(props.actorData, "barbarianRageState", true);
     });
-    hooks.push({ type: "dnd5e.preRollAttack", id: attackHook });
+    hooks.push({ type: "dnd5e.preRollAttackV2", id: attackHook });
 
     // Handle Damage Condition ------------------------------------------------
-    const damageHook = Hooks.on("dnd5e.applyDamage", async (actor) => {
+    const damageHook = Hooks.on("dnd5e.applyDamage", (actor) => {
         if (actor.uuid === props.actorData.uuid) {
             DAE.setFlag(props.actorData, "barbarianRageState", true);
         }
@@ -133,7 +133,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
 

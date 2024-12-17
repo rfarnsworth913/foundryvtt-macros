@@ -30,7 +30,7 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
+if (!game.modules.get("sequencer")?.active) {
     return false;
 }
 
