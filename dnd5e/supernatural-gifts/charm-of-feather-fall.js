@@ -1,7 +1,7 @@
 /* ==========================================================================
-    Macro:         Charmed
+    Macro:         Charm of Feather Fall
     Source:        Custom
-    Usage:         Convenient Effects (Global Macro)
+    Usage:         DAE ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
@@ -11,12 +11,13 @@ const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
-    name: "Charmed",
+    name: "Charm of Feather Fall",
     state: args[0]?.tag || args[0] || "unknown",
 
-    animation: "jb2a.markers.heart.pink.02",
-    label: `Charmed-${lastArg.tokenId}`,
-    tokenData
+    actorData: tokenData?.actor || {},
+    tokenData,
+
+    lastArg
 };
 
 logProps(props);
@@ -25,35 +26,9 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-
-// Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("sequencer")?.active)) {
-    return false;
-}
-
-// Apply animation ------------------------------------------------------------
-if (props.state === "on") {
-    new Sequence()
-        .effect()
-        .file(props.animation)
-        .attachTo(props.tokenData)
-        .scaleToObject(2)
-        .persist()
-        .name(props.label)
-        .fadeIn(300)
-        .fadeOut(300)
-        .play();
-}
-
-
-// Remove animation -----------------------------------------------------------
 if (props.state === "off") {
-    Sequencer.EffectManager.endEffects({
-        name: props.label,
-        object: props.tokenData
-    });
+    await removeItem({ actorData: props.actorData, itemLabel: "Charm of Feather Fall" });
 }
-
 
 
 /* ==========================================================================
@@ -73,4 +48,23 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
+}
+
+/**
+ * Finds and removes an item from the specified actor's inventory
+ *
+ * @param    {Actor5e}  actorData  Actor to be operated on
+ * @param    {String}   itemLabel  Item name to be removed from inventory
+ * @returns  {Promise}             Removal handler
+ */
+async function removeItem ({ actorData, itemLabel = "" } = {}) {
+    const getItem = actorData.items.find((item) => {
+        return item.name === itemLabel;
+    });
+
+    if (!getItem) {
+        return {};
+    }
+
+    return await actorData.deleteEmbeddedDocuments("Item", [getItem.id])
 }

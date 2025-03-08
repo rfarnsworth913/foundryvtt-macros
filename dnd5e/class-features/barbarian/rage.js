@@ -17,6 +17,22 @@ const props = {
     actorData: tokenData?.actor || {},
     tokenData,
 
+    secondaryEffects: {
+        optional: [
+            "Frenzy",
+            "Totem Spirit: Elk"
+        ],
+        passive: [
+            "Mindless Rage",
+            "Totem Spirit: Bear",
+            "Totem Spirit: Eagle",
+            "Totem Spirit: Tiger",
+            "Totem Spirit: Wolf",
+            "Totemic Attunement: Bear",
+            "Totemic Attunement: Eagle"
+        ],
+    },
+
     lastArg,
 };
 
@@ -29,6 +45,10 @@ logProps(props);
 
 // Handle setup of Hooks ------------------------------------------------------
 if (props.state === "on") {
+    const persistentRage = await getItems({
+        actorData: props.actorData,
+        itemLabel: "Persistent Rage"
+    });
     const hooks = [];
 
     // Set Initial Rage State -------------------------------------------------
@@ -42,21 +62,26 @@ if (props.state === "on") {
     });
     hooks.push({ type: "preCreateActiveEffect", id: unconsciousHook });
 
-    // Handle Attack Condition ------------------------------------------------
-    const attackHook = Hooks.on("dnd5e.preRollAttackV2", () => {
-        DAE.setFlag(props.actorData, "barbarianRageState", true);
-    });
-    hooks.push({ type: "dnd5e.preRollAttackV2", id: attackHook });
-
-    // Handle Damage Condition ------------------------------------------------
-    const damageHook = Hooks.on("dnd5e.applyDamage", (actor) => {
-        if (actor.uuid === props.actorData.uuid) {
+    // Only if Persistent Rage does not exist ---------------------------------
+    if (persistentRage.length === 0) {
+        // Handle Attack Condition --------------------------------------------
+        const attackHook = Hooks.on("dnd5e.preRollAttackV2", () => {
             DAE.setFlag(props.actorData, "barbarianRageState", true);
-        }
-    });
-    hooks.push({ type: "dnd5e.applyDamage", id: damageHook });
+        });
+        hooks.push({ type: "dnd5e.preRollAttackV2", id: attackHook });
+
+        // Handle Damage Condition --------------------------------------------
+        const damageHook = Hooks.on("dnd5e.applyDamage", (actor) => {
+            if (actor.uuid === props.actorData.uuid) {
+                DAE.setFlag(props.actorData, "barbarianRageState", true);
+            }
+        });
+        hooks.push({ type: "dnd5e.applyDamage", id: damageHook });
+    }
 
     DAE.setFlag(props.actorData, "barbarianRage", hooks);
+
+    activateSecondaryEffects();
 }
 
 // Handle checking conditons --------------------------------------------------
@@ -88,6 +113,82 @@ if (props.state === "off") {
             Hooks.off(hook.type, hook.id);
         });
     }
+
+    // Remove related rage effects --------------------------------------------
+    removeSecondaryEffects();
+}
+
+
+/* ==========================================================================
+    Rage Supporting Features
+   ========================================================================== */
+
+function activateSecondaryEffects () {
+
+    // Optional Effects -------------------------------------------------------
+    props.secondaryEffects.optional.forEach(async (effect) => {
+        const [effectItem] = await getItems({
+            actorData: props.actorData,
+            itemLabel: effect
+        });
+
+        if (!effectItem) {
+            return;
+        }
+
+        return await new Promise((resolve) => {
+            new Dialog({
+                title: `${effectItem.name}`,
+                content: `<p>Do you want to activate ${effectItem.name}</p>`,
+                buttons: {
+                    yes: {
+                        label: effectItem.name,
+                        callback: async () => {
+                            return resolve(await effectItem.use({ legacy: false }));
+                        }
+                    },
+                    no: {
+                        label: "Cancel",
+                        callback: () => {
+                            return resolve(false);
+                        }
+                    }
+                },
+                default: "No"
+            }).render(true);
+        });
+    });
+
+    // Non-Optional Effects ---------------------------------------------------
+    props.secondaryEffects.passive.forEach(async (effect) => {
+        const [effectItem] = await getItems({
+            actorData: props.actorData,
+            itemLabel: effect
+        });
+
+        if (!effectItem) {
+            return;
+        }
+
+        return await effectItem.use({ legacy: false });
+    });
+}
+
+/**
+ * Removes secondary effects of the Rage feature such as Frenzy
+ */
+function removeSecondaryEffects () {
+    const effects = [
+        ...props.secondaryEffects.optional,
+        ...props.secondaryEffects.passive
+    ];
+
+    effects.forEach(async (effect) => {
+        await removeEffect({
+            actorData: props.actorData,
+            effectLabel: effect
+        });
+    });
 }
 
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 /* ==========================================================================
     Macro:         Turn Undead
     Source:        https://www.patreon.com/posts/channel-divinity-49814315
@@ -8,21 +7,21 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 const actorData = tokenData?.actor.getRollData() || {};
 
 const props = {
-    name:      "Turn Undead / Destroy Undead",
+    name: "Turn Undead / Destroy Undead",
     macroPass: lastArg.macroPass || "",
-    state:     args[0]?.tag || args[0] || "unknown",
+    state: args[0]?.tag || args[0] || "unknown",
 
     actorData,
-    casterLevel: Number((actorData.details?.spellLevel) || (actorData.classes?.cleric?.levels) || 0),
-    itemData:    lastArg?.item,
-    itemUUID:    lastArg?.uuid || lastArg?.itemUuid,
-    saveType:    actorData.attributes.spellcasting || "wis",
-    spellDC:     actorData.attributes.spelldc,
+    casterLevel: Number(actorData.details?.spellLevel || actorData.classes?.cleric?.levels || 0),
+    itemData: lastArg?.item,
+    itemUUID: lastArg?.uuid || lastArg?.itemUuid,
+    saveType: actorData.attributes.spellcasting || "wis",
+    spellDC: actorData.attributes.spelldc,
     tokenData,
 
     lastArg
@@ -34,27 +33,16 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-
-// Check if Warpgate is active ------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
-
-if (!(game.modules.get("dfreds-convenient-effects")?.active)) {
-    return ui.notifications.error("Convenient Effects is required!");
-}
-
-// Process Turn Undead --------------------------------------------------------
 if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
 
     // Get target data --------------------------------------------------------
     const targetList = await Array.from(props.lastArg.targets).reduce((list, target) => {
         const creatureTypes = ["undead"];
-        const targetData    = target.actor.getRollData();
-        const undead        = creatureTypes.some((type) => {
+        const targetData = target.actor.getRollData();
+        const undead = creatureTypes.some((type) => {
             return ((targetData.details?.type?.custom || targetData.details?.type?.value) ||
                 (targetData.details?.race?.name || targetData.details?.race))
-                    ?.toLowerCase()?.includes(type) || "";
+                ?.toLowerCase()?.includes(type) || "";
         });
 
         if (undead) {
@@ -75,10 +63,10 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
 
     for (const target of targetList) {
         const targetData = await target.actor.getRollData();
-        const monsterCR  = targetData.details.cr;
-        const levelCR    = await getDestroyCR(props.casterLevel);
+        const monsterCR = targetData.details.cr;
+        const levelCR = getDestroyCR(props.casterLevel);
 
-        const resist     = ["Turn Resistance", "Turn Defiance"];
+        const resist = ["Turn Resistance", "Turn Defiance"];
         const getResistance = target.actor.itemTypes.feat.find((feat) => {
             return resist.includes(feat.name);
         });
@@ -93,11 +81,12 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
             chatMessage: false,
             fastForward: true
         };
-        const save = await MidiQOL.socket().executeAsGM("rollAbility", {
-            request:    "save",
+
+        const save = await MidiQOL.socket().executeAsGM("rollAbilityV2", {
+            request: "save",
             targetUuid: target.actor.uuid,
-            ability:    props.saveType,
-            options:    getAdvantage
+            ability: props.saveType,
+            options: getAdvantage
         });
 
         if (getImmunity) {
@@ -107,119 +96,106 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
                     <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">${target.name} is immune</div>
                     <div><img src="${target.actor.prototypeToken.texture.src}" width="30" height="30" style="border:0px"></div>
                 </div>`);
-        } else {
-            if (save.total < props.spellDC) {
+        } else if (save[0].total < props.spellDC) {
 
+            if (levelCR >= monsterCR) {
                 // Target Destroyed -------------------------------------------
-                if (levelCR >= monsterCR) {
-                    logStatus(target.name, monsterCR, props.spellDC, save.total, "Fail", "Destroyed");
-                    turnTargets.push(getHTMLStructure(target, save, "is destroyed", "Destroyed"));
-                    const maxHP = Number(targetData.attributes.hp.max);
-                    const updates = {
-                        actor: {
-                            ["system.attributes.hp.value"]: 0,
-                            ["system.attributes.hp.max"]:   maxHP
-                        }
-                    };
-                    await warpgate.mutate(target, updates, {}, { permanent: true });
+                logStatus(target.name, monsterCR, props.spellDC, save[0].total, "Fail", "Destroyed");
+                turnTargets.push(getHTMLStructure(target, save, "is destroyed", "Destroyed"));
+                const maxHP = Number(targetData.attributes.hp.max);
+                const updates = {
+                    "system.attributes.hp.value": 0,
+                    "system.attributes.hp.max": maxHP
+                };
+                await target.actor.update(updates);
+                await target.actor.toggleStatusEffect("dead", { active: true });
 
-                // Target Turned ----------------------------------------------
-                } else {
-                    logStatus(target.name, monsterCR, props.spellDC, save.total, "Fail", "Turned");
-                    const condition      = game.i18n.localize("Frightened");
-                    const conditionFlags = {
-                        dae: {
-                            selfTarget: false,
-                            token: target.uuid,
-                            stackable: "noneOrigin",
-                            durationExpression: "",
-                            macroRepeat: "",
-                            specialDuration: ["zeroHP", "isDamaged"],
-                            transfer: false
-                        }
-                    };
-
-                    const dCondition = await game.dfreds.effects[`_${condition.toLowerCase()}`];
-                    // eslint-disable-next-line max-depth
-                    if (dCondition) {
-                        conditionFlags["convenientDescription"] = dCondition.description;
-                        conditionFlags["core"] = { "statusId": `Convenient Effect: ${condition}`, "overlay": false };
-                        conditionFlags["isConvenient"] = true;
-                    }
-
-                    const effectChanges = [
-                        {
-                            key: "flags.midi-qol.disadvantage.ability.check.all",
-                            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
-                            value: 1,
-                            priority: 20
-                        },
-                        {
-                            key: "flags.midi-qol.disadvantage.skill.all",
-                            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
-                            value: 1,
-                            priority: 20
-                        },
-                        {
-                            key: "flags.midi-qol.disadvantage.attack.all",
-                            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
-                            value: 1,
-                            priority: 20
-                        }
-                    ];
-
-                    const effectData = {
-                        name:     "Turned",
-                        icon:     props.itemData.img,
-                        origin:   props.itemUUID,
-                        disabled: false,
-                        transfer: false,
-                        flags:    conditionFlags,
-                        duration: {
-                            seconds:    60,
-                            rounds:     10,
-                            startRound: game.combat ? game.combat.round : 0,
-                            startTime:  game.time.worldTime
-                        },
-                        changes: effectChanges
-                    };
-
-                    const effect = await getEffect({ actorData: target.actor, effectLabel: "Turned" });
-
-                    // eslint-disable-next-line max-depth
-                    if (!effect) {
-                        await MidiQOL.socket().executeAsGM("createEffects", {
-                            actorUuid: target.actor.uuid,
-                            effects: [effectData]
-                        });
-                    }
-
-                    turnTargets.push(getHTMLStructure(target, save, "fails with", "Turned"));
-                }
             } else {
-                turnTargets.push(getHTMLStructure(target, save, "succeeds with", "Saved"));
+                // Target Turned ----------------------------------------------
+                logStatus(target.name, monsterCR, props.spellDC, save.total, "Fail", "Turned");
+                const conditionFlags = {
+                    dae: {
+                        selfTarget: false,
+                        token: target.uuid,
+                        stackable: "noneOrigin",
+                        durationExpression: "",
+                        macroRepeat: "",
+                        specialDuration: ["zeroHP", "isDamaged"],
+                        transfer: false
+                    }
+                };
+
+                const effectChanges = [
+                    {
+                        key: "flags.midi-qol.disadvantage.ability.check.all",
+                        mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+                        value: 1,
+                        priority: 20
+                    },
+                    {
+                        key: "flags.midi-qol.disadvantage.skill.all",
+                        mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+                        value: 1,
+                        priority: 20
+                    },
+                    {
+                        key: "flags.midi-qol.disadvantage.attack.all",
+                        mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+                        value: 1,
+                        priority: 20
+                    }
+                ];
+
+                const effectData = {
+                    name: "Turned",
+                    icon: props.itemData.img,
+                    origin: props.itemUUID,
+                    disabled: false,
+                    transfer: false,
+                    flags: conditionFlags,
+                    duration: {
+                        seconds: 60,
+                        rounds: 10,
+                        startRound: game.combat ? game.combat.round : 0,
+                        startTime: game.time.worldTime
+                    },
+                    changes: effectChanges
+                };
+
+                const effect = await getEffect({ actorData: target.actor, effectLabel: "Turned" });
+
+                if (!effect) {
+                    await MidiQOL.socket().executeAsGM("createEffects", {
+                        actorUuid: target.actor.uuid,
+                        effects: [effectData]
+                    });
+                }
+
+                turnTargets.push(getHTMLStructure(target, save, "fails with", "Turned"));
             }
+        } else {
+            turnTargets.push(getHTMLStructure(target, save, "succeeds with", "Saved"));
         }
+
+        await wait(300);
+
+        // Log information to the chat --------------------------------------------
+        const turnResults = `
+            <div class="midi-qol-nobox midi-qol-bigger-text">
+                ${CONFIG.DND5E.abilities[props.saveType]?.label} Saving Throw: DC ${props.spellDC}
+            </div>
+            <div>
+                <div class="midi-qol-nobox">${turnTargets.join("")}</div>
+            </div>`;
+
+        const chatMessage = await game.messages.get(props.lastArg.itemCardId);
+        let content = await duplicate(chatMessage.content);
+        const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
+        const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${turnResults}`;
+        content = await content.replace(searchString, replaceString);
+        await chatMessage.update({ content: content });
+        await ui.chat.scrollBottom();
     }
-
-    await wait (300);
-
-    // Log information to the chat --------------------------------------------
-    const turn_results = `
-        <div class="midi-qol-nobox midi-qol-bigger-text">
-            ${CONFIG.DND5E.abilities[props.saveType]?.label} Saving Throw: DC ${props.spellDC}
-        </div>
-        <div>
-            <div class="midi-qol-nobox">${turnTargets.join("")}</div>
-        </div>`;
-
-    const chatMessage = await game.messages.get(props.lastArg.itemCardId);
-    let content = await duplicate(chatMessage.content);
-    const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
-    const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${turn_results}`;
-    content = await content.replace(searchString, replaceString);
-    await chatMessage.update({ content: content });
-    await ui.chat.scrollBottom();
 }
 
 
@@ -252,12 +228,12 @@ function logStatus (name, cr, dc, save, status, result) {
 
 function getHTMLStructure (target, save, text, label) {
     return `
-        <div class="midi-qol-flex-container">
-            <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
-                ${target.name} ${text} ${save.total} [${label}]
-            </div>
-            <div>
+        <div class="flexrow">
+            <div style="flex: 0 0 30px; margin-right: 5px;">
                 <img src="${target.actor.prototypeToken.texture.src}" width="30" height="30" style="border:0px">
+            </div>
+            <div class="midi-qol-target-npc midi-qol-target-name" id="${target.id}">
+                ${target.name} ${text} ${save[0].total} [${label}]
             </div>
         </div>`;
 }
@@ -282,11 +258,11 @@ async function wait (ms) {
  */
 function getDestroyCR (level) {
     return level > 20 ? 5 :
-           level >= 17 ? 4 :
-           level >= 14 ? 3 :
-           level >= 11 ? 2 :
-           level >= 8 ? 1 :
-           level >= 5 ? 0.5 : 0;
+        level >= 17 ? 4 :
+        level >= 14 ? 3 :
+        level >= 11 ? 2 :
+        level >= 8 ? 1 :
+        level >= 5 ? 0.5 : 0;
 }
 
 /**
@@ -302,7 +278,7 @@ async function getEffect ({ actorData, effectLabel = "" } = {}) {
         return console.error("No actor specified!");
     }
 
-    return (actorData.effects.find((effect) => {
+    return actorData.effects.find((effect) => {
         return effect.name.toLowerCase() === effectLabel.toLowerCase();
-    }));
+    });
 }
