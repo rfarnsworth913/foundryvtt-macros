@@ -21,7 +21,7 @@ const props = {
     casterData,
     casterDisposition: casterData.document.disposition,
     itemData: await fromUuidSync(lastArg.origin),
-    saveDC: casterData.actor.getRollData().attributes.spelldc,
+    saveDC: casterData.actor.getRollData().attributes.spell.dc,
     spellCasting: casterData.actor.getRollData().attributes.spellcasting,
 
     lastArg

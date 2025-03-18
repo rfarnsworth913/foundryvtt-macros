@@ -14,8 +14,8 @@ const props = {
     name: "Harness Divine Power",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData:  tokenData?.actor || {},
-    itemData:   lastArg.item,
+    actorData: tokenData?.actor || {},
+    itemData: lastArg.item,
     itemCardID: lastArg.itemCardId,
     tokenData,
 };
@@ -32,8 +32,8 @@ if (props.actorData.system.spells.spell1.max === 0) {
 
 
 // Handle spell refunds -------------------------------------------------------
-const rollData   = await props.actorData.getRollData();
-const prof       = Math.ceil(rollData.prof / 2);
+const rollData = await props.actorData.getRollData();
+const prof = Math.ceil(rollData.prof / 2);
 let inputContent = "";
 
 if (hasAvailableSlots(props.actorData)) {
@@ -41,8 +41,8 @@ if (hasAvailableSlots(props.actorData)) {
     // Get options for available slots
     for (let i = 1; i <= prof; i++) {
         const chosenSpellSlots = getSpellSlots(props.actorData, i);
-        const minSlots         = chosenSpellSlots.value;
-        const maxSlots         = chosenSpellSlots.max;
+        const minSlots = chosenSpellSlots.value;
+        const maxSlots = chosenSpellSlots.max;
 
         if (minSlots < maxSlots) {
             inputContent += `
@@ -57,7 +57,7 @@ if (hasAvailableSlots(props.actorData)) {
     }
 }
 
-new Dialog ({
+new Dialog({
     title: props.itemData.name,
     content: `
         <form>
@@ -68,12 +68,12 @@ new Dialog ({
     `,
     buttons: {
         recover: {
-            icon:  "<i class=\"fas fa-check\"></i>",
+            icon: "<i class=\"fas fa-check\"></i>",
             label: "Recover",
-            callback: async (html) => {
+            callback: (html) => {
                 const selectedSlot = html.find("input[name=\"spellSlot\"]:checked");
-                let slot           = "";
-                let num            = "";
+                let slot = "";
+                let num = "";
 
                 for (let i = 0; i < selectedSlot.length; i++) {
                     slot = selectedSlot[i].id;
@@ -85,10 +85,10 @@ new Dialog ({
                 }
 
                 spellRefund(props.actorData, slot);
-                const rollResults   = `<div>Regains 1 spell slot, Level ${num}.</div>`;
-                const chatMessage   = game.messages.get(props.itemCardID);
-                let content         = duplicate(chatMessage.content);
-                const searchString  = /<div class="midi-qol-saves-display">[\\s\\S]*<div class="end-midi-qol-saves-display">/g;
+                const rollResults = `<div>Regains 1 spell slot, Level ${num}.</div>`;
+                const chatMessage = game.messages.get(props.itemCardID);
+                let content = foundry.utils.duplicate(chatMessage.content);
+                const searchString = /<div class="midi-qol-saves-display">[\\s\\S]*<div class="end-midi-qol-saves-display">/g;
                 const replaceString = `<div class="midi-qol-saves-display"><div class="end-midi-qol-saves-display">${rollResults}`;
                 content = content.replace(searchString, replaceString);
                 chatMessage.update({ content });
@@ -124,9 +124,9 @@ function logProps (props) {
  * @param  {number}   slot       Spell level to be updated
  */
 async function spellRefund (actorData, slot) {
-    const actor_data = duplicate(actorData._source);
-    actor_data.system.spells[slot].value = actor_data.system.spells[slot].value + 1;
-    await actorData.update(actor_data);
+    const actorDataClone = foundry.utils.duplicate(actorData._source);
+    actorDataClone.system.spells[slot].value = actorDataClone.system.spells[slot].value + 1;
+    await actorData.update(actorDataClone);
 }
 
 /**

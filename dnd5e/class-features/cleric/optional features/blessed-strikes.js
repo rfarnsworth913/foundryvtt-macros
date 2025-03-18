@@ -7,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -15,21 +15,21 @@ const props = {
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData:  lastArg.itemData || {},
+    itemData: lastArg.itemData || {},
     tokenData,
 
-    abilityID:      "BlessedStrikes",
-    allowedTypes:   ["weapon", "spell"],
+    abilityID: "BlessedStrikes",
+    allowedTypes: ["weapon", "spell"],
     animations: {
         source: "jb2a.divine_smite.caster.blueyellow",
         target: "jb2a.divine_smite.target.blueyellow"
     },
     damageDice: 1,
-    damageType: CONFIG.DND5E.damageTypes.radiant,
+    damageType: CONFIG.DND5E.damageTypes.radiant.label,
 
     hitTargets: lastArg.hitTargets,
     spellLevel: lastArg.spellLevel || 0,
-    uuid:       lastArg.uuid,
+    uuid: lastArg.uuid,
 
     lastArg,
 };
@@ -43,7 +43,11 @@ logProps(props);
 if (props.state === "DamageBonus") {
 
     // Validate usage ---------------------------------------------------------
-    if (getProperty(props.actorData.flags, `midi-qol.${props.abilityID}Used`)) {
+    if (props.hitTargets.length === 0) {
+        return {};
+    }
+
+    if (foundry.utils.getProperty(props.actorData.flags, `midi-qol.${props.abilityID}Used`)) {
         return {};
     }
 
@@ -61,8 +65,8 @@ if (props.state === "DamageBonus") {
 
     // Ask for attack augment -------------------------------------------------
     const dialogResult = await Dialog.confirm({
-        title:       `Use ${props.name}`,
-        content:     `<p>Use ${props.name}?</p>`,
+        title: `Use ${props.name}`,
+        content: `<p>Use ${props.name}?</p>`,
         rejectClose: true
     });
 
@@ -73,18 +77,18 @@ if (props.state === "DamageBonus") {
     // Create tracking effect data --------------------------------------------
     const effectData = {
         changes: [{
-            key:      `flags.midi-qol.${props.abilityID}Used`,
-            mode:     CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
-            value:    "1",
+            key: `flags.midi-qol.${props.abilityID}Used`,
+            mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+            value: "1",
             priority: 20
         }],
-        origin:   props.uuid,
+        origin: props.uuid,
         disabled: false,
         duration: {
             seconds: 1
         },
         name: `${props.name} already used this round`,
-        icon: "assets/icons/dnd5e/classes/features/cleric/blessed-strikes.webp"
+        icon: "assets/icons/dnd5e/classes/cleric/features/blessed-strikes.webp"
     };
 
     await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
@@ -94,7 +98,7 @@ if (props.state === "DamageBonus") {
     // Return bonus damage ----------------------------------------------------
     return {
         damageRoll: `${props.damageDice}d8[${props.damageType}]`,
-        flavor:     "Blessed Strikes"
+        flavor: "Blessed Strikes"
     };
 }
 
