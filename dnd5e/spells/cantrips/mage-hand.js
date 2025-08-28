@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/js/indent */
 /* ==========================================================================
     Macro:         Summon
     Source:        Custom
@@ -9,31 +10,29 @@
    ========================================================================== */
 const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const { itemData } = lastArg.efData.flags.dae;
 
 const props = {
-    name: "Mage Hand",
+    name: "Summon",
     state: args[0]?.tag || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData: await fromUuidSync(lastArg?.origin),
+    itemData,
     tokenData,
 
-    description: "<p>A spectral, floating hand appears at a point you choose within range.</p>",
+    description: "<p>A simple overview of the spell</p>",
     sourceFolder: "Mage Hand",
+    summonCount: 1,
     summonRange: 60,
 
     animations: {
-        summoner: {
-            intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
-            loop:  "jb2a.magic_signs.circle.02.conjuration.loop.blue",
-            outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
-        },
+        intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
+        loop: "jb2a.magic_signs.circle.02.conjuration.loop.blue",
+        outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
 
-        summon: {
-            belowToken: "jb2a.impact.ground_crack.02.orange",
-            topCircle:   "jb2a.magic_signs.circle.02.conjuration.complete.blue",
-            lowerCircle: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
-        }
+        belowToken: "jb2a.impact.ground_crack.02.orange",
+        complete: "jb2a.magic_signs.circle.02.conjuration.complete.blue",
+        loopOffset: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
     },
 
     lastArg
@@ -47,11 +46,12 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("portal-lib")?.active)) {
+if (!game.modules.get("portal-lib")?.active) {
     return ui.notifications.error("Portal Library is required!");
 }
 
-// Summon Handler -------------------------------------------------------------
+
+// Handle summoning target(s) -------------------------------------------------
 if (props.state === "on") {
 
     // Get possible summons ---------------------------------------------------
@@ -65,20 +65,22 @@ if (props.state === "on") {
             effectLabel: props.itemData.name
         });
         return ui.notifications.error(
-            `Cannot find folder name ${props.itemData.name}.  Please create the folder and setup as required.`);
+            `Cannot find folder name ${props.sourceFolder}.  Please create the folder and setup as required.`
+        );
     }
 
-    const actorImages = actorList.contents.reduce((acc, actorData) => {
+    const actorImages = [];
+    actorList.contents.forEach((actorData) => {
         const actorImage = actorData.prototypeToken.texture.src.replace("400x400.webm", "Thumb.webp");
 
-        return acc +=`
+        actorImages.push(`
             <label for="${actorData.id}" class="radio-label">
                 <input type="radio" id="${actorData.id}" name="summonForm" value="${actorData.uuid}" />
                 <img src="${actorImage}" style="border: 0; width: 50px; height: 50;" />
                 ${actorData.name}
             </label>
-        `;
-    }, "").trim();
+        `);
+    });
 
 
     // Summon dialog box ------------------------------------------------------
@@ -92,8 +94,6 @@ if (props.state === "on") {
                     width: 100%;
                     align-items: flex-start;
                     max-height: 400px;
-                    overflow-y: auto;
-                    overflow-x: hidden;
                     margin-bottom: 15px;
                 }
 
@@ -129,7 +129,7 @@ if (props.state === "on") {
                 ${props.description}
                 <hr />
                 <div class="form-group">
-                    ${actorImages}
+                    ${actorImages.join("")}
                 </div>
             </form>
         `,
@@ -209,10 +209,9 @@ if (props.state === "on") {
         },
         default: "Cancel"
     }).render(true);
-
 }
 
-// Unsummon Handler -----------------------------------------------------------
+// Handle unsummoning target(s) -----------------------------------------------
 if (props.state === "off") {
     const summonedIDs = DAE.getFlag(props.actorData, props.itemData.name.replace(" ", ""));
     DAE.unsetFlag(props.actorData, props.itemData.name.replace(" ", ""));
@@ -269,37 +268,35 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
 /**
  * Simple summoner animation that plays on the summoner token
- *
  * @param {Token5e}  tokenData  Token data of the summoner
  */
 function summonerAnimation (tokenData) {
-    if (!(game.modules.get("sequencer")?.active)) {
+    if (!game.modules.get("sequencer")?.active) {
         return false;
     }
 
     new Sequence()
         .effect()
-            .file(props.animations.summoner.intro)
-            .scaleToObject(1.75)
-            .atLocation(tokenData)
-            .belowTokens()
-            .waitUntilFinished(-500)
+        .file(props.animations.intro)
+        .scaleToObject(1.75)
+        .atLocation(tokenData)
+        .belowTokens()
+        .waitUntilFinished(-500)
         .effect()
-            .file(props.animations.summoner.loop)
-            .scaleToObject(1.75)
-            .atLocation(tokenData)
-            .belowTokens()
-            .fadeIn(200)
-            .fadeOut(200)
-            .waitUntilFinished(-500)
+        .file(props.animations.loop)
+        .scaleToObject(1.75)
+        .atLocation(tokenData)
+        .belowTokens()
+        .fadeIn(200)
+        .fadeOut(200)
+        .waitUntilFinished(-500)
         .effect()
-            .file(props.animations.summoner.outro)
-            .scaleToObject(1.75)
-            .atLocation(tokenData)
-            .belowTokens()
+        .file(props.animations.outro)
+        .scaleToObject(1.75)
+        .atLocation(tokenData)
+        .belowTokens()
         .play();
 }
-
 
 /**
  * Simple summoning animation that plays on the summoned token
@@ -308,75 +305,81 @@ function summonerAnimation (tokenData) {
  */
 // eslint-disable-next-line max-lines-per-function
 function summonAnimation (tokenID, index = 0) {
-    if (!(game.modules.get("sequencer")?.active)) {
+    if (!game.modules.get("sequencer")?.active) {
         return false;
     }
 
     const tokenData = canvas.tokens.get(tokenID);
+    const imageSize = tokenData.width * tokenData.document.texture.scaleX;
     const image = tokenData.document.texture.src;
 
     new Sequence()
         .wait(200 * (1 + index))
         .effect()
-            .file(props.animations.summon.belowToken)
-            .atLocation(tokenData)
-            .opacity(1)
-            .randomRotation()
-            .belowTokens()
-            .scaleToObject(2)
-            .zIndex(0.2)
-            .wait(100)
+        .file(props.animations.complete)
+        .atLocation(tokenData, { offset: { y: -((imageSize - 1) / 2) }, gridUnits: true })
+        .scaleToObject(1.1)
+        .filter("ColorMatrix", { saturate: -1, brightness: 0 })
+        .filter("Blur", { blurX: 5, blurY: 10 })
+        .animateProperty(
+            "spriteContainer",
+            "position.y",
+            { from: -3, to: -0.3, duration: 500, ease: "easeOutCubic", gridUnits: true }
+        )
+        .fadeOut(100)
+        .rotate(-90)
+        .scaleOut(0, 100, { ease: "easeOutCubic" })
+        .duration(500)
+        .attachTo(tokenData, { bindAlpha: false })
+        .zIndex(5)
+        .waitUntilFinished(-300)
         .effect()
-            .file(props.animations.summon.topCircle)
-            .atLocation(tokenData)
-            .scaleIn(0, 200, { ease: "easeOutCubic" })
-            .scaleToObject(1.5)
-            .duration(1200)
-            .fadeIn(200, { ease: "easeOutCirc", delay: 200 })
-            .fadeOut(300, { ease: "linear" })
-            .filter("ColorMatrix", { saturate: -1, brightness: 2 })
-            .filter("Blur", { blurX: 5, blurY: 10 })
-            .zIndex(0.1)
+        .file(props.animations.belowToken)
+        .atLocation(tokenData)
+        .opacity(1)
+        .randomRotation()
+        .belowTokens()
+        .scaleToObject(2)
+        .zIndex(0.2)
+        .wait(100)
         .effect()
-            .file(props.animations.summon.topCircle)
-            .atLocation(tokenData)
-            .scaleIn(0, 200, { ease: "easeOutCubic" })
-            .scaleToObject(1.5)
-            .fadeOut(5000, { ease: "easeOutQuint" })
-            .duration(10000)
+        .file(props.animations.complete)
+        .atLocation(tokenData)
+        .opacity(1)
+        .scaleToObject(1.5)
         .effect()
-            .file(props.animations.summon.lowerCircle)
-            .atLocation(tokenData)
-            .scaleIn(0, 200, { ease: "easeOutCubic" })
-            .belowTokens()
-            .scaleToObject(1.25)
-            .duration(1200)
-            .fadeIn(200, { ease: "easeOutCirc", delay: 200 })
-            .fadeOut(300, { ease: "linear" })
-            .filter("ColorMatrix", { saturate: -1, brightness: 2 })
-            .filter("Blur", { blurX: 5, blurY: 10 })
-            .zIndex(0.1)
+        .file(props.animations.loopOffset)
+        .atLocation(tokenData)
+        .scaleIn(0, 200, { ease: "easeOutCubic" })
+        .belowTokens()
+        .scaleToObject(1.25)
+        .duration(1200)
+        .fadeIn(200, { ease: "easeOutCirc", delay: 200 })
+        .fadeOut(300, { ease: "linear" })
+        .filter("ColorMatrix", { saturate: -1, brightness: 2 })
+        .filter("Blur", { blurX: 5, blurY: 10 })
+        .zIndex(0.1)
         .effect()
-            .file(props.animations.summon.lowerCircle)
-            .atLocation(tokenData)
-            .scaleIn(0, 200, { ease: "easeOutCubic" })
-            .belowTokens()
-            .scaleToObject(1.25)
-            .fadeOut(5000, { ease: "easeOutQuint" })
-            .duration(10000)
+        .file(props.animations.loopOffset)
+        .atLocation(tokenData)
+        .scaleIn(0, 200, { ease: "easeOutCubic" })
+        .belowTokens()
+        .scaleToObject(1.25)
+        .fadeOut(5000, { ease: "easeOutQuint" })
+        .duration(10000)
         .effect()
-            .file(image)
-            .atLocation(tokenData)
-            .scaleToObject(tokenData.document.texture.scaleX)
-            .fadeOut(1000, { ease: "easeInExpo" })
-            .filter("ColorMatrix", { saturate: -1, brightness: 0 })
-            .filter("Blur", { blurX: 5, blurY: 5 })
-            .scaleIn(0, 500, { ease: "easeOutCubic" })
-            .duration(1200)
-            .attachTo(tokenData, { bindAlpha: false })
-            .waitUntilFinished(-800)
-            .animation()
-            .on(tokenData)
-            .fadeIn(250)
+        .file(image)
+        .atLocation(tokenData)
+        .scaleToObject(tokenData.document.texture.scaleX)
+        .fadeOut(1000, { ease: "easeInExpo" })
+        .filter("ColorMatrix", { saturate: -1, brightness: 0 })
+        .filter("Blur", { blurX: 5, blurY: 5 })
+        .scaleIn(0, 500, { ease: "easeOutCubic" })
+        .duration(1200)
+        .attachTo(tokenData, { bindAlpha: false })
+        .waitUntilFinished(-800)
+        .animation()
+        .on(tokenData)
+        .fadeIn(250)
         .play();
 }

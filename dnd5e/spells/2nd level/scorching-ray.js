@@ -14,14 +14,14 @@ const props = {
     name: "Scorching Ray",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: lastArg.actor || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
-    boltNumber: lastArg.spellLevel + 1,
+    boltNumber: lastArg.castData.castLevel + 1,
     damageType: CONFIG.DND5E.damageTypes.fire.label.toLowerCase(),
-    itemData:   lastArg.item,
-    spellLevel: lastArg.spellLevel,
-    targets:    lastArg.hitTargets,
+    itemData: lastArg.item,
+    spellLevel: lastArg.castData.castLevel,
+    targets: lastArg.hitTargets,
 
     animation: "jb2a.scorching_ray.orange",
 
@@ -40,13 +40,13 @@ if (props.targets.length === 0) {
     return ui.notifications.error("No targets selected for Sorching Ray!");
 }
 
-let targetData = [];
+let targetData;
 let errorMessage = "";
 
 if (props.targets.length === 1) {
     targetData = [{
         target: props.targets[0].id,
-        bolts:  props.boltNumber
+        bolts: props.boltNumber
     }];
 } else {
     targetData = await targetingDialog(props.targets);
@@ -58,24 +58,20 @@ if (errorMessage) {
 }
 
 // Handle damage rolls --------------------------------------------------------
-targetData.forEach(async (targetData) => {
-    const target = await canvas.tokens.get(targetData.target);
+targetData.forEach(async (currentTarget) => {
+    const target = await canvas.tokens.get(currentTarget.target);
     const damageFormula = "2d6";
 
-    for (let i = 0; i < targetData.bolts; i++) {
+    for (let i = 0; i < currentTarget.bolts; i++) {
         const targetAC = target.actor.system.attributes.ac.value;
         const casterAttributes = props.actorData.system.attributes;
-        // eslint-disable-next-line no-await-in-loop
-        const attackRoll = await new Roll(`1d20 + ${casterAttributes.prof} + ${casterAttributes.spellmod}`).roll();
+        const attackRoll = await new CONFIG.Dice.D20Roll(`1d20 + ${casterAttributes.prof} + ${casterAttributes.spellmod}`, {}, {}).evaluate();
 
         logProps({ name: `${props.name} Attack Roll`, attackRoll, targetAC });
 
         if (attackRoll.total > targetAC || attackRoll.total === 20) {
-            // eslint-disable-next-line no-await-in-loop
-            await animation(props.tokenData, target, targetData.bolts);
-            // eslint-disable-next-line no-await-in-loop
-            const damage = await new game.dnd5e.dice.DamageRoll(damageFormula, props.actorData, {}).roll();
-            // eslint-disable-next-line no-await-in-loop
+            await animation(props.tokenData, target, currentTarget.bolts);
+            const damage = await new CONFIG.Dice.DamageRoll(damageFormula, {}, { type: "force" }).evaluate();
             await new MidiQOL.DamageOnlyWorkflow(
                 props.actorData,
                 props.tokenData,
@@ -96,23 +92,23 @@ targetData.forEach(async (targetData) => {
 /**
  * Handles creating and returning targeting information from a custom targeting dialog box
  *
- * @param {Token5e} targets Scorching Targets
+ * @param {Token5e} targetsData Scorching Targets
  * @returns                 Targeting or error information
  */
 // eslint-disable-next-line max-lines-per-function
-function targetingDialog (targets) {
+function targetingDialog (targetsData) {
 
     // Dialog Content -------------------------------------------------------------
-    const targetContent = targets.reduce((list, target) => {
+    const targetContent = targetsData.reduce((list, target) => {
         const image = target.texture.src;
+        const selectOption = `
+            <label for="${target.id}" class="radio-label">
+                <img src="${image}" style="border: 0; width: 50px; height: 50;" />
+                ${target.actor.name}
+                <input type="number" id="${target.id}" name="beamCount" value="0" min="0" max="12" />
+            </label>`;
 
-        return list += `
-        <label for="${target.id}" class="radio-label">
-            <img src="${image}" style="border: 0; width: 50px; height: 50;" />
-            ${target.actor.name}
-            <input type="number" id="${target.id}" name="beamCount" value="0" min="0" max="12" />
-        </label>
-    `;
+        return list + selectOption;
     }, []);
 
     // Render Dialog Box ----------------------------------------------------------
@@ -164,13 +160,13 @@ function targetingDialog (targets) {
                 label: "Damage",
                 callback: async (html) => {
                     const targets = await html.find("input[name='beamCount']");
-                    const targetData = [];
+                    const targetDamageData = [];
                     let spentBolts = 0;
 
                     for (const selectedTarget of targets) {
                         if (selectedTarget.value > 0) {
                             spentBolts += parseInt(selectedTarget.value);
-                            targetData.push({
+                            targetDamageData.push({
                                 target: selectedTarget.id,
                                 bolts: selectedTarget.value
                             });
@@ -185,12 +181,12 @@ function targetingDialog (targets) {
                         errorMessage = "The spell fails, no rays were spent!";
                     }
 
-                    return targetData;
+                    return targetDamageData;
                 }
             },
             cancel: {
                 label: "Cancel",
-                callback: async () => {
+                callback: () => {
                     return [];
                 }
             }
@@ -206,7 +202,7 @@ function targetingDialog (targets) {
  * @param {number} bolts    Number of Bolts
  */
 async function animation (caster, target, bolts) {
-    if ((game.modules.get("sequencer")?.active)) {
+    if (game.modules.get("sequencer")?.active) {
         const fire = new Sequence()
             .effect()
             .file(props.animation)
@@ -215,7 +211,7 @@ async function animation (caster, target, bolts) {
             .repeats(Number(bolts), 500, 500)
             .randomizeMirrorY();
 
-        return fire.play();
+        return await fire.play();
     }
 }
 

@@ -7,15 +7,15 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
+const tokenData = await fromUuidSync(lastArg.tokenUuid) || {};
 
 const props = {
     name: "Divine Smite",
     state: args[0]?.tag || args[0] || "unknown",
     macroPass: lastArg.macroPass || "unknown",
 
-    actorData: tokenData?.actor || {},
+    actorData: lastArg?.actor || {},
     itemData: lastArg.item || {},
     tokenData,
 
@@ -37,16 +37,14 @@ logProps(props);
     Macro Logic
    ========================================================================== */
 const [divineSmite] = await getItems({ actorData: props.actorData, itemLabel: "Divine Smite" });
-const itemUpdate = await fromUuidSync(divineSmite.uuid);
-const itemData = await itemUpdate.getChatData();
-const sourceData = itemData?.source?.book || itemData?.source;
-const trigger = (sourceData.toLowerCase() === "all") ? true :
-    ((sourceData.toLowerCase() === "crit") && (lastArg.isCritical)) ? true : false;
+const itemData = await divineSmite.getChatData();
+
 const weapons = await props.actorData.itemTypes.weapon.filter((weapon) => {
-    return weapon.getChatData().weaponType !== "Natural";
+    return weapon.system.type.label !== "Natural";
 }).map((i) => {
     return i.name;
 });
+
 const spellCount = Object.values(props.actorData.getRollData().spells).reduce((list, item) => {
     if (item.value > 0) {
         list.push(item.value);
@@ -55,26 +53,22 @@ const spellCount = Object.values(props.actorData.getRollData().spells).reduce((l
     return list;
 }, []);
 
-console.warn(props.itemData.name);
-console.warn(props.lastArg.damageRoll.options.type);
-
 
 // Handle Damage Bonus Condition ----------------------------------------------
 if (props.macroPass === "DamageBonus" &&
     props.itemData.name.toLowerCase() !== "divine smite" &&
     props.lastArg.damageRoll.options.type !== "healing" &&
     props.lastArg.damageRoll.options.type !== "temphp" &&
-    trigger &&
     spellCount.length > 0) {
 
+
     // Check for melee attack ---------------------------------------------
-    if (!["mwak"].some((i) => {
-        return (props.itemData.system.actionType || "").toLowerCase().includes(i);
+    if (!["martialm", "simplem"].some((i) => {
+        return (props.itemData.system.type.value || "").toLowerCase().includes(i);
     })) {
         return ui.notifications.error("Divine Smite can only be used with melee weapons");
     }
 
-    // eslint-disable-next-line no-async-promise-executor
     return await new Promise(async (resolve) => {
         new Dialog({
             title: "Divine Smite",
@@ -88,7 +82,7 @@ if (props.macroPass === "DamageBonus" &&
                 },
                 no: {
                     label: "No",
-                    callback: async () => {
+                    callback: () => {
                         return resolve(false);
                     }
                 }
@@ -98,16 +92,18 @@ if (props.macroPass === "DamageBonus" &&
     });
 }
 
+
 if (props.state === "OnUse" &&
     props.macroPass === "preDamageRoll" &&
     props.itemData.name.toLowerCase() === "divine smite") {
     await updateSmite();
 }
 
+
 // eslint-disable-next-line max-lines-per-function
 async function updateSmite () {
     const divineArray = {};
-    let targetList = [];
+    let targetList;
 
     try {
         const messageHistory = Object.values(MidiQOL.Workflow.workflows).filter((workflow) => {
@@ -126,13 +122,15 @@ async function updateSmite () {
         }
 
         divineArray.targetId = targetList.first().id;
+
     } catch (error) {
         console.warn(error, divineArray);
     } finally {
         const critArray = {
             critical: divineArray.critical,
             powerfulCritical: game.settings.get("dnd5e", "criticalDamageMaxDice"),
-            multiplyNumeric: game.settings.get("dnd5e", "criticalDamageModifiers")
+            multiplyNumeric: game.settings.get("dnd5e", "criticalDamageModifiers"),
+            type: props.damageType
         };
 
         const target = await canvas.tokens.get(divineArray.targetId);
@@ -141,24 +139,25 @@ async function updateSmite () {
         let diceNum = Math.min(5, spellLevel + 1);
 
         const undead = props.creatureTypes.some((type) => {
-            return ((targetData.details?.race) || (targetData.details?.type?.value) || "").toLowerCase().includes(type);
+            return (targetData.details?.race || targetData.details?.type?.value || "").toLowerCase().includes(type);
         });
 
         if (undead) {
             diceNum += 1;
         }
 
-        const damageRoll = await new game.dnd5e.dice.DamageRoll(
+        const damageRoll = await new CONFIG.Dice.DamageRoll(
             `${diceNum}d8[${props.damageType}]`,
-            props.actorData.getRollData(), critArray
-        ).evaluate({ async: true });
+            props.actorData.getRollData(),
+            critArray
+        ).evaluate();
 
         const finalData = {
             "Target Id": divineArray.targetId,
             "Target": target,
             "Target Name": target.actor.name,
             "Target Data": targetData,
-            "Target Race": (targetData.details?.race) || (targetData.details?.type?.value),
+            "Target Race": (targetData.details?.race) || targetData.details?.type?.value,
             "Undead": undead,
             "Spell Level": spellLevel,
             "Damage Dice": `${diceNum}d8`,
@@ -202,21 +201,21 @@ function logProps (props) {
  * @param    {String}     itemLabel  Item name to be found
  * @returns  Array<Item>             Collection of items matching the label
  */
-async function getItems ({ actorData, itemLabel = "" } = {}) {
+function getItems ({ actorData, itemLabel = "" } = {}) {
     if (!actorData) {
         return console.error("No actor specified");
     }
 
-    return (actorData.items.filter((item) => {
+    return actorData.items.filter((item) => {
         return item.name?.toLowerCase() === itemLabel.toLowerCase();
-    }));
+    });
 }
 
 /**
  * Plays the animation for the attack when called
  */
 function playAnimation (target) {
-    if ((game.modules.get("sequencer")?.active)) {
+    if (game.modules.get("sequencer")?.active) {
         new Sequence()
             .effect()
                 .file(props.animations.source)

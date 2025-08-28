@@ -7,11 +7,16 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
+const lastArg = args[args.length - 1];
+
 const props = {
     name: "Abi-Dalzim’s Horrid Wilting",
-    state: args[0]?.macroPass || args[0] || "unknown",
+    state: lastArg?.macroPass || lastArg || "unknown",
 
-    templateID: args[0]?.templateId || ""
+    targets: lastArg?.targets || [],
+
+    templateUuid: lastArg?.templateUuid || "",
+    lastArg
 };
 
 logProps(props);
@@ -22,10 +27,9 @@ logProps(props);
    ========================================================================== */
 if (props.state === "templatePlaced") {
     const creatureTypes = ["construct", "undead"];
-    const newTargets = args[0].targets.reduce((targets, target) => {
+    const newTargets = props.targets.reduce((targets, target) => {
         const invalid = creatureTypes.some((creatureType) => {
-            return (target.actor.data.data.details.race ||
-                target.actor.data.data.details.type.value).toLowerCase().includes(creatureType);
+            return target.actor.system.details.type.value.toLowerCase().includes(creatureType);
         });
 
         if (!invalid) {
@@ -42,7 +46,8 @@ if (props.state === "templatePlaced") {
 }
 
 if (props.state === "postActiveEffects") {
-    await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [props.templateID]);
+    const measuredTemplate = await fromUuidSync(props.templateUuid);
+    await game.scenes.current.deleteEmbeddedDocuments("MeasuredTemplate", [measuredTemplate.id]);
     game.user.updateTokenTargets([]);
     game.user.broadcastActivity({ targets: [] });
 }

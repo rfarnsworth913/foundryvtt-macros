@@ -1,3 +1,4 @@
+
 /* ==========================================================================
     Macro:         Keeper of Souls
     Source:        Custom
@@ -7,7 +8,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -22,19 +23,10 @@ const props = {
 
 logProps(props);
 
-// target.actor.getRollData().actorType === "npc" || "pc?"
-
 
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-
-// Check for dependencies -----------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
-}
-
-
 if (props.state === "OnUse") {
 
     // Get death workflow -----------------------------------------------------
@@ -47,8 +39,7 @@ if (props.state === "OnUse") {
             }
         });
 
-        return workflow.workflowType === "Workflow" &&
-            deadTargets;
+        return workflow.workflowType === "Workflow" && deadTargets;
     });
 
 
@@ -77,12 +68,7 @@ if (props.state === "OnUse") {
         const maxHP = Number(props.actorData.system.attributes.hp.max);
         const healing = Math.clamped(currentHP + Number(healingHitDice), 0, maxHP);
 
-        const updates = {
-            actor: {
-                ["system.attributes.hp.value"]: healing
-            }
-        };
-        await warpgate.mutate(props.tokenData.document, updates, {}, { permanent: true });
+        await actor.update({ "system.attributes.hp.value": healing });
     }
 }
 

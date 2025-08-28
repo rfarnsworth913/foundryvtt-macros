@@ -7,15 +7,14 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Brutal Critical",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: lastArg.actor || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
     targetData: lastArg.targets[0],
 
     lastArg,

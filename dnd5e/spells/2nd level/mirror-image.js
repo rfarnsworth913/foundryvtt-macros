@@ -1,5 +1,3 @@
-// Finalize Macro
-
 /* ==========================================================================
     Macro:         Mirror Image
     Source:        Custom
@@ -9,7 +7,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -19,7 +17,7 @@ const props = {
     actorData: tokenData?.actor || {},
     tokenData,
 
-    icon: lastArg.efData.icon || "",
+    icon: await fromUuidSync(lastArg.origin).img || "",
 
     lastArg,
 };
@@ -56,8 +54,7 @@ if (props.state === "on") {
 
         let clones = DAE.getFlag(props.actorData, "mirrorImageClones") || 3;
         const attackDC = clones === 3 ? 6 : clones === 2 ? 8 : 11;
-        const saveRoll = new Roll("1d20").roll({ async: false });
-        await game.dice3d?.showForRoll(saveRoll);
+        const saveRoll = await new CONFIG.Dice.D20Roll("1d20", {}, {}).evaluate();
 
         if (saveRoll.total >= attackDC) {
             clones -= 1;

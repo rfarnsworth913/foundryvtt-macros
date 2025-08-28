@@ -8,15 +8,14 @@
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
     name: "Great Weapon Master",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    itemData: lastArg.item,
-    tokenData,
+    actorData: lastArg.actor || {},
+    itemData: lastArg.itemData,
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     lastArg,
 };
@@ -62,7 +61,7 @@ if (props.state === "OnUse") {
         ],
         origin: props.itemData.uuid,
         disabled: false,
-        label: props.itemData.name,
+        name: props.itemData.name,
         icon: props.itemData.img,
         flags: {
             dae: {

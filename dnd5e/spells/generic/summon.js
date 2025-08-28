@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/js/indent */
 /* ==========================================================================
     Macro:         Summon
     Source:        Custom
@@ -7,7 +8,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 const { itemData } = lastArg.efData.flags.dae;
 
@@ -19,18 +20,18 @@ const props = {
     itemData,
     tokenData,
 
-    description:  "<p>A simple overview of the spell</p>",
-    sourceFolder: "Summoned",
-    summonCount:  2,
-    summonRange:  60,
+    description: "<p>A simple overview of the spell</p>",
+    sourceFolder: "Mage Hand",
+    summonCount: 1,
+    summonRange: 60,
 
     animations: {
-        intro:      "jb2a.magic_signs.circle.02.conjuration.intro.blue",
-        loop:       "jb2a.magic_signs.circle.02.conjuration.loop.blue",
-        outro:      "jb2a.magic_signs.circle.02.conjuration.outro.blue",
+        intro: "jb2a.magic_signs.circle.02.conjuration.intro.blue",
+        loop: "jb2a.magic_signs.circle.02.conjuration.loop.blue",
+        outro: "jb2a.magic_signs.circle.02.conjuration.outro.blue",
 
         belowToken: "jb2a.impact.ground_crack.02.orange",
-        complete:   "jb2a.magic_signs.circle.02.conjuration.complete.blue",
+        complete: "jb2a.magic_signs.circle.02.conjuration.complete.blue",
         loopOffset: "jb2a.magic_signs.circle.02.conjuration.loop.yellow"
     },
 
@@ -45,9 +46,10 @@ logProps(props);
    ========================================================================== */
 
 // Check dependencies ---------------------------------------------------------
-if (!(game.modules.get("warpgate")?.active)) {
-    return ui.notifications.error("Warpgate is required!");
+if (!game.modules.get("portal-lib")?.active) {
+    return ui.notifications.error("Portal Library is required!");
 }
+
 
 // Handle summoning target(s) -------------------------------------------------
 if (props.state === "on") {
@@ -58,13 +60,12 @@ if (props.state === "on") {
     });
 
     if (!actorList) {
-        await warpgate.wait(1000);
         await removeEffect({
-            actorData:   props.actorData,
+            actorData: props.actorData,
             effectLabel: props.itemData.name
         });
         return ui.notifications.error(
-            `Cannot find folder name ${props.itemData.name}.  Please create the folder and setup as required.`);
+            `Cannot find folder name ${props.sourceFolder}.  Please create the folder and setup as required.`);
     }
 
     const actorImages = [];
@@ -80,6 +81,7 @@ if (props.state === "on") {
         `);
     });
 
+
     // Summon dialog box ------------------------------------------------------
     return new Dialog({
         title: `${props.itemData.name} Selection`,
@@ -91,8 +93,6 @@ if (props.state === "on") {
                     width: 100%;
                     align-items: flex-start;
                     max-height: 400px;
-                    overflow-y: scroll;
-                    overflow-x: hidden;
                     margin-bottom: 15px;
                 }
 
@@ -138,7 +138,14 @@ if (props.state === "on") {
                 callback: async (html) => {
                     // Get selected actor -------------------------------------
                     const actorDataID = await html.find("input[name='summonForm']:checked").val();
-                    const actorData   = await fromUuid(actorDataID);
+
+                    if (!actorDataID) {
+                        await removeEffect({
+                            actorData: props.actorData,
+                            effectLabel: props.itemData.name
+                        });
+                        return ui.notifications.error("Please select a creature to summon.");
+                    }
 
                     // Setup summon range -------------------------------------
                     const range = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [{
@@ -148,28 +155,44 @@ if (props.state === "on") {
                         y: props.tokenData.y + canvas.grid.size / 2,
                         direction: 0,
                         distance: props.summonRange,
-                        borderColor: "#ff0000"
+                        document: {
+                            borderColor: "#ff0000"
+                        }
                     }]);
 
                     // Handle summoning ---------------------------------------
-                    const updates     = {};
-                    const summonedIDs = [];
+                    const updateData = {
+                        actor: {
+                            name: "Mage Hand"
+                        },
+                        token: {
+                            name: "Mage Hand",
+                            texture: {
+                                scaleX: 0.5,
+                                scaleY: 0.5,
+                            }
+                        }
+                    };
 
-                    for (let i = 0; i < props.summonCount; i++) {
-                        // eslint-disable-next-line no-await-in-loop
-                        const summoned = await warpgate.spawn(actorData.name, updates, {}, {});
-                        const summonedID = `${summoned[0]}`;
-                        summonedIDs.push(summonedID);
-                    }
+                    const portal = new Portal();
+                    portal.addCreature(actorDataID, { updateData })
+                        .range(60)
+                        .delay(1500)
+                        .pick();
+
+                    const summons = await portal.spawn();
 
                     // Summoning Animations -----------------------------------
+                    const summonIDs = [];
+
                     summonerAnimation(props.tokenData);
-                    summonedIDs.forEach((summonedID, index) => {
-                        summonAnimation(summonedID, index);
+                    summons.forEach(async (summonedToken, index) => {
+                        summonIDs.push(summonedToken.id);
+                        summonAnimation(summonedToken.id, index);
                     });
 
                     // Store summoned values in DAE Flags ---------------------
-                    DAE.setFlag(props.actorData, props.itemData.name.replace(" ", ""), summonedIDs);
+                    DAE.setFlag(props.actorData, props.itemData.name.replace(" ", ""), summonIDs);
                     await range[0].delete();
                 }
             },
@@ -185,7 +208,6 @@ if (props.state === "on") {
         },
         default: "Cancel"
     }).render(true);
-
 }
 
 // Handle unsummoning target(s) -----------------------------------------------
@@ -193,10 +215,9 @@ if (props.state === "off") {
     const summonedIDs = DAE.getFlag(props.actorData, props.itemData.name.replace(" ", ""));
     DAE.unsetFlag(props.actorData, props.itemData.name.replace(" ", ""));
 
-    summonedIDs.forEach(async (summonedID) => {
-        await warpgate.dismiss(summonedID, game.scenes.current.id, game.user.id);
-    });
+    await game.scenes.current.deleteEmbeddedDocuments("Token", summonedIDs);
 }
+
 
 /* ==========================================================================
     Helpers
@@ -240,7 +261,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
 
@@ -249,7 +270,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
  * @param {Token5e}  tokenData  Token data of the summoner
  */
 function summonerAnimation (tokenData) {
-    if (!(game.modules.get("sequencer")?.active)) {
+    if (!game.modules.get("sequencer")?.active) {
         return false;
     }
 
@@ -283,13 +304,13 @@ function summonerAnimation (tokenData) {
  */
 // eslint-disable-next-line max-lines-per-function
 function summonAnimation (tokenID, index = 0) {
-    if (!(game.modules.get("sequencer")?.active)) {
+    if (!game.modules.get("sequencer")?.active) {
         return false;
     }
 
     const tokenData = canvas.tokens.get(tokenID);
     const imageSize = tokenData.width * tokenData.document.texture.scaleX;
-    const image     = tokenData.document.texture.src;
+    const image = tokenData.document.texture.src;
 
     new Sequence()
         .wait(200 * (1 + index))

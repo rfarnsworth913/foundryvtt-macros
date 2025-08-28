@@ -8,7 +8,7 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
@@ -16,7 +16,7 @@ const props = {
     state: args[0]?.macroPass || args[0] || "unknown",
 
     actorData: tokenData?.actor || {},
-    itemData:  lastArg.item || {},
+    itemData: lastArg.item || {},
     tokenData,
 
     target: await fromUuidSync(lastArg.targetUuids[0]),
@@ -30,13 +30,12 @@ logProps(props);
 /* ==========================================================================
     Macro Logic
    ========================================================================== */
-const uses = props.itemData.system.uses.value;
+const uses = props.itemData.system.uses.max - props.itemData.system.uses.spent;
 
 const targetHP = props.target.actor.system.attributes.hp.value;
 const targetMaxHP = props.target.actor.system.attributes.hp.max;
 const conditionList = ["Diseased", "Poisoned"];
 const conditionEffects = props.target?.actor?.effects?.filter((effect) => {
-    console.warn(effect);
     return conditionList.includes(effect?.name || effect?.label || effect?.data?.label);
 });
 
@@ -179,7 +178,7 @@ function cureCondition () {
 
             // Remove Effect and update Item
             await removeEffect({ actorData: props.target.actor, effectLabel: element });
-            await updateItem({ itemData: props.itemData, uses: 5 });
+            await updateItem(5);
         }
     }).render(true);
 }
@@ -216,10 +215,10 @@ function healTarget () {
                         return ui.notifications.error(`Invalid number of charges entered = ${number}. Aborting action.`);
                     }
 
-                    const damageRoll = await new Roll(`${number}`).evaluate({ async: true });
+                    const damageRoll = await new CONFIG.Dice.DamageRoll(`${number}`, {}, { type: "healing" }).evaluate();
                     await new MidiQOL.DamageOnlyWorkflow(
-                        props.actorData,
-                        props.tokenData,
+                        actor,
+                        token,
                         damageRoll.total,
                         "healing",
                         [props.target],
@@ -230,7 +229,7 @@ function healTarget () {
                         }
                     );
 
-                    await updateItem({ itemData: props.itemData, uses: number });
+                    await updateItem(number);
                 }
             },
             close: {
@@ -272,7 +271,7 @@ function logProps (props) {
  * @param    {Array<string>}   creatureTypes  Creature types to filter by
  * @returns                                   Filtered list of targets
  */
-async function filterTargets ({ targets = [], creatureTypes = [] }) {
+function filterTargets ({ targets = [], creatureTypes = [] }) {
 
     // Check inputs -----------------------------------------------------------
     if (targets.length === 0) {
@@ -327,7 +326,7 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
 
@@ -338,7 +337,6 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
  * @param    {Item}     itemData     Item to be updated
  * @param    {number}   effectLabel  Change in number of uses
  */
-async function updateItem ({ itemData, uses }) {
-    const dItemData = duplicate(itemData);
-    props.lastArg.workflow.item.update({ "system.uses.value": dItemData.system.uses.value - uses });
+function updateItem (spent) {
+    props.lastArg.workflow.item.update({ "system.uses.spent": props.itemData.system.uses.spent + spent });
 }

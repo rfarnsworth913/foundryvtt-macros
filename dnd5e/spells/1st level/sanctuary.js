@@ -17,6 +17,7 @@ const props = {
     actorData: tokenData?.actor || {},
     tokenData,
     itemData: await fromUuid(lastArg.efData.origin),
+    spellDC: tokenData?.actor?.system?.attributes?.spelldc || 0,
 
     animation: {
         intro: "jb2a.bless.200px.intro.blue",
@@ -53,21 +54,10 @@ if (props.state === "on") {
             return true;
         }
 
-        // Set for saving throw -----------------------------------------------
-        const targetItem = await fromUuidSync(targetEffect.origin);
-        const { scaling } = targetItem.system.save;
-        let spellDC = "";
-
-        if (scaling === "spell") {
-            spellDC = targetItem.actor.system.attributes.spelldc;
-        } else {
-            spellDC = targetItem.actor.system.abilities[scaling].dc;
-        }
-
         // Handle saving throw -----------------------------------------------0
         const sourceActor = workflow.actor;
         const save = await sourceActor.rollAbilitySave("wis");
-        if (save.total >= spellDC) {
+        if (save.total >= props.spellDC) {
             return true;
         }
 

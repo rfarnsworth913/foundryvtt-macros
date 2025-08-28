@@ -7,21 +7,20 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Magic Missile",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: lastArg.actor || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
-    boltNumber: lastArg.spellLevel + 2,
+    boltNumber: lastArg.castData.castLevel + 2,
     damageType: CONFIG.DND5E.damageTypes.force.label.toLowerCase(),
-    itemData:   lastArg.item,
-    spellLevel: lastArg.spellLevel,
-    targets:    lastArg.hitTargets,
+    itemData: lastArg.item,
+    spellLevel: lastArg.castData.castLevel,
+    targets: lastArg.hitTargets,
 
     animation: "jb2a.magic_missile.blue",
 
@@ -42,13 +41,13 @@ if (props.targets.length === 0) {
     return ui.notifications.error("No targets selected for Magic Missile!");
 }
 
-let targetData = [];
+let targetData;
 let errorMessage = "";
 
 if (props.targets.length === 1) {
     targetData = [{
         target: props.targets[0].id,
-        bolts:  props.boltNumber
+        bolts: props.boltNumber
     }];
 } else {
     targetData = await targetingDialog(props.targets);
@@ -60,12 +59,12 @@ if (errorMessage) {
 }
 
 // Handle damage rolls --------------------------------------------------------
-targetData.forEach(async (targetData) => {
-    const target = await canvas.tokens.get(targetData.target);
-    const damageFormula = `${targetData.bolts}d4 + ${targetData.bolts}`;
+targetData.forEach(async (currentTarget) => {
+    const target = await canvas.tokens.get(currentTarget.target);
+    const damageFormula = `${currentTarget.bolts}d4 + ${currentTarget.bolts}`;
 
-    animation(props.actorData, target, targetData.bolts);
-    const damage = await new game.dnd5e.dice.DamageRoll(damageFormula, props.actorData, {}).roll();
+    await animation(props.tokenData, target, currentTarget.bolts);
+    const damage = await new CONFIG.Dice.DamageRoll(damageFormula, {}, { type: "force" }).evaluate();
     await new MidiQOL.DamageOnlyWorkflow(
         props.actorData,
         props.tokenData,
@@ -84,23 +83,23 @@ targetData.forEach(async (targetData) => {
 /**
  * Handles creating and returning targeting information from a custom targeting dialog box
  *
- * @param {Token5e} targets Magic Missile Targets
+ * @param {Token5e} targetsData Magic Missile Targets
  * @returns                 Targeting or error information
  */
 // eslint-disable-next-line max-lines-per-function
-function targetingDialog (targets) {
+function targetingDialog (targetsData) {
 
     // Dialog Content -------------------------------------------------------------
-    const targetContent = targets.reduce((list, target) => {
+    const targetContent = targetsData.reduce((list, target) => {
         const image = target.texture.src;
+        const selectOption = `
+            <label for="${target.id}" class="radio-label">
+                <img src="${image}" style="border: 0; width: 50px; height: 50;" />
+                ${target.actor.name}
+                <input type="number" id="${target.id}" name="missileCount" value="0" min="0" max="12" />
+            </label>`;
 
-        return list += `
-        <label for="${target.id}" class="radio-label">
-            <img src="${image}" style="border: 0; width: 50px; height: 50;" />
-            ${target.actor.name}
-            <input type="number" id="${target.id}" name="missileCount" value="0" min="0" max="12" />
-        </label>
-    `;
+        return list + selectOption;
     }, []);
 
     // Render Dialog Box ----------------------------------------------------------
@@ -151,16 +150,16 @@ function targetingDialog (targets) {
             damage: {
                 label: "Damage",
                 callback: async (html) => {
-                    const targets    = await html.find("input[name='missileCount']");
-                    const targetData = [];
-                    let spentBolts   = 0;
+                    const targets = await html.find("input[name='missileCount']");
+                    const targetDamageData = [];
+                    let spentBolts = 0;
 
                     for (const selectedTarget of targets) {
                         if (selectedTarget.value > 0) {
                             spentBolts += parseInt(selectedTarget.value);
-                            targetData.push({
+                            targetDamageData.push({
                                 target: selectedTarget.id,
-                                bolts:  selectedTarget.value
+                                bolts: selectedTarget.value
                             });
                         }
                     }
@@ -173,12 +172,12 @@ function targetingDialog (targets) {
                         errorMessage = "The spell fails, no bolts were spent!";
                     }
 
-                    return targetData;
+                    return targetDamageData;
                 }
             },
             cancel: {
                 label: "Cancel",
-                callback: async () => {
+                callback: () => {
                     return [];
                 }
             }
@@ -194,9 +193,7 @@ function targetingDialog (targets) {
  * @param {number} bolts    Number of Bolts
  */
 async function animation (caster, target, bolts) {
-    console.warn(bolts);
-
-    if ((game.modules.get("sequencer")?.active)) {
+    if (game.modules.get("sequencer")?.active) {
         const fire = new Sequence()
             .effect()
                 .file(props.animation)

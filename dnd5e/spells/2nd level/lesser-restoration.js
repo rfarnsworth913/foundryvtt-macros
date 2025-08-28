@@ -7,21 +7,23 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Lesser Restoration",
     state: args[0]?.tag || args[0] || "unknown",
 
-    itemCardId: lastArg.itemCardId,
-    target:     canvas.tokens.get(lastArg.targets[0].id),
+    itemCardId: lastArg.itemCardUuid.replace("ChatMessage.", ""),
+    target: canvas.tokens.get(lastArg.targets[0].id),
 
     conditions: [
         "Blinded",
         "Deafened",
         "Paralyzed",
         "Poisoned"
-    ]
+    ],
+
+    lastArg
 };
 
 logProps(props);
@@ -67,41 +69,18 @@ new Dialog({
     `,
     buttons: {
         yes: {
-            icon:  "<ciass=\"fas fa-check\"></i>",
+            icon: "<ciass=\"fas fa-check\"></i>",
             label: "Remove it!",
             callback: async (html) => {
                 const element = html.find("#element").val();
-                const effect  = props.target.actor.effects.find((item) => {
+                const effect = props.target.actor.effects.find((item) => {
                     return item.label === element;
                 });
 
                 await MidiQOL.socket().executeAsGM("removeEffects", {
                     actorUuid: props.target.actor.uuid,
-                    effects:   [effect.id]
+                    effects: [effect.id]
                 });
-
-                const chatMessage = game.messages.get(props.itemCardId);
-                const chatContent = `
-                    <div class="midi-qol-nobox">
-                        <div class="midi-qol-flex-container">
-                            <div>Cures ${element}:</div>
-                            <div class="midi-qol-target-npc midi-qol-target-name" id="${props.target._id}">
-                                ${props.target.name}
-                            </div>
-                            <div>
-                                <img src="${props.target.mesh.document.texture.src}" width="30" height="30" style="border:0px"></img>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                let content         = duplicate(chatMessage.content);
-                const searchString  = /<div class="midi-qol-hits-display">[\\s\\S]*<div class="end-midi-qol-hits-display">/g;
-                const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${chatContent}`;
-
-                content = content.replace(searchString, replaceString);
-                chatMessage.update({ content });
-                ui.chat.scrollBottom();
             }
         }
     },

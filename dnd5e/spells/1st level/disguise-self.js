@@ -7,17 +7,16 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
+const tokenData = canvas.tokens.get(args[1]) || {};
 const { itemData } = lastArg.efData.flags.dae;
 
 const props = {
     name: "Disguise Self",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
+    actorData: tokenData?.actor || await fromUuidSync(lastArg?.actorUuid) || {},
     itemData,
-    tokenData,
 
     itemName: itemData.name,
 
@@ -36,17 +35,20 @@ const actorList = game.folders.contents.find((folder) => {
     return folder.name === props.itemName;
 });
 
-const actorImages = actorList.contents.reduce((list, actorData) => {
+
+const actorImages = [];
+actorList.contents.forEach((actorData) => {
     const actorImage = actorData.prototypeToken.texture.src;
 
-    return list += `
-        <label for="${actorData.uuid}" class="radio-label">
+    actorImages.push(`
+            <label for="${actorData.uuid}" class="radio-label">
             <input type="radio" id="${actorData.uuid}" name="disguiseForm" value="${actorData.uuid}" />
             <img src="${actorImage}" style="border: 0; width: 50px; height: 50;" />
             ${actorData.name}
         </label>
-    `;
-}, "");
+        `);
+});
+
 
 if (props.state === "on") {
 
@@ -99,7 +101,7 @@ if (props.state === "on") {
             </style>
             <form id="disguiseSpell">
                 <div class="form-group">
-                    ${actorImages}
+                    ${actorImages.join("")}
                 </div>
             </form>
         `,
@@ -112,28 +114,28 @@ if (props.state === "on") {
 
                     await props.actorData.transformInto(targetActor, {
                         keepAE: false,
-                        keepBackgroundAE : true,
+                        keepBackgroundAE: true,
                         keepBio: false,
                         keepClass: false,
-                        keepClassAE : true,
-                        keepEquipmentAE : true,
-                        keepFeatAE : true,
+                        keepClassAE: true,
+                        keepEquipmentAE: true,
+                        keepFeatAE: true,
                         keepFeats: false,
                         keepItems: false,
                         keepMental: false,
-                        keepOriginAE : true,
-                        keepOtherOriginAE : true,
+                        keepOriginAE: true,
+                        keepOtherOriginAE: true,
                         keepPhysical: false,
                         keepSaves: false,
-                        keepSelf : true,
+                        keepSelf: true,
                         keepSkills: false,
-                        keepSpellAE : true,
+                        keepSpellAE: true,
                         keepSpells: false,
                         keepVision: false,
                         mergeSaves: false,
                         mergeSkills: false,
-                        renderSheet : true,
-                        transformToken : true,
+                        renderSheet: true,
+                        transformToken: true,
                     });
                 }
             },
