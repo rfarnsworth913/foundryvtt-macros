@@ -7,16 +7,15 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Sharpshooter",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    itemData:  lastArg.item,
-    tokenData,
+    actorData: lastArg?.actor || {},
+    itemData: lastArg.itemData,
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     lastArg,
 };
@@ -48,22 +47,22 @@ if (props.state === "OnUse") {
     const effects = [{
         changes: [
             {
-                key:      "system.bonuses.rwak.damage",
-                mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
-                value:    "+10",
+                key: "system.bonuses.rwak.damage",
+                mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+                value: "+10",
                 priority: 20
             },
             {
-                key:      "system.bonuses.rwak.attack",
-                mode:     CONST.ACTIVE_EFFECT_MODES.ADD,
-                value:    "-5",
+                key: "system.bonuses.rwak.attack",
+                mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+                value: "-5",
                 priority: 20
             }
         ],
-        origin:   props.itemData.uuid,
+        origin: props.itemData.uuid,
         disabled: false,
-        label:    props.itemData.name,
-        icon:     props.itemData.img,
+        name: props.itemData.name,
+        icon: props.itemData.img,
         flags: {
             dae: {
                 showIcon: true
@@ -160,6 +159,6 @@ async function removeEffect ({ actorData, effectLabel = "" } = {}) {
 
     return await MidiQOL.socket().executeAsGM("removeEffects", {
         actorUuid: actorData.uuid,
-        effects:   [effect.id]
+        effects: [effect.id]
     });
 }
