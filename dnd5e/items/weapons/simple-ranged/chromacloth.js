@@ -8,13 +8,12 @@
     Macro Globals
    ========================================================================== */
 const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
     name: "Chromacloth",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
+    actorData: lastArg?.actor || {},
 
     effects: [
         "Chromacloth (Red)",
@@ -34,15 +33,15 @@ if (props.actorData === "") {
     return false;
 }
 
-// Disable effects ------------------------------------------------------------
+// Remove effects -------------------------------------------------------------
 props.effects.forEach(async (effectLabel) => {
 
     const effect = props.actorData.effects.find((effect) => {
-        return effect.label.toLowerCase() === effectLabel.toLowerCase();
+        return effect.name.toLowerCase() === effectLabel.toLowerCase();
     });
 
     if (effect) {
-        await effect.update({ disabled: true });
+        await removeEffect({ actorData: props.actorData, effectLabel });
     }
 });
 
@@ -64,4 +63,31 @@ function logProps (props) {
         console.log(`${key}: `, props[key]);
     });
     console.groupEnd();
+}
+
+/**
+ * Removes an effect from a selected actor
+ *
+ * @param    {object}   [options]
+ * @param    {Actor5e}  actor        Target actor
+ * @param    {string}   effectLabel  Effect to be found on target actor
+ * @returns  {Promise<Function>}     Deletion status of effect
+ */
+async function removeEffect ({ actorData, effectLabel = "" } = {}) {
+    if (!actorData) {
+        return console.error("No actor specified!");
+    }
+
+    const effect = actorData.effects.find((effect) => {
+        return effect.name.toLowerCase() === effectLabel.toLowerCase();
+    });
+
+    if (!effect) {
+        return;
+    }
+
+    return await MidiQOL.socket().executeAsGM("removeEffects", {
+        actorUuid: actorData.uuid,
+        effects: [effect.id]
+    });
 }

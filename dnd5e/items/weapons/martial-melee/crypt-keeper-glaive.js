@@ -36,7 +36,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects" &&
     // props.actorData.update({ "system.attributes.hp.temp": tempHP.total });
 
     const tempHPEffect = {
-        label: `${props.name} (Temp HP)`,
+        name: `${props.name} (Temp HP)`,
         icon: props.itemData.img,
         origin: props.itemData,
         disabled: false,
@@ -57,7 +57,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects" &&
 
     // Apply weapon effect
     const hazeEffect = {
-        label: `${props.name} (Damage Haze)`,
+        name: `${props.name} (Damage Haze)`,
         icon: props.itemData.img,
         origin: props.itemData,
         disabled: false,

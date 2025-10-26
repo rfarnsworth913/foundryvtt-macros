@@ -7,16 +7,15 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Dominate Person",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData:   tokenData?.actor || {},
+    actorData: lastArg?.actor || {},
     failedSaves: lastArg.failedSaves || [],
-    spellLevel:  lastArg.castData.castLevel || 5,
+    spellLevel: lastArg.castData.castLevel || 5,
     targetActor: lastArg.targets[0]?.actor || "",
 
     lastArg
