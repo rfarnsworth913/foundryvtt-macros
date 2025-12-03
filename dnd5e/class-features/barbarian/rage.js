@@ -8,14 +8,13 @@
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
     name: "Rage",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: await fromUuidSync(lastArg.actorUuid) || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     secondaryEffects: {
         optional: [
