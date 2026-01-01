@@ -7,15 +7,14 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = await fromUuidSync(lastArg.targetUuids[0]);
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Spare the Dying",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: lastArg.actor || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     lastArg
 };
@@ -31,7 +30,7 @@ if (props.state === "OnUse") {
     // Check if conditions are valid to update actor data ---------------------
     if (props.actorData.system.attributes.hp.value <= 0 &&
         props.actorData.system.attributes.death.failure < 3) {
-        console.warn("Updating actor data to prevent death...");
+        console.info("Updating actor data to prevent death...");
         props.actorData.update({
             "system.attributes.death.success": 3,
             "system.attributes.death.failure": 0
