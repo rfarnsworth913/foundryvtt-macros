@@ -7,17 +7,16 @@
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
-    name:      "Toll the Dead",
+    name: "Toll the Dead",
     macroPass: "preDamageRoll",
-    state:     args[0]?.tag || args[0] || "unknown",
+    state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    itemData:  await fromUuidSync(lastArg.uuid),
-    tokenData,
+    actorData: lastArg.actor || {},
+    itemData: await fromUuidSync(lastArg.uuid),
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     lastArg
 };
@@ -29,9 +28,9 @@ logProps(props);
     Macro Logic
    ========================================================================== */
 if (props.state === "OnUse" || props.macroPass === "preDamageRoll") {
-    const target   = await fromUuidSync(props.lastArg.targetUuids[0]);
+    const target = await fromUuidSync(props.lastArg.targetUuids[0]);
     const needsD12 = target.actor.system.attributes.hp.value < target.actor.system.attributes.hp.max;
-    let formula    = props.itemData.system.damage.parts[0][0];
+    let [formula] = props.itemData.system.damage.parts[0];
     let scalingFormula = props.itemData.system.scaling.formula;
 
     if (needsD12) {
