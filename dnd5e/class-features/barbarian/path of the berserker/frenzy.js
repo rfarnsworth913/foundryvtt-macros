@@ -8,14 +8,13 @@
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
     name: "Frenzy",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: await fromUuidSync(lastArg.actorUuid) || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     lastArg,
 };
@@ -28,7 +27,7 @@ logProps(props);
    ========================================================================== */
 if (props.state === "off") {
     props.actorData.update({
-        "system.attributes.exhaustion": Math.clamp(props.sactorData.system.attributes.exhaustion + 1, 0, 6)
+        "system.attributes.exhaustion": Math.clamp(props.actorData.system.attributes.exhaustion + 1, 0, 6)
     });
 }
 
