@@ -8,16 +8,15 @@
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
-const casterData = fromUuidSync(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1));
+const casterData = await fromUuidSync(lastArg.efData.origin.substring(0, lastArg.efData.origin.indexOf("Item") - 1));
 
 const props = {
     name: "Bardic Inspiration",
     state: args[0]?.tag || args[0] || "unknown",
 
     // Bardic Inspiration Target
-    actorData: tokenData?.actor || {},
-    tokenData,
+    actorData: await fromUuidSync(lastArg.actorUuid) || {},
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
     inspirationDice: casterData.getRollData().scale.bard["bardic-inspiration-dice"],
     itemData: lastArg.efData.flags.dae.itemData,
 
