@@ -79,8 +79,9 @@ if (props.state === "on") {
             }
         ];
 
-    //     // Handle modifications -----------------------------------------------
-    //     await checkMagicalInspiration(props.casterData, effectData, props.inspirationDice);
+        // Handle modifications -----------------------------------------------
+        await checkMagicalInspiration(props.casterData, effectData, props.inspirationDice);
+        await checkCombatInspiration(props.casterData, effectData, props.inspirationDice);
 
         // Update Bardic Inspiration ------------------------------------------
         await props.actorData.updateEmbeddedDocuments("ActiveEffect", [{
@@ -134,6 +135,41 @@ async function checkMagicalInspiration (actorData, effectData, inspirationDice) 
         });
         effectData.push({
             key: "flags.midi-qol.optional.bardicInspiration.damage.rsak",
+            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+            value: `+${inspirationDice}`,
+            priority: 20
+        });
+    }
+}
+
+/**
+ * Handles applying effects of Combat Inspiration
+ *
+ * @param  {Actor5e}       actorData        Actor to be checked for data
+ * @param  {ActiveEffect}  effectData       Effect data to be modified
+ * @param  {string}        inspirationDice  Roll string for dice information
+ */
+async function checkCombatInspiration (actorData, effectData, inspirationDice) {
+    const ability = await getItems({
+        actorData,
+        itemLabel: "Combat Inspiration"
+    });
+
+    if (ability.length > 0) {
+        effectData.push({
+            key: "flags.midi-qol.optional.bardicInspiration.damage.mwak",
+            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+            value: `+${inspirationDice}`,
+            priority: 20
+        });
+        effectData.push({
+            key: "flags.midi-qol.optional.bardicInspiration.damage.rwak",
+            mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
+            value: `+${inspirationDice}`,
+            priority: 20
+        });
+        effectData.push({
+            key: "flags.midi-qol.optional.bardicInspiration.ac",
             mode: CONST.ACTIVE_EFFECT_MODES.CUSTOM,
             value: `+${inspirationDice}`,
             priority: 20
