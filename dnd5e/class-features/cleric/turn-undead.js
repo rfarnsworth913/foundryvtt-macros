@@ -1,15 +1,13 @@
 /* ==========================================================================
-    Macro:         Turn Undead
-    Source:        https://www.patreon.com/posts/channel-divinity-49814315
-    Usage:         ItemMacro
+    Macro:  Turn Undead
+    Usage:  ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
-const actorData = tokenData?.actor.getRollData() || {};
+const actorData = await fromUuidSync(lastArg.uuid).getRollData() || {};
 
 const props = {
     name: "Turn Undead / Destroy Undead",
@@ -21,8 +19,7 @@ const props = {
     itemData: lastArg?.item,
     itemUUID: lastArg?.uuid || lastArg?.itemUuid,
     saveType: actorData.attributes.spellcasting || "wis",
-    spellDC: actorData.attributes.spelldc,
-    tokenData,
+    spellDC: actorData.attributes.spell.dc,
 
     lastArg
 };
@@ -112,7 +109,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
 
             } else {
                 // Target Turned ----------------------------------------------
-                logStatus(target.name, monsterCR, props.spellDC, save.total, "Fail", "Turned");
+                logStatus(target.name, monsterCR, props.spellDC, save[0].total, "Fail", "Turned");
                 const conditionFlags = {
                     dae: {
                         selfTarget: false,
@@ -188,7 +185,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
                 <div class="midi-qol-nobox">${turnTargets.join("")}</div>
             </div>`;
 
-        const chatMessage = await game.messages.get(props.lastArg.itemCardId);
+        const chatMessage = await game.messages.get(props.lastArg.itemCardUuid.replace("ChatMessage.", ""));
         let content = await duplicate(chatMessage.content);
         const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
         const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${turnResults}`;
