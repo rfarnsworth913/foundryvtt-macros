@@ -186,7 +186,7 @@ if (props.state === "OnUse" && props.macroPass === "postActiveEffects") {
             </div>`;
 
         const chatMessage = await game.messages.get(props.lastArg.itemCardUuid.replace("ChatMessage.", ""));
-        let content = await duplicate(chatMessage.content);
+        let content = await foundry.utils.duplicate(chatMessage.content);
         const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
         const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${turnResults}`;
         content = await content.replace(searchString, replaceString);

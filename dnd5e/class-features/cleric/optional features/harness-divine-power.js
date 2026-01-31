@@ -1,23 +1,22 @@
 /* ==========================================================================
     Macro:         Harness Divine Power
-    Source:        https://www.patreon.com/posts/harness-divine-53855097
     Usage:         ItemMacro
    ========================================================================== */
 
 /* ==========================================================================
     Macro Globals
    ========================================================================== */
-const lastArg   = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
+const lastArg = args[args.length - 1];
 
 const props = {
     name: "Harness Divine Power",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
+    actorData: lastArg.actor || {},
     itemData: lastArg.item,
-    itemCardID: lastArg.itemCardId,
-    tokenData,
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
+
+    lastArg
 };
 
 logProps(props);
@@ -70,7 +69,7 @@ new Dialog({
         recover: {
             icon: "<i class=\"fas fa-check\"></i>",
             label: "Recover",
-            callback: (html) => {
+            callback: async (html) => {
                 const selectedSlot = html.find("input[name=\"spellSlot\"]:checked");
                 let slot = "";
                 let num = "";
@@ -86,12 +85,13 @@ new Dialog({
 
                 spellRefund(props.actorData, slot);
                 const rollResults = `<div>Regains 1 spell slot, Level ${num}.</div>`;
-                const chatMessage = game.messages.get(props.itemCardID);
-                let content = foundry.utils.duplicate(chatMessage.content);
-                const searchString = /<div class="midi-qol-saves-display">[\\s\\S]*<div class="end-midi-qol-saves-display">/g;
-                const replaceString = `<div class="midi-qol-saves-display"><div class="end-midi-qol-saves-display">${rollResults}`;
-                content = content.replace(searchString, replaceString);
-                chatMessage.update({ content });
+                const chatMessage = await game.messages.get(props.lastArg.itemCardUuid.replace("ChatMessage.", ""));
+                let content = await foundry.utils.duplicate(chatMessage.content);
+                const searchString = /<div class="midi-qol-hits-display">[\s\S]*<div class="end-midi-qol-hits-display">/g;
+                const replaceString = `<div class="midi-qol-hits-display"><div class="end-midi-qol-hits-display">${rollResults}`;
+                content = await content.replace(searchString, replaceString);
+                await chatMessage.update({ content });
+                await ui.chat.scrollBottom();
             }
         }
     }
