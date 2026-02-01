@@ -1,6 +1,5 @@
 /* ==========================================================================
     Macro:         Blessed Strikes
-    Source:        Custom
     Usage:         DAE ItemMacro
    ========================================================================== */
 
@@ -8,15 +7,14 @@
     Macro Globals
    ========================================================================== */
 const lastArg = args[args.length - 1];
-const tokenData = canvas.tokens.get(lastArg?.tokenId) || {};
 
 const props = {
     name: "Blessed Strikes",
     state: args[0]?.tag || args[0] || "unknown",
 
-    actorData: tokenData?.actor || {},
+    actorData: lastArg.actor || {},
     itemData: lastArg.itemData || {},
-    tokenData,
+    tokenData: await fromUuidSync(lastArg.tokenUuid) || {},
 
     abilityID: "BlessedStrikes",
     allowedTypes: ["weapon", "spell"],
@@ -88,7 +86,7 @@ if (props.state === "DamageBonus") {
             seconds: 1
         },
         name: `${props.name} already used this round`,
-        icon: "assets/icons/dnd5e/classes/cleric/features/blessed-strikes.webp"
+        icon: props.itemData.img
     };
 
     await props.actorData.createEmbeddedDocuments("ActiveEffect", [effectData]);
